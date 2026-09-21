@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState, type FormEvent } from "react";
+import RecommendLoader from "@/components/RecommendLoader";
 
 interface Profile {
   id: string;
@@ -102,58 +103,58 @@ function SearchForm() {
     }
 
     setLoading(true);
-    try {
-      let profileId = selectedProfileId;
 
-      if (selectedProfileId === NEW_PROFILE) {
-        const res = await fetch("/api/profiles", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name,
-            gender: gender || undefined,
-            age: age ? Number(age) : undefined,
-            relationship: relationship || undefined,
-            job: job || undefined,
-            interests: interests || undefined,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          setError(data.error ?? "Не удалось сохранить профиль получателя");
-          setLoading(false);
-          return;
-        }
-        profileId = data.profile.id;
-      }
+    let profileId = selectedProfileId;
 
-      const res = await fetch("/api/recommend", {
+    if (selectedProfileId === NEW_PROFILE) {
+      const res = await fetch("/api/profiles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          profileId,
-          occasion,
-          budget: budget || undefined,
-          timeframe: timeframe || undefined,
-          city: city || undefined,
-          mood: selectedMoods.length > 0 ? selectedMoods.join(", ") : undefined,
+          name,
+          gender: gender || undefined,
+          age: age ? Number(age) : undefined,
+          relationship: relationship || undefined,
+          job: job || undefined,
+          interests: interests || undefined,
         }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Не удалось подобрать подарок");
+        setError(data.error ?? "Не удалось сохранить профиль получателя");
         setLoading(false);
         return;
       }
-
-      router.push(`/results?searchId=${data.searchId}`);
-    } finally {
-      setLoading(false);
+      profileId = data.profile.id;
     }
+
+    const res = await fetch("/api/recommend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        profileId,
+        occasion,
+        budget: budget || undefined,
+        timeframe: timeframe || undefined,
+        city: city || undefined,
+        mood: selectedMoods.length > 0 ? selectedMoods.join(", ") : undefined,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error ?? "Не удалось подобрать подарок");
+      setLoading(false);
+      return;
+    }
+
+    // loading не сбрасываем: индикатор должен остаться до перехода на /results.
+    router.push(`/results?searchId=${data.searchId}`);
   }
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-8 px-6 py-12">
+      {loading && <RecommendLoader />}
+
       <div className="text-center sm:text-left">
         <span className="text-3xl">🎁</span>
         <h1 className="font-display mt-2 text-2xl font-extrabold sm:text-3xl">
