@@ -7,10 +7,23 @@ export async function POST(request: NextRequest) {
   const email: string | undefined = body?.email;
   const password: string | undefined = body?.password;
   const phone: string | undefined = body?.phone;
+  const acceptTerms: boolean = body?.acceptTerms === true;
 
   if (!email || !password) {
     return NextResponse.json(
       { error: "Укажите email и пароль" },
+      { status: 400 },
+    );
+  }
+
+  // Галочку проверяем и на сервере: без согласия у нас нет правового
+  // основания обрабатывать данные, а форму можно обойти в обход браузера.
+  if (!acceptTerms) {
+    return NextResponse.json(
+      {
+        error:
+          "Примите пользовательское соглашение и согласие на обработку данных",
+      },
       { status: 400 },
     );
   }

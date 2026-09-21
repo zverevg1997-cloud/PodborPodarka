@@ -12,6 +12,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [confirmationSent, setConfirmationSent] = useState(false);
@@ -24,7 +25,12 @@ export default function RegisterPage() {
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, phone: phone || undefined }),
+      body: JSON.stringify({
+        email,
+        password,
+        phone: phone || undefined,
+        acceptTerms,
+      }),
     });
     const data = await res.json();
     setLoading(false);
@@ -118,6 +124,35 @@ export default function RegisterPage() {
           />
         </div>
 
+        <label className="flex items-start gap-2.5 text-xs leading-relaxed text-muted-foreground">
+          <input
+            type="checkbox"
+            required
+            checked={acceptTerms}
+            onChange={(e) => setAcceptTerms(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-primary)]"
+          />
+          <span>
+            Я принимаю{" "}
+            <Link
+              href="/terms"
+              target="_blank"
+              className="font-semibold text-primary hover:underline"
+            >
+              пользовательское соглашение
+            </Link>{" "}
+            и даю согласие на обработку персональных данных в соответствии с{" "}
+            <Link
+              href="/privacy"
+              target="_blank"
+              className="font-semibold text-primary hover:underline"
+            >
+              политикой конфиденциальности
+            </Link>
+            .
+          </span>
+        </label>
+
         {error && (
           <p className="rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary">
             {error}
@@ -126,7 +161,7 @@ export default function RegisterPage() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !acceptTerms}
           className="gradient-brand mt-2 rounded-full px-4 py-3 font-semibold text-primary-foreground shadow-md shadow-primary/25 transition hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
         >
           {loading ? "Создаём аккаунт…" : "Зарегистрироваться"}

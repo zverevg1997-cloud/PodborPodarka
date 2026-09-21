@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Nunito, Unbounded } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { getCurrentUser } from "@/lib/auth";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
 const bodyFont = Nunito({
   variable: "--font-body",
@@ -16,8 +18,27 @@ const headingFont = Unbounded({
 });
 
 export const metadata: Metadata = {
-  title: "Daribot — подбор подарков",
-  description: "Сервис, который помогает быстро подобрать идею подарка",
+  // Нужен, чтобы относительные пути в og:image и canonical разворачивались
+  // в абсолютные — без него Next ругается и ссылки в превью ломаются.
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME} — подбор подарков с ИИ`,
+    template: `%s — ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    siteName: SITE_NAME,
+    url: SITE_URL,
+    title: `${SITE_NAME} — подбор подарков с ИИ`,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} — подбор подарков с ИИ`,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
@@ -31,6 +52,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <Header userEmail={user?.email ?? null} />
         <main className="flex-1">{children}</main>
+        <Footer />
       </body>
     </html>
   );
