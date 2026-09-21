@@ -14,6 +14,7 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -37,8 +38,29 @@ export default function RegisterPage() {
       router.push("/search");
       router.refresh();
     } else {
-      router.push("/login");
+      setConfirmationSent(true);
     }
+  }
+
+  if (confirmationSent) {
+    return (
+      <div className="mx-auto flex max-w-sm flex-col gap-4 px-6 py-16 text-center">
+        <span className="text-4xl">📬</span>
+        <h1 className="font-display text-2xl font-extrabold">
+          Проверьте почту
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Мы отправили письмо со ссылкой для подтверждения на {email}. После
+          подтверждения можно войти.
+        </p>
+        <Link
+          href="/login"
+          className="gradient-brand rounded-full px-4 py-3 font-semibold text-primary-foreground shadow-md shadow-primary/25 transition hover:opacity-90"
+        >
+          Перейти ко входу
+        </Link>
+      </div>
+    );
   }
 
   return (
