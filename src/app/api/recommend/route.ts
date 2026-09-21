@@ -3,7 +3,15 @@ import { Prisma } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { mockRecommend } from "@/lib/mockRecommend";
-import type { RecommendRequestBody } from "@/lib/types";
+import {
+  isClaudeConfigured,
+  recommendWithClaude,
+  RecommendError,
+} from "@/lib/claudeRecommend";
+import type { GiftIdea, RecommendRequestBody } from "@/lib/types";
+
+// Ответ ИИ может идти десятки секунд — не даём хостингу оборвать функцию рано.
+export const maxDuration = 60;
 
 const DAILY_RECOMMEND_LIMIT = 5;
 
@@ -51,18 +59,47 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Профиль не найден" }, { status: 404 });
   }
 
-  // TODO: здесь позже вместо mockRecommend будет сборка промпта из данных
-  // профиля/анкеты и реальный вызов Claude API (Anthropic), с парсингом
-  // ответа в массив GiftIdea того же формата.
-  const ideas = mockRecommend({
-    profileName: profile.name,
-    occasion: body.occasion,
-    budget: body.budget,
-    timeframe: body.timeframe,
-    city: body.city,
-    mood: body.mood,
-    interests: profile.interests,
-  });
+  let ideas: GiftIdea[];
+
+  if (isClaudeConfigured()) {
+    try {
+      ideas = await recommendWithClaude({
+        profileName: profile.name,
+        gender: profile.gender,
+        age: profile.age,
+        relationship: profile.relationship,
+        job: profile.job,
+        interests: profile.interests,
+        occasion: body.occasion,
+        budget: body.budget,
+        timeframe: body.timeframe,
+        city: body.city,
+        mood: body.mood,
+      });
+    } catch (error) {
+      const message =
+        error instanceof RecommendError
+          ? error.message
+          : "Не удалось подобрать идеи, попробуйте ещё раз";
+      return NextResponse.json({ error: message }, { status: 502 });
+    }
+  } else if (process.env.NODE_ENV !== "production") {
+    ideas = mockRecommend({
+      profileName: profile.name,
+      occasion: body.occasion,
+      budget: body.budget,
+      timeframe: body.timeframe,
+      city: body.city,
+      mood: body.mood,
+      interests: profile.interests,
+    });
+  } else {
+    console.error("ANTHROPIC_API_KEY is not set");
+    return NextResponse.json(
+      { error: "Подбор временно недоступен" },
+      { status: 503 },
+    );
+  }
 
   const search = await prisma.search.create({
     data: {
