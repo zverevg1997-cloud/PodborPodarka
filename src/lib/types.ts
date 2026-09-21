@@ -2,6 +2,9 @@ export interface GiftIdea {
   name: string;
   reason: string;
   searchQuery: string;
+  // "local" — сертификаты, услуги, впечатления, цветы: их ищем обычным
+  // поиском Яндекса по городу, а не на Маркете. У старых записей поля нет.
+  kind?: "product" | "local";
 }
 
 export interface RecommendRequestBody {

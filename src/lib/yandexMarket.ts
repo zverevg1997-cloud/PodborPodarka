@@ -52,3 +52,13 @@ export function buildYandexMarketSearchUrl(query: string): string {
   url.searchParams.set("text", query);
   return url.toString();
 }
+
+/**
+ * Строит ссылку на обычный поиск Яндекса. Используется для услуг,
+ * сертификатов и цветов: их ищут по городу, а не на маркетплейсе.
+ */
+export function buildYandexSearchUrl(query: string, city?: string | null): string {
+  const url = new URL("https://yandex.ru/search/");
+  url.searchParams.set("text", city ? `${query} ${city}` : query);
+  return url.toString();
+}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { buildYandexSearchUrl } from "@/lib/yandexMarket";
 import type { GiftIdea } from "@/lib/types";
 
 interface ResultsPageProps {
@@ -92,12 +93,20 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
               </h3>
               <p className="text-sm text-muted-foreground">{idea.reason}</p>
               <a
-                href={`/api/market-link?q=${encodeURIComponent(idea.searchQuery)}`}
+                href={
+                  idea.kind === "local"
+                    ? buildYandexSearchUrl(idea.searchQuery, search.city)
+                    : `/api/market-link?q=${encodeURIComponent(idea.searchQuery)}`
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-1 inline-flex w-fit items-center gap-1 text-sm font-semibold text-primary hover:underline"
               >
-                Смотреть на Яндекс Маркете →
+                {idea.kind === "local"
+                  ? search.city
+                    ? `Найти в Яндексе: ${search.city} →`
+                    : "Найти в Яндексе →"
+                  : "Смотреть на Яндекс Маркете →"}
               </a>
             </div>
           </div>
