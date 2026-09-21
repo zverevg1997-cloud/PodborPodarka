@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Аутентификация выполняется через Supabase Auth (auth.users).
+// User.id совпадает с id пользователя в Supabase Auth — эта таблица
+// хранит только прикладные поля, пароль в ней не хранится.
+model User {
+  id         String   @id
+  email      String   @unique
+  phone      String?
+  telegramId String?  @unique
+  createdAt  DateTime @default(now())
+
+  profiles Profile[]
+
+  @@map("users")
+}
+
+// Профиль получателя подарка ("Мама", "Коллега Андрей" и т.п.),
+// создаётся пользователем сервиса.
+model Profile {
+  id           String   @id @default(cuid())
+  userId       String
+  name         String
+  gender       String?
+  age          Int?
+  relationship String?
+  job          String?
+  interests    String?
+  createdAt    DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  searches Search[]
+
+  @@index([userId])
+  @@map("profiles")
+}
+
+// Один запрос на подбор подарка для конкретного профиля получателя.
+model Search {
+  id         String   @id @default(cuid())
+  profileId  String
+  occasion   String
+  budget     String?
+  timeframe  String?
+  city       String?
+  mood       String?
+  resultJson Json?
+  createdAt  DateTime @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@map("searches")
+}

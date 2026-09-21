@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fff8f3;
+  --foreground: #2b1b3d;
+
+  --color-primary: #ff5c7a;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #7c5cfc;
+  --color-secondary-foreground: #ffffff;
+  --color-accent: #ffb020;
+  --color-accent-foreground: #2b1b3d;
+
+  --color-card: #ffffff;
+  --color-muted: #fff1e6;
+  --color-muted-foreground: #6b5a7a;
+  --color-border: #f0dfea;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--color-primary);
+  --color-primary-foreground: var(--color-primary-foreground);
+  --color-secondary: var(--color-secondary);
+  --color-secondary-foreground: var(--color-secondary-foreground);
+  --color-accent: var(--color-accent);
+  --color-accent-foreground: var(--color-accent-foreground);
+  --color-card: var(--color-card);
+  --color-muted: var(--color-muted);
+  --color-muted-foreground: var(--color-muted-foreground);
+  --color-border: var(--color-border);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-heading);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1a1225;
+    --foreground: #f5efff;
+
+    --color-primary: #ff7a93;
+    --color-secondary: #a78bfa;
+    --color-accent: #ffc94a;
+    --color-accent-foreground: #1a1225;
+
+    --color-card: #241934;
+    --color-muted: #2e2140;
+    --color-muted-foreground: #b9a9cc;
+    --color-border: #3b2a52;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), Arial, Helvetica, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-display {
+  font-family: var(--font-heading), var(--font-body), sans-serif;
+}
+
+.gradient-brand {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-secondary)
+  );
+}
+
+.gradient-brand-text {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-secondary)
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
