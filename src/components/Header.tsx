@@ -37,13 +37,14 @@ export default function Header({ userEmail }: HeaderProps) {
             <>
               <Link
                 href="/search"
-                className="hidden rounded-full px-3 py-2 font-medium text-foreground/80 transition hover:bg-muted hover:text-foreground sm:inline-block"
+                className="rounded-full px-2.5 py-2 font-medium text-foreground/80 transition hover:bg-muted hover:text-foreground sm:px-3"
               >
-                Подобрать подарок
+                <span className="sm:hidden">Подобрать</span>
+                <span className="hidden sm:inline">Подобрать подарок</span>
               </Link>
               <Link
                 href="/profile"
-                className="hidden rounded-full px-3 py-2 font-medium text-foreground/80 transition hover:bg-muted hover:text-foreground sm:inline-block"
+                className="rounded-full px-2.5 py-2 font-medium text-foreground/80 transition hover:bg-muted hover:text-foreground sm:px-3"
               >
                 Кабинет
               </Link>
@@ -53,7 +54,7 @@ export default function Header({ userEmail }: HeaderProps) {
               <button
                 onClick={handleLogout}
                 disabled={loading}
-                className="rounded-full border border-border px-4 py-2 font-medium text-foreground/80 transition hover:border-primary/40 hover:text-primary disabled:opacity-50"
+                className="rounded-full border border-border px-2.5 py-2 font-medium text-foreground/80 transition hover:border-primary/40 hover:text-primary disabled:opacity-50 sm:px-4"
               >
                 Выйти
               </button>
