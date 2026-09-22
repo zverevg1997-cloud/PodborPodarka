@@ -16,6 +16,8 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [confirmationSent, setConfirmationSent] = useState(false);
+  const [code, setCode] = useState("");
+  const [resent, setResent] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -55,23 +57,115 @@ export default function RegisterPage() {
     }
   }
 
+  async function handleConfirm(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, token: code }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setError(data.error ?? "Код неверный или устарел");
+        return;
+      }
+
+      // verifyOtp сразу выдаёт сессию — входить отдельно не нужно.
+      router.push("/search");
+      router.refresh();
+    } catch {
+      setError("Не удалось связаться с сервером. Проверьте соединение.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    setError(null);
+    setResent(false);
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) setError(data.error ?? "Не удалось отправить письмо");
+      else setResent(true);
+    } catch {
+      setError("Не удалось связаться с сервером. Проверьте соединение.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (confirmationSent) {
     return (
-      <div className="mx-auto flex max-w-sm flex-col gap-4 px-6 py-16 text-center">
-        <span className="text-4xl">📬</span>
-        <h1 className="font-display text-2xl font-extrabold">
-          Проверьте почту
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Мы отправили письмо со ссылкой для подтверждения на {email}. После
-          подтверждения можно войти.
-        </p>
-        <Link
-          href="/login"
-          className="gradient-brand rounded-full px-4 py-3 font-semibold text-primary-foreground shadow-md shadow-primary/25 transition hover:opacity-90"
+      <div className="mx-auto flex max-w-sm flex-col gap-5 px-6 py-16">
+        <div className="text-center">
+          <span className="text-4xl">📬</span>
+          <h1 className="font-display mt-2 text-2xl font-extrabold">
+            Введите код из письма
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Отправили код на {email}. Он действует час.
+          </p>
+        </div>
+
+        <form
+          onSubmit={handleConfirm}
+          className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm"
         >
-          Перейти ко входу
-        </Link>
+          <input
+            id="code"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            autoFocus
+            required
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+            placeholder="00000000"
+            className="rounded-xl border border-border bg-background px-3.5 py-3 text-center font-mono text-2xl tracking-[0.4em] outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/25"
+          />
+
+          {error && (
+            <p className="rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary">
+              {error}
+            </p>
+          )}
+
+          {resent && !error && (
+            <p className="rounded-xl bg-secondary/10 px-4 py-2.5 text-sm font-medium text-secondary">
+              Отправили новый код.
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading || code.length < 6}
+            className="gradient-brand rounded-full px-4 py-3 font-semibold text-primary-foreground shadow-md shadow-primary/25 transition hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+          >
+            {loading ? "Проверяем…" : "Подтвердить"}
+          </button>
+        </form>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Письмо не пришло?{" "}
+          <button
+            onClick={handleResend}
+            disabled={loading}
+            className="font-semibold text-primary hover:underline disabled:opacity-50"
+          >
+            Отправить ещё раз
+          </button>
+        </p>
       </div>
     );
   }
