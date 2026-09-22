@@ -1,8 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import {
+  REGISTRATIONS_PER_IP,
+  checkRegistrationLimit,
+  getClientIp,
+} from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
+  // Лимит проверяем до разбора тела: смысл в том, чтобы отсечь поток запросов
+  // как можно раньше, ещё до обращений к Supabase.
+  const { allowed } = await checkRegistrationLimit(getClientIp(request));
+  if (!allowed) {
+    return NextResponse.json(
+      {
+        error:
+          `Слишком много попыток регистрации. Можно создать не больше ` +
+          `${REGISTRATIONS_PER_IP} аккаунтов в час — попробуйте позже.`,
+      },
+      { status: 429 },
+    );
+  }
+
   const body = await request.json().catch(() => null);
   const email: string | undefined = body?.email;
   const password: string | undefined = body?.password;

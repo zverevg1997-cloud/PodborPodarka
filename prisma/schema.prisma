@@ -59,3 +59,17 @@ model Search {
   @@index([profileId])
   @@map("searches")
 }
+
+// Попытки регистрации с одного IP — нужны, чтобы ограничить массовое
+// создание аккаунтов. В памяти процесса такой счётчик держать нельзя:
+// на Vercel запросы обслуживают разные инстансы и общего состояния у них нет.
+model RegistrationAttempt {
+  id        String   @id @default(cuid())
+  ip        String
+  createdAt DateTime @default(now())
+
+  @@index([ip, createdAt])
+  // Отдельный индекс для регулярной чистки старых записей.
+  @@index([createdAt])
+  @@map("registration_attempts")
+}
