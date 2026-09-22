@@ -4,10 +4,10 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { mockRecommend } from "@/lib/mockRecommend";
 import {
-  isClaudeConfigured,
-  recommendWithClaude,
+  isRecommendConfigured,
+  recommendIdeas,
   RecommendError,
-} from "@/lib/claudeRecommend";
+} from "@/lib/recommend";
 import type { GiftIdea, RecommendRequestBody } from "@/lib/types";
 
 // Ответ ИИ может идти десятки секунд — не даём хостингу оборвать функцию рано.
@@ -61,9 +61,9 @@ export async function POST(request: NextRequest) {
 
   let ideas: GiftIdea[];
 
-  if (isClaudeConfigured()) {
+  if (isRecommendConfigured()) {
     try {
-      ideas = await recommendWithClaude({
+      ideas = await recommendIdeas({
         profileName: profile.name,
         gender: profile.gender,
         age: profile.age,
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       interests: profile.interests,
     });
   } else {
-    console.error("ANTHROPIC_API_KEY is not set");
+    console.error("Не настроен ни один провайдер ИИ: нет ключей ни Яндекса, ни Anthropic");
     return NextResponse.json(
       { error: "Подбор временно недоступен" },
       { status: 503 },
