@@ -22,8 +22,9 @@ export default function PrivacyPage() {
 
       <h2>1. Оператор</h2>
       <p>
-        Оператором персональных данных является {OPERATOR.name}, ИНН{" "}
-        {OPERATOR.inn}, адрес для корреспонденции: {OPERATOR.address}. Связаться
+        Оператором персональных данных является {OPERATOR.name},{" "}
+        {OPERATOR.taxStatus}, ИНН {OPERATOR.inn}, адрес для корреспонденции:{" "}
+        {OPERATOR.address}. Связаться
         по любым вопросам обработки данных можно по адресу{" "}
         <a href={`mailto:${OPERATOR.email}`}>{OPERATOR.email}</a>.
       </p>
