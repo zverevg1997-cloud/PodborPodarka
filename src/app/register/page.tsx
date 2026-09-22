@@ -22,29 +22,36 @@ export default function RegisterPage() {
     setError(null);
     setLoading(true);
 
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email,
-        password,
-        phone: phone || undefined,
-        acceptTerms,
-      }),
-    });
-    const data = await res.json();
-    setLoading(false);
+    // Всё внутри try/finally: если ответ окажется не JSON или оборвётся сеть,
+    // без этого кнопка навсегда застревала в состоянии «Создаём аккаунт…».
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password,
+          phone: phone || undefined,
+          acceptTerms,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
 
-    if (!res.ok) {
-      setError(data.error ?? "Не удалось зарегистрироваться");
-      return;
-    }
+      if (!res.ok) {
+        setError(data.error ?? "Не удалось зарегистрироваться");
+        return;
+      }
 
-    if (data.session) {
-      router.push("/search");
-      router.refresh();
-    } else {
-      setConfirmationSent(true);
+      if (data.session) {
+        router.push("/search");
+        router.refresh();
+      } else {
+        setConfirmationSent(true);
+      }
+    } catch {
+      setError("Не удалось связаться с сервером. Проверьте соединение.");
+    } finally {
+      setLoading(false);
     }
   }
 

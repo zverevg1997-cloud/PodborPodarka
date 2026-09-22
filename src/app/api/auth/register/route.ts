@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import {
@@ -66,11 +67,46 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const user = await prisma.user.upsert({
-    where: { id: data.user.id },
-    update: { email, phone },
-    create: { id: data.user.id, email, phone },
-  });
+  // Supabase намеренно не раскрывает, что адрес уже занят: вместо ошибки он
+  // возвращает пользователя со случайным id и пустым identities. Без этой
+  // проверки upsert ниже пытался создать вторую строку с тем же email, падал
+  // на уникальном индексе и отдавал HTML-страницу ошибки вместо JSON —
+  // форма на сайте после этого зависала в состоянии «Создаём аккаунт…».
+  if (Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+    return NextResponse.json(
+      {
+        error:
+          "Аккаунт с такой почтой уже существует. Войдите или восстановите пароль.",
+      },
+      { status: 409 },
+    );
+  }
+
+  let user;
+  try {
+    user = await prisma.user.upsert({
+      where: { id: data.user.id },
+      update: { email, phone },
+      create: { id: data.user.id, email, phone },
+    });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      return NextResponse.json(
+        {
+          error:
+            "Аккаунт с такой почтой уже существует. Войдите или восстановите пароль.",
+        },
+        { status: 409 },
+      );
+    }
+    // Любую другую ошибку тоже отдаём как JSON: клиент разбирает ответ через
+    // res.json(), и HTML-страница ошибки сломала бы ему обработку.
+    console.error("register: не удалось создать пользователя", e);
+    return NextResponse.json(
+      { error: "Не удалось создать аккаунт. Попробуйте ещё раз." },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json(
     {

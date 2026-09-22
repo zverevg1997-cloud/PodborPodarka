@@ -25,21 +25,26 @@ function LoginForm() {
     setError(null);
     setLoading(true);
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
-    setLoading(false);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json().catch(() => ({}));
 
-    if (!res.ok) {
-      setError(data.error ?? "Не удалось войти");
-      return;
+      if (!res.ok) {
+        setError(data.error ?? "Не удалось войти");
+        return;
+      }
+
+      router.push(next);
+      router.refresh();
+    } catch {
+      setError("Не удалось связаться с сервером. Проверьте соединение.");
+    } finally {
+      setLoading(false);
     }
-
-    router.push(next);
-    router.refresh();
   }
 
   return (
