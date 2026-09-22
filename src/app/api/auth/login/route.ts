@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { translateAuthError } from "@/lib/authErrors";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -23,7 +24,9 @@ export async function POST(request: NextRequest) {
 
   if (error || !data.user) {
     return NextResponse.json(
-      { error: error?.message ?? "Неверный email или пароль" },
+      {
+        error: translateAuthError(error?.message, "Неверная почта или пароль"),
+      },
       { status: 401 },
     );
   }

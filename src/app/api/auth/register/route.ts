@@ -8,6 +8,7 @@ import {
   getClientIp,
 } from "@/lib/rateLimit";
 import { resolveBaseUrl } from "@/lib/site";
+import { translateAuthError } from "@/lib/authErrors";
 
 export async function POST(request: NextRequest) {
   // Лимит проверяем до разбора тела: смысл в том, чтобы отсечь поток запросов
@@ -62,7 +63,12 @@ export async function POST(request: NextRequest) {
 
   if (error || !data.user) {
     return NextResponse.json(
-      { error: error?.message ?? "Не удалось зарегистрироваться" },
+      {
+        error: translateAuthError(
+          error?.message,
+          "Не удалось зарегистрироваться. Попробуйте ещё раз.",
+        ),
+      },
       { status: 400 },
     );
   }
