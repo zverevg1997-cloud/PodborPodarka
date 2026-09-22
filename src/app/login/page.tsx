@@ -11,6 +11,9 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/search";
+  // Ставится в /auth/callback, когда почта подтверждена, но сессию выдать не
+  // вышло: ссылку открыли в другом браузере, чем тот, где регистрировались.
+  const confirmed = searchParams.get("confirmed") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,6 +48,12 @@ function LoginForm() {
         <span className="text-3xl">👋</span>
         <h1 className="font-display mt-2 text-2xl font-extrabold">Вход</h1>
       </div>
+
+      {confirmed && (
+        <p className="rounded-xl border border-secondary/40 bg-secondary/10 px-4 py-3 text-center text-sm font-medium text-secondary">
+          Почта подтверждена — войдите, чтобы продолжить.
+        </p>
+      )}
 
       <form
         onSubmit={handleSubmit}

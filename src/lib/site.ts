@@ -5,6 +5,17 @@
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.xn--80achr5ajr.xn--p1ai";
 
+/**
+ * Базовый адрес для ссылок, уходящих наружу: письма, редиректы после
+ * подтверждения. На проде всегда канонический домен — за прокси Vercel
+ * из самого запроса можно получить служебный адрес деплоя.
+ */
+export function resolveBaseUrl(requestUrl: string): string {
+  return process.env.NODE_ENV === "production"
+    ? SITE_URL
+    : new URL(requestUrl).origin;
+}
+
 export const SITE_NAME = "Daribot";
 export const SITE_DOMAIN = "дарибот.рф";
 

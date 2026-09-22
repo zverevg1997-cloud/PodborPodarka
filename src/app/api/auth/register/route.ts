@@ -6,6 +6,7 @@ import {
   checkRegistrationLimit,
   getClientIp,
 } from "@/lib/rateLimit";
+import { resolveBaseUrl } from "@/lib/site";
 
 export async function POST(request: NextRequest) {
   // Лимит проверяем до разбора тела: смысл в том, чтобы отсечь поток запросов
@@ -48,7 +49,15 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    // Без этого Supabase вернёт человека на site_url, то есть на главную,
+    // где обменивать code на сессию некому.
+    options: {
+      emailRedirectTo: `${resolveBaseUrl(request.url)}/auth/callback`,
+    },
+  });
 
   if (error || !data.user) {
     return NextResponse.json(
