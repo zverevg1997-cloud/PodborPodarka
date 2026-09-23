@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import { GOALS, reachGoal } from "@/lib/metrika";
 import type { RecommendRequestBody } from "@/lib/types";
 
 interface MoreIdeasButtonProps {
@@ -39,6 +40,8 @@ export default function MoreIdeasButton({ search }: MoreIdeasButtonProps) {
         setLoading(false);
         return;
       }
+
+      reachGoal(GOALS.moreIdeas);
 
       // Новый подбор содержит и прежние идеи, и новые, поэтому просто
       // переходим на него — страница покажет всё разом.

@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { buildYandexSearchUrl } from "@/lib/yandexMarket";
 import MoreIdeasButton from "@/components/MoreIdeasButton";
+import GiftLink from "@/components/GiftLink";
 import { readGuestId } from "@/lib/guest";
 import type { GiftIdea } from "@/lib/types";
 
@@ -100,22 +101,22 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
                 {idea.name}
               </h3>
               <p className="text-sm text-muted-foreground">{idea.reason}</p>
-              <a
+              <GiftLink
                 href={
                   idea.kind === "local"
                     ? buildYandexSearchUrl(idea.searchQuery, search.city)
                     : `/api/market-link?q=${encodeURIComponent(idea.searchQuery)}`
                 }
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-1 inline-flex w-fit items-center gap-1 text-sm font-semibold text-primary hover:underline"
-              >
-                {idea.kind === "local"
-                  ? search.city
-                    ? `Найти в Яндексе: ${search.city} →`
-                    : "Найти в Яндексе →"
-                  : "Смотреть на Яндекс Маркете →"}
-              </a>
+                kind={idea.kind === "local" ? "local" : "product"}
+                query={idea.searchQuery}
+                label={
+                  idea.kind === "local"
+                    ? search.city
+                      ? `Найти в Яндексе: ${search.city} →`
+                      : "Найти в Яндексе →"
+                    : "Смотреть на Яндекс Маркете →"
+                }
+              />
             </div>
           </div>
         ))}

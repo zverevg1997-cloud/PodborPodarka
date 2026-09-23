@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState, type FormEvent } from "react";
 import RecommendLoader from "@/components/RecommendLoader";
+import { GOALS, reachGoal } from "@/lib/metrika";
 
 interface Profile {
   id: string;
@@ -146,6 +147,10 @@ function SearchForm() {
       setLoading(false);
       return;
     }
+
+    // Цель отправляем здесь, а не на странице результатов: туда можно попасть
+    // и из истории, и такие заходы не должны считаться новыми подборами.
+    reachGoal(GOALS.recommendDone, { ideas: data.ideas?.length ?? 0 });
 
     // loading не сбрасываем: индикатор должен остаться до перехода на /results.
     router.push(`/results?searchId=${data.searchId}`);

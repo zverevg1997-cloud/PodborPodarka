@@ -1,4 +1,9 @@
+"use client";
+
 import Script from "next/script";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { trackPageView } from "@/lib/metrika";
 
 const COUNTER_ID = process.env.NEXT_PUBLIC_METRIKA_ID;
 
@@ -8,14 +13,26 @@ const COUNTER_ID = process.env.NEXT_PUBLIC_METRIKA_ID;
  * Вебвизор намеренно выключен: он записывает сессии вместе с тем, что человек
  * печатает в формах, а у нас в анкете — сведения о третьем лице (имя, возраст,
  * увлечения получателя подарка). Записывать это и хранить у стороннего
- * сервиса мы людям не обещали. Для поиска мест, где люди уходят с формы,
- * хватает карты кликов и целей; понадобится большее — включим вместе с
- * маскированием полей и правкой политики конфиденциальности.
+ * сервиса мы людям не обещали.
  *
  * Идентификатор берём из переменной окружения, поэтому при локальной
  * разработке счётчик просто не подключается и не портит статистику.
  */
 export default function Metrika() {
+  const pathname = usePathname();
+  const firstRender = useRef(true);
+
+  useEffect(() => {
+    // Next.js меняет страницы без перезагрузки, и счётчик сам этого не
+    // замечает: без этого вся воронка после первой страницы была бы невидимой.
+    // Первый заход считает сам init при загрузке скрипта, поэтому пропускаем.
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    trackPageView(window.location.href);
+  }, [pathname]);
+
   if (!COUNTER_ID) return null;
 
   return (

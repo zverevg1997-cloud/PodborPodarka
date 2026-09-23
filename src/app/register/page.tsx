@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import { GOALS, reachGoal } from "@/lib/metrika";
 
 const inputClass =
   "rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/25";
@@ -75,6 +76,10 @@ export default function RegisterPage() {
         setError(data.error ?? "Код неверный или устарел");
         return;
       }
+
+      // Цель отправляем только после подтверждения кода: создание аккаунта
+      // без подтверждения почты пользователем не считается.
+      reachGoal(GOALS.signupDone);
 
       // verifyOtp сразу выдаёт сессию — входить отдельно не нужно.
       router.push("/search");
