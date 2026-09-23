@@ -6,6 +6,7 @@ import { buildYandexSearchUrl } from "@/lib/yandexMarket";
 import MoreIdeasButton from "@/components/MoreIdeasButton";
 import GiftLink from "@/components/GiftLink";
 import { readGuestId } from "@/lib/guest";
+import { parseBudget } from "@/lib/budget";
 import type { GiftIdea } from "@/lib/types";
 
 interface ResultsPageProps {
@@ -58,6 +59,14 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
 
   const ideas = (search.resultJson as unknown as GiftIdea[] | null) ?? [];
 
+  // Модель цен не знает и в бюджет попадает на глаз. Поиск на Маркете
+  // фильтровать умеет — передаём границы туда, где они действительно работают.
+  const price = parseBudget(search.budget);
+  const priceParams = [
+    price.from ? `&from=${price.from}` : "",
+    price.to ? `&to=${price.to}` : "",
+  ].join("");
+
   const chips = [
     { label: "Повод", value: search.occasion },
     { label: "Бюджет", value: search.budget },
@@ -105,7 +114,7 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
                 href={
                   idea.kind === "local"
                     ? buildYandexSearchUrl(idea.searchQuery, search.city)
-                    : `/api/market-link?q=${encodeURIComponent(idea.searchQuery)}`
+                    : `/api/market-link?q=${encodeURIComponent(idea.searchQuery)}${priceParams}`
                 }
                 kind={idea.kind === "local" ? "local" : "product"}
                 query={idea.searchQuery}

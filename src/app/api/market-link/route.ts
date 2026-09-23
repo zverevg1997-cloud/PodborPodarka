@@ -9,13 +9,23 @@ import {
 // сети, если она настроена (YANDEX_MARKET_OAUTH_TOKEN + YANDEX_MARKET_CLID
 // в .env) — иначе ведёт на обычный поиск на Маркете без трекинга.
 export async function GET(request: NextRequest) {
-  const query = request.nextUrl.searchParams.get("q");
+  const params = request.nextUrl.searchParams;
+  const query = params.get("q");
 
   if (!query) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  const searchUrl = buildYandexMarketSearchUrl(query);
+  const toNumber = (value: string | null) => {
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : undefined;
+  };
+
+  const searchUrl = buildYandexMarketSearchUrl(query, {
+    from: toNumber(params.get("from")),
+    to: toNumber(params.get("to")),
+  });
+
   const affiliateUrl = await createYandexMarketAffiliateLink(searchUrl);
 
   return NextResponse.redirect(affiliateUrl ?? searchUrl);

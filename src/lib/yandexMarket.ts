@@ -46,10 +46,21 @@ export async function createYandexMarketAffiliateLink(
 
 /**
  * Строит ссылку на страницу поиска Яндекс Маркета по текстовому запросу.
+ *
+ * Границы цены передаём параметрами pricefrom и priceto — строго строчными:
+ * с заглавными буквами (priceTo) Маркет их молча игнорирует, выдача приходит
+ * без фильтра, и заметить это можно только глазами.
  */
-export function buildYandexMarketSearchUrl(query: string): string {
+export function buildYandexMarketSearchUrl(
+  query: string,
+  price?: { from?: number; to?: number },
+): string {
   const url = new URL("https://market.yandex.ru/search");
   url.searchParams.set("text", query);
+
+  if (price?.from) url.searchParams.set("pricefrom", String(price.from));
+  if (price?.to) url.searchParams.set("priceto", String(price.to));
+
   return url.toString();
 }
 
