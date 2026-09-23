@@ -10,7 +10,15 @@ import { SITE_URL } from "./src/lib/site";
  * Важно: DNS-записи домена daribot.ru трогать нельзя, кроме A — там живут
  * MX, SPF, DKIM и DMARC, на которых держится отправка писем.
  */
-const REDIRECT_FROM = ["daribot.ru", "www.daribot.ru"];
+// www.дарибот.рф здесь же: имя привязано к приложению и отвечает тем же
+// сайтом, то есть без редиректа поисковик видит два одинаковых сайта и делит
+// вес между ними. Хост в заголовке запроса приходит в punycode, кириллицу
+// сравнивать бесполезно.
+const REDIRECT_FROM = [
+  "daribot.ru",
+  "www.daribot.ru",
+  "www.xn--80achr5ajr.xn--p1ai",
+];
 
 const nextConfig: NextConfig = {
   async redirects() {
@@ -18,7 +26,10 @@ const nextConfig: NextConfig = {
       source: "/:path*",
       has: [{ type: "host" as const, value: host }],
       destination: `${SITE_URL}/:path*`,
-      permanent: true,
+      // Именно 301, а не 308, который Next ставит при permanent: true.
+      // По этому редиректу Яндекс склеивает зеркала, и в его документации
+      // про переезд описан 301 — рисковать ради одной цифры незачем.
+      statusCode: 301,
     }));
   },
 };
