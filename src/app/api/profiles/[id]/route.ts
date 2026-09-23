@@ -44,6 +44,15 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     .json()
     .catch(() => null);
 
+  // Имя — единственное обязательное поле профиля. Без этой проверки форма,
+  // отправленная в обход браузера, оставила бы получателя без названия.
+  if (body?.name !== undefined && !String(body.name).trim()) {
+    return NextResponse.json(
+      { error: "Укажите имя получателя" },
+      { status: 400 },
+    );
+  }
+
   const profile = await prisma.profile.update({
     where: { id },
     data: {

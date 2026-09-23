@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import DeleteSearchButton from "@/components/DeleteSearchButton";
+import ProfileCard from "@/components/ProfileCard";
 
 export default async function ProfilePage() {
   const user = await getCurrentUser();
@@ -17,6 +18,9 @@ export default async function ProfilePage() {
         orderBy: { createdAt: "desc" },
         take: 5,
       },
+      // Полное число подборов, а не только показанные пять: его показываем
+      // в предупреждении при удалении получателя.
+      _count: { select: { searches: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -58,27 +62,19 @@ export default async function ProfilePage() {
 
       <div className="flex flex-col gap-4">
         {profiles.map((profile) => (
-          <div
+          <ProfileCard
             key={profile.id}
-            className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+            searchCount={profile._count.searches}
+            profile={{
+              id: profile.id,
+              name: profile.name,
+              gender: profile.gender,
+              age: profile.age,
+              relationship: profile.relationship,
+              job: profile.job,
+              interests: profile.interests,
+            }}
           >
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="font-display text-base font-bold">
-                {profile.name}
-              </h3>
-              <Link
-                href={`/search?profileId=${profile.id}`}
-                className="shrink-0 rounded-full border border-border px-3 py-1.5 text-xs font-semibold transition hover:border-primary/40 hover:text-primary"
-              >
-                Подобрать подарок
-              </Link>
-            </div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {[profile.relationship, profile.age ? `${profile.age} лет` : null]
-                .filter(Boolean)
-                .join(" · ") || "Нет дополнительных данных"}
-            </p>
-
             {profile.searches.length > 0 && (
               <ul className="mt-3 flex flex-col gap-1.5 border-t border-border pt-3 text-sm">
                 {profile.searches.map((search) => (
@@ -99,7 +95,7 @@ export default async function ProfilePage() {
                 ))}
               </ul>
             )}
-          </div>
+          </ProfileCard>
         ))}
       </div>
     </div>
