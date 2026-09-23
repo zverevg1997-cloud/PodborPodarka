@@ -2,11 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { buildYandexSearchUrl } from "@/lib/yandexMarket";
+import { buildYandexMapsUrl, buildYandexSearchUrl } from "@/lib/yandexMarket";
 import MoreIdeasButton from "@/components/MoreIdeasButton";
 import GiftLink from "@/components/GiftLink";
 import { readGuestId } from "@/lib/guest";
 import { parseBudget } from "@/lib/budget";
+import { needsLocalPurchase, parseUrgency } from "@/lib/timeframe";
 import type { GiftIdea } from "@/lib/types";
 
 interface ResultsPageProps {
@@ -67,6 +68,32 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
     price.to ? `&to=${price.to}` : "",
   ].join("");
 
+  // Если подарок нужен сегодня, заказ с маркетплейса бессмыслен: доставка не
+  // успеет. Ведём в магазины города — там видно адреса и часы работы.
+  const city = search.city;
+  const buyLocally = needsLocalPurchase(parseUrgency(search.timeframe)) && !!city;
+
+  const linkFor = (idea: GiftIdea) => {
+    if (idea.kind === "local") {
+      return {
+        href: buildYandexSearchUrl(idea.searchQuery, city),
+        label: city ? `Найти в Яндексе: ${city} →` : "Найти в Яндексе →",
+      };
+    }
+
+    if (buyLocally && city) {
+      return {
+        href: buildYandexMapsUrl(idea.searchQuery, city),
+        label: `Где купить сегодня: ${city} →`,
+      };
+    }
+
+    return {
+      href: `/api/market-link?q=${encodeURIComponent(idea.searchQuery)}${priceParams}`,
+      label: "Смотреть на Яндекс Маркете →",
+    };
+  };
+
   const chips = [
     { label: "Повод", value: search.occasion },
     { label: "Бюджет", value: search.budget },
@@ -111,20 +138,10 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
               </h3>
               <p className="text-sm text-muted-foreground">{idea.reason}</p>
               <GiftLink
-                href={
-                  idea.kind === "local"
-                    ? buildYandexSearchUrl(idea.searchQuery, search.city)
-                    : `/api/market-link?q=${encodeURIComponent(idea.searchQuery)}${priceParams}`
-                }
+                href={linkFor(idea).href}
+                label={linkFor(idea).label}
                 kind={idea.kind === "local" ? "local" : "product"}
                 query={idea.searchQuery}
-                label={
-                  idea.kind === "local"
-                    ? search.city
-                      ? `Найти в Яндексе: ${search.city} →`
-                      : "Найти в Яндексе →"
-                    : "Смотреть на Яндекс Маркете →"
-                }
               />
             </div>
           </div>

@@ -73,3 +73,16 @@ export function buildYandexSearchUrl(query: string, city?: string | null): strin
   url.searchParams.set("text", city ? `${query} ${city}` : query);
   return url.toString();
 }
+
+/**
+ * Ссылка на поиск по картам — магазины города с адресами и часами работы.
+ *
+ * Нужна, когда подарок нужен сегодня: доставка с маркетплейса не успеет, а
+ * человеку важно понять, куда можно съездить прямо сейчас. Обычный поиск на
+ * такой запрос отвечает интернет-магазинами, то есть снова доставкой.
+ */
+export function buildYandexMapsUrl(query: string, city: string): string {
+  const url = new URL("https://yandex.ru/maps/");
+  url.searchParams.set("text", `${query} купить ${city}`);
+  return url.toString();
+}
