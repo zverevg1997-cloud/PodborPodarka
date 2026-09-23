@@ -8,12 +8,14 @@ import {
   recommendIdeas,
   RecommendError,
 } from "@/lib/recommend";
+import {
+  DAILY_RECOMMEND_LIMIT,
+  countTodaySearches,
+} from "@/lib/recommendLimit";
 import type { GiftIdea, RecommendRequestBody } from "@/lib/types";
 
 // Ответ ИИ может идти десятки секунд — не даём хостингу оборвать функцию рано.
 export const maxDuration = 60;
-
-const DAILY_RECOMMEND_LIMIT = 5;
 
 export async function POST(request: NextRequest) {
   const authUser = await getCurrentUser();
@@ -21,20 +23,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
   }
 
-  const startOfDay = new Date();
-  startOfDay.setUTCHours(0, 0, 0, 0);
-
-  const todayCount = await prisma.search.count({
-    where: {
-      profile: { userId: authUser.id },
-      createdAt: { gte: startOfDay },
-    },
-  });
+  // Считаем тем же кодом, что и счётчик в шапке: иначе человек увидит
+  // «осталось 1», нажмёт и получит отказ.
+  const todayCount = await countTodaySearches(authUser.id);
 
   if (todayCount >= DAILY_RECOMMEND_LIMIT) {
     return NextResponse.json(
       {
-        error: `Достигнут дневной лимит подбора подарков (${DAILY_RECOMMEND_LIMIT} в день). Попробуйте завтра.`,
+        error: `Достигнут дневной лимит подбора подарков (${DAILY_RECOMMEND_LIMIT} в день). Лимит обновится в полночь по Москве.`,
       },
       { status: 429 },
     );

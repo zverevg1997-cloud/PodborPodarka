@@ -4,6 +4,10 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getCurrentUser } from "@/lib/auth";
+import {
+  DAILY_RECOMMEND_LIMIT,
+  countTodaySearches,
+} from "@/lib/recommendLimit";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
 const bodyFont = Nunito({
@@ -43,6 +47,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const user = await getCurrentUser();
+  const usedToday = user ? await countTodaySearches(user.id) : 0;
 
   return (
     <html
@@ -50,7 +55,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${bodyFont.variable} ${headingFont.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Header userEmail={user?.email ?? null} />
+        <Header
+          userEmail={user?.email ?? null}
+          usedToday={usedToday}
+          dailyLimit={DAILY_RECOMMEND_LIMIT}
+        />
         <main className="flex-1">{children}</main>
         <Footer />
       </body>

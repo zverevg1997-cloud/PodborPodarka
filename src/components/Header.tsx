@@ -6,9 +6,15 @@ import { useState } from "react";
 
 interface HeaderProps {
   userEmail: string | null;
+  usedToday: number;
+  dailyLimit: number;
 }
 
-export default function Header({ userEmail }: HeaderProps) {
+export default function Header({
+  userEmail,
+  usedToday,
+  dailyLimit,
+}: HeaderProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -48,7 +54,24 @@ export default function Header({ userEmail }: HeaderProps) {
               >
                 Кабинет
               </Link>
-              <span className="hidden max-w-[12rem] truncate text-muted-foreground md:inline">
+              {/* Счётчик показываем и на телефоне: человек должен понимать,
+                  сколько подборов осталось, до того как нажмёт кнопку. */}
+              <span
+                title={`Подборов сегодня: ${usedToday} из ${dailyLimit}. Лимит обновляется в полночь по Москве.`}
+                className={`flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums ${
+                  usedToday >= dailyLimit
+                    ? "bg-primary/15 text-primary"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                <span aria-hidden>🎁</span>
+                <span>
+                  {Math.max(0, dailyLimit - usedToday)}
+                  <span className="opacity-60">/{dailyLimit}</span>
+                </span>
+              </span>
+
+              <span className="hidden max-w-[10rem] truncate text-muted-foreground md:inline">
                 {userEmail}
               </span>
               <button
