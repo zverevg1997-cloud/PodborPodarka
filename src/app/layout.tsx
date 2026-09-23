@@ -9,7 +9,12 @@ import {
   DAILY_RECOMMEND_LIMIT,
   countTodaySearches,
 } from "@/lib/recommendLimit";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_URL,
+} from "@/lib/site";
 
 const bodyFont = Nunito({
   variable: "--font-body",
@@ -27,7 +32,7 @@ export const metadata: Metadata = {
   // в абсолютные — без него Next ругается и ссылки в превью ломаются.
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — подбор подарков с ИИ`,
+    default: SITE_TITLE,
     template: `%s — ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -36,19 +41,24 @@ export const metadata: Metadata = {
     locale: "ru_RU",
     siteName: SITE_NAME,
     url: SITE_URL,
-    title: `${SITE_NAME} — подбор подарков с ИИ`,
+    title: SITE_TITLE,
     description: SITE_DESCRIPTION,
   },
-  // Подтверждение прав на площадку для партнёрской сети Яндекс Маркета.
-  // Метатег отдаётся на всех страницах, поэтому подойдёт любой адрес сайта.
   verification: {
+    // Подтверждение прав в Вебмастере и Search Console. Коды приходят при
+    // добавлении сайта в панель: пока переменных нет, Next метатеги
+    // не выводит, и это ничего не ломает.
+    yandex: process.env.YANDEX_VERIFICATION,
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+    // Подтверждение прав на площадку для партнёрской сети Яндекс Маркета.
+    // Метатег отдаётся на всех страницах, поэтому подойдёт любой адрес сайта.
     other: {
       "yandex-market-verification": "tokfu892m4mzx9d4",
     },
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} — подбор подарков с ИИ`,
+    title: SITE_TITLE,
     description: SITE_DESCRIPTION,
   },
 };

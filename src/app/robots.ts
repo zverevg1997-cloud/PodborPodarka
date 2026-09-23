@@ -7,8 +7,10 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
       // Страницы за авторизацией индексировать нечего: робот всё равно
-      // увидит только редирект на вход.
-      disallow: ["/api/", "/profile", "/results", "/search", "/login"],
+      // увидит только редирект на вход. Анкета (/search) в этот список не
+      // входит: первый подбор доступен без регистрации, так что робот видит
+      // ровно то же, что и человек, зашедший впервые.
+      disallow: ["/api/", "/profile", "/results", "/login"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

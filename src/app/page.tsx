@@ -1,6 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { getShowcaseIdeas } from "@/lib/showcase";
+
+// У главной несколько входов: апекс, www и второй домен. Канонический адрес
+// говорит поисковику, какой из них считать основным, иначе он видит
+// несколько одинаковых сайтов и делит между ними вес.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const STEPS = [
   {
@@ -49,7 +57,7 @@ export default async function Home() {
           <br className="hidden sm:block" /> за пару минут
         </h1>
         <p className="max-w-xl text-lg text-muted-foreground">
-          Расскажите, кому и по какому поводу нужен подарок — Daribot
+          Расскажите, кому и по какому поводу нужен подарок — Дарибот
           предложит несколько идей с объяснением, почему они подойдут.
         </p>
         <Link
@@ -92,7 +100,7 @@ export default async function Home() {
 
       <section className="relative mx-auto max-w-5xl px-6 pb-24">
         <h2 className="font-display text-center text-2xl font-bold sm:text-3xl">
-          Что Daribot предлагал на днях
+          Что Дарибот предлагал на днях
         </h2>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {showcase.map((idea) => (
