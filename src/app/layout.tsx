@@ -38,6 +38,13 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} — подбор подарков с ИИ`,
     description: SITE_DESCRIPTION,
   },
+  // Подтверждение прав на площадку для партнёрской сети Яндекс Маркета.
+  // Метатег отдаётся на всех страницах, поэтому подойдёт любой адрес сайта.
+  verification: {
+    other: {
+      "yandex-market-verification": "tokfu892m4mzx9d4",
+    },
+  },
   twitter: {
     card: "summary_large_image",
     title: `${SITE_NAME} — подбор подарков с ИИ`,
