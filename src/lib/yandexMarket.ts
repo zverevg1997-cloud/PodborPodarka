@@ -53,13 +53,19 @@ export async function createYandexMarketAffiliateLink(
  */
 export function buildYandexMarketSearchUrl(
   query: string,
-  price?: { from?: number; to?: number },
+  options?: { from?: number; to?: number; deliveryInterval?: number },
 ): string {
   const url = new URL("https://market.yandex.ru/search");
   url.searchParams.set("text", query);
 
-  if (price?.from) url.searchParams.set("pricefrom", String(price.from));
-  if (price?.to) url.searchParams.set("priceto", String(price.to));
+  if (options?.from) url.searchParams.set("pricefrom", String(options.from));
+  if (options?.to) url.searchParams.set("priceto", String(options.to));
+
+  // 0 — сегодня, 1 — сегодня-завтра, 3 — до трёх дней. Ноль здесь значимый,
+  // поэтому проверяем на undefined, а не на истинность.
+  if (options?.deliveryInterval !== undefined) {
+    url.searchParams.set("delivery-interval", String(options.deliveryInterval));
+  }
 
   return url.toString();
 }

@@ -7,7 +7,11 @@ import MoreIdeasButton from "@/components/MoreIdeasButton";
 import GiftLink from "@/components/GiftLink";
 import { readGuestId } from "@/lib/guest";
 import { parseBudget } from "@/lib/budget";
-import { needsLocalPurchase, parseUrgency } from "@/lib/timeframe";
+import {
+  marketDeliveryInterval,
+  needsLocalPurchase,
+  parseUrgency,
+} from "@/lib/timeframe";
 import type { GiftIdea } from "@/lib/types";
 
 interface ResultsPageProps {
@@ -71,7 +75,11 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
   // Если подарок нужен сегодня, заказ с маркетплейса бессмыслен: доставка не
   // успеет. Ведём в магазины города — там видно адреса и часы работы.
   const city = search.city;
-  const buyLocally = needsLocalPurchase(parseUrgency(search.timeframe)) && !!city;
+  const urgency = parseUrgency(search.timeframe);
+  const buyLocally = needsLocalPurchase(urgency, city) && !!city;
+
+  const delivery = marketDeliveryInterval(urgency);
+  const deliveryParam = delivery !== undefined ? `&d=${delivery}` : "";
 
   const linkFor = (idea: GiftIdea) => {
     if (idea.kind === "local") {
@@ -89,8 +97,13 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
     }
 
     return {
-      href: `/api/market-link?q=${encodeURIComponent(idea.searchQuery)}${priceParams}`,
-      label: "Смотреть на Яндекс Маркете →",
+      href: `/api/market-link?q=${encodeURIComponent(idea.searchQuery)}${priceParams}${deliveryParam}`,
+      label:
+        urgency === "today"
+          ? "Смотреть с доставкой сегодня →"
+          : urgency === "soon"
+            ? "Смотреть с быстрой доставкой →"
+            : "Смотреть на Яндекс Маркете →",
     };
   };
 

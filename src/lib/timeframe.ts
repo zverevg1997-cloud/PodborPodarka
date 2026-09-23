@@ -28,7 +28,46 @@ export function parseUrgency(raw?: string | null): Urgency {
   return "later";
 }
 
-/** Успеет ли обычная доставка с маркетплейса. */
-export function needsLocalPurchase(urgency: Urgency): boolean {
-  return urgency === "today";
+/**
+ * Значение фильтра доставки на Яндекс Маркете.
+ * Проверено вручную: 0 — сегодня, 1 — сегодня-завтра, 3 — до трёх дней.
+ * Остальные числа Маркет молча игнорирует и показывает выдачу без фильтра.
+ */
+export function marketDeliveryInterval(urgency: Urgency): number | undefined {
+  if (urgency === "today") return 0;
+  if (urgency === "soon") return 1;
+  return undefined;
+}
+
+/**
+ * Города, где у Маркета есть доставка в день заказа.
+ *
+ * Список намеренно короткий. Экспресс работает и в других крупных городах,
+ * но если ошибиться и включить город, где его нет, человек увидит пустую
+ * выдачу — а это хуже, чем ссылка на магазины рядом.
+ */
+const EXPRESS_CITIES = [
+  "москва",
+  "московск",
+  "санкт-петербург",
+  "петербург",
+  "спб",
+  "ленинградск",
+];
+
+export function hasExpressDelivery(city?: string | null): boolean {
+  if (!city) return false;
+  const normalized = city.toLowerCase().replace(/ё/g, "е");
+  return EXPRESS_CITIES.some((name) => normalized.includes(name));
+}
+
+/**
+ * Нужно ли вести человека в магазины города вместо маркетплейса.
+ * Срочно — и при этом доставка в день заказа тут не работает.
+ */
+export function needsLocalPurchase(
+  urgency: Urgency,
+  city?: string | null,
+): boolean {
+  return urgency === "today" && !hasExpressDelivery(city);
 }
