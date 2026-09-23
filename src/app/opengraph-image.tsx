@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { SITE_DOMAIN } from "@/lib/site";
 
-export const alt = "Дарибот (Daribot) — подбор подарков с ИИ";
+export const alt = "Daribot — подбор подарков с ИИ";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
