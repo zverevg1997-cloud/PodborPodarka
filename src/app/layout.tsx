@@ -3,6 +3,7 @@ import { Nunito, Unbounded } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import Metrika from "@/components/Metrika";
 import { getCurrentUser } from "@/lib/auth";
 import {
   DAILY_RECOMMEND_LIMIT,
@@ -69,6 +70,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         />
         <main className="flex-1">{children}</main>
         <Footer />
+        <Metrika />
       </body>
     </html>
   );

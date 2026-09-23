@@ -43,4 +43,4 @@ export const OPERATOR_INCOMPLETE = Object.values(OPERATOR).some((value) =>
 );
 
 // Дата последней редакции юридических документов.
-export const LEGAL_REVISION = "22 сентября 2026 года";
+export const LEGAL_REVISION = "23 сентября 2026 года";
