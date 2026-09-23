@@ -1,7 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED_PATHS = ["/search", "/results", "/profile"];
+// /search и /results намеренно открыты: первый подбор доступен без аккаунта,
+// иначе человек упирается в регистрацию раньше, чем поймёт, зачем она ему.
+// Доступ к чужим результатам ограничивает сама страница, сверяя владельца.
+const PROTECTED_PATHS = ["/profile"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });

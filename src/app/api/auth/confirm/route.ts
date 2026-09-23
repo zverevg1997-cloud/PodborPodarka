@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { translateAuthError } from "@/lib/authErrors";
+import { claimGuestProfiles } from "@/lib/guest";
 
 /**
  * Подтверждение почты кодом из письма.
@@ -64,5 +65,9 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true });
+  // Всё, что человек успел сделать гостем, переносим на новый аккаунт:
+  // иначе он зарегистрируется и обнаружит пустой кабинет.
+  const claimed = await claimGuestProfiles(data.user.id);
+
+  return NextResponse.json({ ok: true, claimedProfiles: claimed });
 }

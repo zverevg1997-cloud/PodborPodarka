@@ -12,6 +12,8 @@ import {
   DAILY_RECOMMEND_LIMIT,
   countTodaySearches,
 } from "@/lib/recommendLimit";
+import { checkGuestQuota, readGuestId } from "@/lib/guest";
+import { getClientIp } from "@/lib/rateLimit";
 import type { GiftIdea, RecommendRequestBody } from "@/lib/types";
 
 // Ответ ИИ может идти десятки секунд — не даём хостингу оборвать функцию рано.
@@ -19,21 +21,40 @@ export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   const authUser = await getCurrentUser();
-  if (!authUser) {
-    return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+  const guestId = authUser ? null : await readGuestId();
+
+  if (!authUser && !guestId) {
+    // Гость без куки — значит, и профиля у него быть не может.
+    return NextResponse.json({ error: "Начните с анкеты" }, { status: 400 });
   }
 
-  // Считаем тем же кодом, что и счётчик в шапке: иначе человек увидит
-  // «осталось 1», нажмёт и получит отказ.
-  const todayCount = await countTodaySearches(authUser.id);
+  if (authUser) {
+    // Считаем тем же кодом, что и счётчик в шапке: иначе человек увидит
+    // «осталось 1», нажмёт и получит отказ.
+    const todayCount = await countTodaySearches(authUser.id);
 
-  if (todayCount >= DAILY_RECOMMEND_LIMIT) {
-    return NextResponse.json(
-      {
-        error: `Достигнут дневной лимит подбора подарков (${DAILY_RECOMMEND_LIMIT} в день). Лимит обновится в полночь по Москве.`,
-      },
-      { status: 429 },
-    );
+    if (todayCount >= DAILY_RECOMMEND_LIMIT) {
+      return NextResponse.json(
+        {
+          error: `Достигнут дневной лимит подбора подарков (${DAILY_RECOMMEND_LIMIT} в день). Лимит обновится в полночь по Москве.`,
+        },
+        { status: 429 },
+      );
+    }
+  } else {
+    const quota = await checkGuestQuota(guestId!, getClientIp(request));
+    if (!quota.allowed) {
+      return NextResponse.json(
+        {
+          error:
+            quota.reason === "ip"
+              ? "Сегодня с этого устройства уже сделано несколько подборов без регистрации. Зарегистрируйтесь, чтобы продолжить."
+              : "Первый подбор готов. Зарегистрируйтесь, чтобы сохранить его и получить ещё пять в день.",
+          needsAccount: true,
+        },
+        { status: 429 },
+      );
+    }
   }
 
   const body: RecommendRequestBody | null = await request
@@ -47,8 +68,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Владелец профиля — либо аккаунт, либо гость с той же кукой.
+  const owner = authUser ? { userId: authUser.id } : { guestId };
+
   const profile = await prisma.profile.findFirst({
-    where: { id: body.profileId, userId: authUser.id },
+    where: { id: body.profileId, ...owner },
   });
 
   if (!profile) {
@@ -60,7 +84,7 @@ export async function POST(request: NextRequest) {
   let previous: GiftIdea[] = [];
   if (body.continueSearchId) {
     const earlier = await prisma.search.findFirst({
-      where: { id: body.continueSearchId, profile: { userId: authUser.id } },
+      where: { id: body.continueSearchId, profile: owner },
       select: { resultJson: true },
     });
     if (!earlier) {

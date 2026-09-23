@@ -24,9 +24,18 @@ model User {
 
 // Профиль получателя подарка ("Мама", "Коллега Андрей" и т.п.),
 // создаётся пользователем сервиса.
+// Профиль получателя подарка ("Мама", "Коллега Андрей" и т.п.).
+// Принадлежит либо зарегистрированному пользователю, либо гостю: первый
+// подбор доступен без регистрации, иначе человек упирается в форму раньше,
+// чем понимает, зачем ему аккаунт.
 model Profile {
   id           String   @id @default(cuid())
-  userId       String
+  userId       String?
+  // Идентификатор из куки гостя. Заполнен, пока профиль не присвоен аккаунту.
+  guestId      String?
+  // IP на момент создания — нужен, чтобы очистка куки не давала гостю
+  // бесконечные бесплатные подборы.
+  guestIp      String?
   name         String
   gender       String?
   age          Int?
@@ -35,10 +44,12 @@ model Profile {
   interests    String?
   createdAt    DateTime @default(now())
 
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   searches Search[]
 
   @@index([userId])
+  @@index([guestId])
+  @@index([guestIp, createdAt])
   @@map("profiles")
 }
 

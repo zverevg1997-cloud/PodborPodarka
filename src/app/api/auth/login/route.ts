@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { translateAuthError } from "@/lib/authErrors";
+import { claimGuestProfiles } from "@/lib/guest";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -60,6 +61,10 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
+
+  // Человек мог сделать подбор гостем, а потом войти в старый аккаунт —
+  // забирать гостевые профили нужно и здесь, не только при регистрации.
+  await claimGuestProfiles(user.id);
 
   return NextResponse.json({
     user: { id: user.id, email: user.email, phone: user.phone },

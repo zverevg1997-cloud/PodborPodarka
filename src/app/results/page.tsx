@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { buildYandexSearchUrl } from "@/lib/yandexMarket";
 import MoreIdeasButton from "@/components/MoreIdeasButton";
+import { readGuestId } from "@/lib/guest";
 import type { GiftIdea } from "@/lib/types";
 
 interface ResultsPageProps {
@@ -31,7 +32,9 @@ function EmptyState({ text }: { text: string }) {
 export default async function ResultsPage({ searchParams }: ResultsPageProps) {
   const { searchId } = await searchParams;
   const user = await getCurrentUser();
-  if (!user) {
+  const guestId = user ? null : await readGuestId();
+
+  if (!user && !guestId) {
     redirect("/login");
   }
 
@@ -39,8 +42,12 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
     return <EmptyState text="Результат не выбран." />;
   }
 
+  // Результат виден либо владельцу аккаунта, либо гостю с той же кукой.
   const search = await prisma.search.findFirst({
-    where: { id: searchId, profile: { userId: user.id } },
+    where: {
+      id: searchId,
+      profile: user ? { userId: user.id } : { guestId },
+    },
     include: { profile: true },
   });
 
@@ -114,6 +121,28 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
         ))}
       </div>
 
+      {!user && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-primary/40 bg-primary/5 p-5 text-center">
+          <p className="font-display text-base font-bold">
+            Сохранить эти идеи?
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Зарегистрируйтесь — подборка останется в кабинете, а вы получите
+            ещё пять подборов в день и возможность искать для других людей.
+          </p>
+          <Link
+            href="/register"
+            className="gradient-brand mx-auto rounded-full px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 transition hover:opacity-90"
+          >
+            Создать аккаунт
+          </Link>
+        </div>
+      )}
+
+      {/* Гостю кнопку не показываем: его единственный бесплатный подбор уже
+          потрачен, и нажатие привело бы к отказу. Вместо неё — предложение
+          зарегистрироваться выше. */}
+      {user && (
       <div className="flex flex-col gap-2 border-t border-border pt-6">
         <p className="text-center text-sm text-muted-foreground">
           Ничего не подошло?
@@ -130,6 +159,7 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
           }}
         />
       </div>
+      )}
 
       <div className="flex flex-wrap gap-3 border-t border-border pt-6 text-sm">
         <Link
