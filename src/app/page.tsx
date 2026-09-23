@@ -57,11 +57,20 @@ export default async function Home() {
           предложит несколько идей с объяснением, почему они подойдут.
         </p>
         <Link
-          href={user ? "/search" : "/register"}
+          href="/search"
           className="gradient-brand rounded-full px-8 py-3.5 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:opacity-90 active:scale-95"
         >
-          {user ? "Подобрать подарок 🎁" : "Начать бесплатно"}
+          Подобрать подарок 🎁
         </Link>
+
+        {/* Главный довод для того, кто зашёл впервые: пробовать можно сразу.
+            Раньше кнопка вела его на регистрацию, и это сводило на нет весь
+            смысл бесплатного первого подбора. */}
+        {!user && (
+          <p className="-mt-2 text-sm font-medium text-muted-foreground">
+            Первый подбор — без регистрации
+          </p>
+        )}
       </section>
 
       <section className="relative mx-auto max-w-5xl px-6 pb-20">

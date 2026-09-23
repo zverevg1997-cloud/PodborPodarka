@@ -84,9 +84,17 @@ export default function Header({
             </>
           ) : (
             <>
+              {/* Гостю тоже нужен путь к анкете: он может зайти на страницу
+                  политики или соглашения и оттуда не найти дороги обратно. */}
+              <Link
+                href="/search"
+                className="rounded-full px-2.5 py-2 font-medium text-foreground/80 transition hover:bg-muted hover:text-foreground sm:px-3"
+              >
+                Подобрать
+              </Link>
               <Link
                 href="/login"
-                className="rounded-full px-4 py-2 font-medium text-foreground/80 transition hover:bg-muted hover:text-foreground"
+                className="hidden rounded-full px-4 py-2 font-medium text-foreground/80 transition hover:bg-muted hover:text-foreground sm:inline-block"
               >
                 Войти
               </Link>
