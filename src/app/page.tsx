@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
+import { getShowcaseIdeas } from "@/lib/showcase";
 
 const STEPS = [
   {
@@ -19,15 +20,10 @@ const STEPS = [
   },
 ];
 
-const EXAMPLE_IDEAS = [
-  { emoji: "🎧", name: "Беспроводные наушники", tag: "Универсально" },
-  { emoji: "🧖", name: "Сертификат в SPA", tag: "Для отдыха" },
-  { emoji: "☕", name: "Набор для кофе", tag: "Для дома" },
-  { emoji: "🧣", name: "Плед с вышивкой", tag: "С душой" },
-];
-
 export default async function Home() {
   const user = await getCurrentUser();
+  // Настоящие идеи из недавних подборов вместо придуманных при вёрстке.
+  const showcase = await getShowcaseIdeas();
 
   return (
     <div className="relative overflow-hidden">
@@ -96,20 +92,22 @@ export default async function Home() {
 
       <section className="relative mx-auto max-w-5xl px-6 pb-24">
         <h2 className="font-display text-center text-2xl font-bold sm:text-3xl">
-          Примеры идей, которые предлагает Daribot
+          Что Daribot предлагал на днях
         </h2>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {EXAMPLE_IDEAS.map((idea) => (
+          {showcase.map((idea) => (
             <div
               key={idea.name}
               className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md"
             >
-              <span className="text-3xl">{idea.emoji}</span>
+              <span className="text-3xl">
+                {idea.kind === "local" ? "✨" : "🎁"}
+              </span>
               <span className="font-display text-sm font-bold">
                 {idea.name}
               </span>
               <span className="w-fit rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-                {idea.tag}
+                {idea.kind === "local" ? "Впечатление" : "Товар"}
               </span>
             </div>
           ))}
