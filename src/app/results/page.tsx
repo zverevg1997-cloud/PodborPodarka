@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { buildYandexSearchUrl } from "@/lib/yandexMarket";
+import MoreIdeasButton from "@/components/MoreIdeasButton";
 import type { GiftIdea } from "@/lib/types";
 
 interface ResultsPageProps {
@@ -111,6 +112,23 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="flex flex-col gap-2 border-t border-border pt-6">
+        <p className="text-center text-sm text-muted-foreground">
+          Ничего не подошло?
+        </p>
+        <MoreIdeasButton
+          search={{
+            id: search.id,
+            profileId: search.profileId,
+            occasion: search.occasion,
+            budget: search.budget ?? undefined,
+            timeframe: search.timeframe ?? undefined,
+            city: search.city ?? undefined,
+            mood: search.mood ?? undefined,
+          }}
+        />
       </div>
 
       <div className="flex flex-wrap gap-3 border-t border-border pt-6 text-sm">

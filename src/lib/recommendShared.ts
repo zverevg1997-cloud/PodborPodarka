@@ -18,6 +18,8 @@ export interface RecommendInput {
   timeframe?: string;
   city?: string;
   mood?: string;
+  /** Названия идей, которые человеку уже показали и которые не должны повториться. */
+  exclude?: string[];
 }
 
 export class RecommendError extends Error {}
@@ -96,7 +98,21 @@ export function buildUserPrompt(input: RecommendInput): string {
     .map(([label, value]) => `${label}: ${value}`)
     .join("\n");
 
-  return `<anketa>\n${body}\n</anketa>\n\nПредложи ${IDEAS_COUNT} идеи подарка.`;
+  const base = `<anketa>\n${body}\n</anketa>\n\nПредложи ${IDEAS_COUNT} идеи подарка.`;
+
+  if (!input.exclude?.length) return base;
+
+  // Человек нажал «Смотреть ещё» — значит, показанное не подошло. Просить
+  // «другие идеи» мало: без явного списка модель предлагает то же самое
+  // другими словами, и это заметно сразу.
+  const shown = input.exclude.map((name) => `- ${name}`).join("\n");
+
+  return `${base}
+
+Эти идеи человеку уже показали, и они не подошли:
+${shown}
+
+Не повторяй их и не предлагай то же самое под другим названием или в виде разновидности той же вещи. Ищи в других категориях и с другой стороны увлечений получателя.`;
 }
 
 // Слова, по которым идею заведомо не найти на маркетплейсе. Модель регулярно

@@ -59,11 +59,29 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Профиль не найден" }, { status: 404 });
   }
 
+  // «Смотреть ещё»: продолжаем прежний подбор. Показанные идеи нужны дважды —
+  // как запрет для модели и как начало итогового списка.
+  let previous: GiftIdea[] = [];
+  if (body.continueSearchId) {
+    const earlier = await prisma.search.findFirst({
+      where: { id: body.continueSearchId, profile: { userId: authUser.id } },
+      select: { resultJson: true },
+    });
+    if (!earlier) {
+      return NextResponse.json(
+        { error: "Предыдущий подбор не найден" },
+        { status: 404 },
+      );
+    }
+    previous = (earlier.resultJson as unknown as GiftIdea[] | null) ?? [];
+  }
+
   let ideas: GiftIdea[];
 
   if (isRecommendConfigured()) {
     try {
       ideas = await recommendIdeas({
+        exclude: previous.map((idea) => idea.name),
         profileName: profile.name,
         gender: profile.gender,
         age: profile.age,
@@ -101,6 +119,22 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Отсеиваем повторы по названию на случай, если модель всё же предложила
+  // уже показанное: запрет в промпте она соблюдает не всегда.
+  const seen = new Set(previous.map((idea) => idea.name.toLowerCase()));
+  const fresh = ideas.filter((idea) => !seen.has(idea.name.toLowerCase()));
+
+  if (previous.length > 0 && fresh.length === 0) {
+    return NextResponse.json(
+      { error: "Новых идей не нашлось. Попробуйте изменить условия подбора." },
+      { status: 502 },
+    );
+  }
+
+  const combined = [...previous, ...fresh];
+
+  // Новая запись, а не правка прежней: так «Смотреть ещё» расходует дневной
+  // лимит (он считает записи о подборах) и попадает в историю.
   const search = await prisma.search.create({
     data: {
       profileId: profile.id,
@@ -109,9 +143,12 @@ export async function POST(request: NextRequest) {
       timeframe: body.timeframe,
       city: body.city,
       mood: body.mood,
-      resultJson: ideas as unknown as Prisma.InputJsonValue,
+      resultJson: combined as unknown as Prisma.InputJsonValue,
     },
   });
 
-  return NextResponse.json({ searchId: search.id, ideas }, { status: 201 });
+  return NextResponse.json(
+    { searchId: search.id, ideas: combined },
+    { status: 201 },
+  );
 }

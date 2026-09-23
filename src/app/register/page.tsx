@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 const inputClass =
   "rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/25";
@@ -109,6 +110,8 @@ export default function RegisterPage() {
   if (confirmationSent) {
     return (
       <div className="mx-auto flex max-w-sm flex-col gap-5 px-6 py-16">
+        {loading && <LoadingOverlay title="Проверяем код…" icon="📬" />}
+
         <div className="text-center">
           <span className="text-4xl">📬</span>
           <h1 className="font-display mt-2 text-2xl font-extrabold">
@@ -172,6 +175,14 @@ export default function RegisterPage() {
 
   return (
     <div className="mx-auto flex max-w-sm flex-col gap-6 px-6 py-16">
+      {loading && (
+        <LoadingOverlay title="Создаём аккаунт…">
+          <p className="text-sm text-muted-foreground">
+            Отправляем код на почту
+          </p>
+        </LoadingOverlay>
+      )}
+
       <div className="text-center">
         <span className="text-3xl">🎁</span>
         <h1 className="font-display mt-2 text-2xl font-extrabold">

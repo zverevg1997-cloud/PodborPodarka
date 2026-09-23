@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 const inputClass =
   "rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/25";
@@ -35,20 +36,25 @@ function LoginForm() {
 
       if (!res.ok) {
         setError(data.error ?? "Не удалось войти");
+        setLoading(false);
         return;
       }
 
       router.push(next);
       router.refresh();
+      // Индикатор намеренно оставляем включённым: он должен продержаться до
+      // перехода на новую страницу, иначе форма на секунду «оживает» и
+      // выглядит так, будто вход не сработал.
     } catch {
       setError("Не удалось связаться с сервером. Проверьте соединение.");
-    } finally {
       setLoading(false);
     }
   }
 
   return (
     <div className="mx-auto flex max-w-sm flex-col gap-6 px-6 py-16">
+      {loading && <LoadingOverlay title="Входим…" icon="👋" />}
+
       <div className="text-center">
         <span className="text-3xl">👋</span>
         <h1 className="font-display mt-2 text-2xl font-extrabold">Вход</h1>
