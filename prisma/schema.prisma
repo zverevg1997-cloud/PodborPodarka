@@ -73,6 +73,9 @@ model EmailToken {
 model Profile {
   id           String   @id @default(cuid())
   userId       String?
+  // Чат телеграма, если получателя завели через бота. Третий возможный
+  // владелец профиля наряду с аккаунтом и гостем.
+  telegramChat String?
   // Идентификатор из куки гостя. Заполнен, пока профиль не присвоен аккаунту.
   guestId      String?
   // IP на момент создания — нужен, чтобы очистка куки не давала гостю
@@ -91,6 +94,7 @@ model Profile {
 
   @@index([userId])
   @@index([guestId])
+  @@index([telegramChat])
   @@index([guestIp, createdAt])
   @@map("profiles")
 }
@@ -111,6 +115,23 @@ model Search {
 
   @@index([profileId])
   @@map("searches")
+}
+
+// Состояние диалога с ботом: на каком шаге человек и что уже ответил.
+// Держим в базе, а не в памяти процесса: контейнер перезапускается при
+// каждом деплое, и разговор оборвался бы на середине.
+model TelegramChat {
+  // Идентификатор чата в телеграме. Строкой: он не помещается в int32.
+  id           String   @id
+  step         String   @default("idle")
+  // Накопленные ответы: получатель, повод, бюджет, срок, город.
+  draftJson    Json?
+  // Последний подбор — чтобы кнопка «Ещё идеи» знала, что уже показано.
+  lastSearchId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("telegram_chats")
 }
 
 // Попытки регистрации с одного IP — нужны, чтобы ограничить массовое
