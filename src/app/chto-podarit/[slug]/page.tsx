@@ -90,13 +90,12 @@ export default async function GuidePage({
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="font-display text-2xl font-bold">До 1500 рублей</h2>
-        <p className="text-sm text-muted-foreground">
-          Недорогой подарок не обязан выглядеть недорогим. Здесь варианты,
-          которые не стыдно вручить.
-        </p>
+        <h2 className="font-display text-2xl font-bold">
+          {guide.budget.title}
+        </h2>
+        <p className="text-sm text-muted-foreground">{guide.budget.note}</p>
         <div className="flex flex-col gap-3">
-          {guide.budgetIdeas.map((idea) => (
+          {guide.budget.ideas.map((idea) => (
             <IdeaCard key={idea.name} idea={idea} />
           ))}
         </div>
@@ -108,11 +107,7 @@ export default async function GuidePage({
         <h2 className="font-display text-lg font-bold">
           Ничего не подошло?
         </h2>
-        <p className="text-sm text-muted-foreground">
-          Расскажите про самого ребёнка — чем увлекается, что уже есть, сколько
-          готовы потратить, — и Дарибот подберёт идеи под него, а не под
-          возраст вообще. Первый подбор без регистрации.
-        </p>
+        <p className="text-sm text-muted-foreground">{guide.cta}</p>
         <Link
           href="/search"
           className="gradient-brand mx-auto rounded-full px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 transition hover:opacity-90"
