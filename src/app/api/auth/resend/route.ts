@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { translateAuthError } from "@/lib/authErrors";
+import { prisma } from "@/lib/prisma";
+import { issueCode } from "@/lib/emailCode";
+import { codeEmail, sendEmail } from "@/lib/mail";
 
 /**
  * Повторная отправка кода подтверждения. Без этого потерянное письмо
@@ -9,24 +10,39 @@ import { translateAuthError } from "@/lib/authErrors";
  */
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
-  const email: string | undefined = body?.email;
+  const email: string = body?.email?.toString().trim().toLowerCase() ?? "";
 
   if (!email) {
     return NextResponse.json({ error: "Укажите почту" }, { status: 400 });
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.resend({ type: "signup", email });
+  const user = await prisma.user.findUnique({ where: { email } });
 
-  if (error) {
+  // Неизвестный или уже подтверждённый адрес — отвечаем так же, как в
+  // успешном случае. Иначе форма подсказывает, кто у нас зарегистрирован.
+  if (!user || user.emailConfirmedAt) {
+    return NextResponse.json({ ok: true });
+  }
+
+  const issued = await issueCode(user.id, "confirm");
+
+  if (!issued.ok) {
     return NextResponse.json(
       {
-        error: translateAuthError(
-          error.message,
-          "Не удалось отправить письмо. Попробуйте позже.",
-        ),
+        error: `Письмо только что отправлено. Подождите ${issued.secondsLeft} с и попробуйте снова.`,
       },
-      { status: 400 },
+      { status: 429 },
+    );
+  }
+
+  const letter = codeEmail(issued.code, "confirm");
+  const sent = await sendEmail({ to: email, ...letter });
+
+  if (!sent.ok) {
+    console.error("resend: письмо не ушло", sent.error);
+    return NextResponse.json(
+      { error: "Не удалось отправить письмо. Попробуйте позже." },
+      { status: 502 },
     );
   }
 

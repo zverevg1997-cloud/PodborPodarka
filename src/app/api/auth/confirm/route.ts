@@ -1,73 +1,59 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { translateAuthError } from "@/lib/authErrors";
+import { verifyCode, verifyErrorText } from "@/lib/emailCode";
+import { createSession } from "@/lib/session";
 import { claimGuestProfiles } from "@/lib/guest";
 
 /**
  * Подтверждение почты кодом из письма.
  *
- * Раньше в письме была ссылка, но Unisender заворачивал её в свой трекер:
- * переход занимал десятки секунд, а иногда обрывался по таймауту. Код такой
- * обёртки не требует — заворачивать нечего.
+ * В письме именно код, а не ссылка: Unisender заворачивает ссылки в свой
+ * трекер, переход занимал десятки секунд, а иногда обрывался по таймауту.
+ * Код такой обёртки не требует — заворачивать нечего.
  *
- * verifyOtp выдаёт сессию, поэтому после успеха человек сразу залогинен.
+ * После успеха человек сразу залогинен: заставлять его вводить пароль
+ * второй раз подряд незачем.
  */
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
-  const email: string | undefined = body?.email;
-  const token: string | undefined = body?.token?.toString().trim();
+  const email: string = body?.email?.toString().trim().toLowerCase() ?? "";
+  const code: string = body?.token?.toString().trim() ?? "";
 
-  if (!email || !token) {
+  if (!email || !code) {
     return NextResponse.json(
       { error: "Введите код из письма" },
       { status: 400 },
     );
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.verifyOtp({
-    email,
-    token,
-    type: "signup",
-  });
+  const user = await prisma.user.findUnique({ where: { email } });
 
-  if (error || !data.user) {
+  if (!user) {
     return NextResponse.json(
-      {
-        error: translateAuthError(
-          error?.message,
-          "Код неверный или устарел. Запросите новый.",
-        ),
-      },
+      { error: "Код неверный или устарел. Запросите новый." },
       { status: 400 },
     );
   }
 
-  // Строку пользователя создаёт /api/auth/register, но если письмо
-  // подтверждают спустя время, лишняя проверка не помешает.
-  try {
-    await prisma.user.upsert({
-      where: { id: data.user.id },
-      update: { email },
-      create: { id: data.user.id, email },
-    });
-  } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      console.error("confirm: конфликт email в таблице users", email);
-    } else {
-      console.error("confirm: не удалось сохранить пользователя", e);
-      return NextResponse.json(
-        { error: "Почта подтверждена, но войти не удалось. Попробуйте войти вручную." },
-        { status: 500 },
-      );
-    }
+  const result = await verifyCode(user.id, code, "confirm");
+
+  if (!result.ok) {
+    return NextResponse.json(
+      { error: verifyErrorText(result.reason) },
+      { status: 400 },
+    );
   }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { emailConfirmedAt: new Date() },
+  });
+
+  await createSession(user.id);
 
   // Всё, что человек успел сделать гостем, переносим на новый аккаунт:
   // иначе он зарегистрируется и обнаружит пустой кабинет.
-  const claimed = await claimGuestProfiles(data.user.id);
+  const claimed = await claimGuestProfiles(user.id);
 
   return NextResponse.json({ ok: true, claimedProfiles: claimed });
 }

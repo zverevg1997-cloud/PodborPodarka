@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { translateAuthError } from "@/lib/authErrors";
+import { verifyPassword } from "@/lib/password";
+import { createSession } from "@/lib/session";
 import { claimGuestProfiles } from "@/lib/guest";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
-  const email: string | undefined = body?.email;
-  const password: string | undefined = body?.password;
+  const email: string = body?.email?.toString().trim().toLowerCase() ?? "";
+  const password: string = body?.password?.toString() ?? "";
 
   if (!email || !password) {
     return NextResponse.json(
@@ -17,50 +16,29 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  const user = await prisma.user.findUnique({ where: { email } });
 
-  if (error || !data.user) {
+  // Один и тот же текст и при неизвестной почте, и при неверном пароле:
+  // иначе форма превращается в способ узнать, кто у нас зарегистрирован.
+  const wrong = NextResponse.json(
+    { error: "Неверная почта или пароль" },
+    { status: 401 },
+  );
+
+  if (!user) return wrong;
+  if (!(await verifyPassword(password, user.passwordHash))) return wrong;
+
+  if (!user.emailConfirmedAt) {
     return NextResponse.json(
       {
-        error: translateAuthError(error?.message, "Неверная почта или пароль"),
+        error:
+          "Почта не подтверждена. Мы отправляли код при регистрации — введите его или запросите новый.",
       },
-      { status: 401 },
+      { status: 403 },
     );
   }
 
-  // На случай, если строка пользователя ещё не была создана в Prisma
-  // (например, пользователь был создан напрямую в Supabase).
-  let user;
-  try {
-    user = await prisma.user.upsert({
-      where: { id: data.user.id },
-      update: { email },
-      create: { id: data.user.id, email },
-    });
-  } catch (e) {
-    // Случается, если аккаунт удалили в Supabase, а строка с тем же email
-    // осталась у нас: id новый, email занят прежней строкой. Раньше это
-    // выдавало 500 с HTML вместо ответа — теперь хотя бы внятный JSON.
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      console.error("login: конфликт email в таблице users", email);
-      return NextResponse.json(
-        {
-          error:
-            "С этим адресом что-то не так на нашей стороне. Напишите нам, мы починим.",
-        },
-        { status: 409 },
-      );
-    }
-    console.error("login: не удалось получить пользователя", e);
-    return NextResponse.json(
-      { error: "Не удалось войти. Попробуйте ещё раз." },
-      { status: 500 },
-    );
-  }
+  await createSession(user.id);
 
   // Человек мог сделать подбор гостем, а потом войти в старый аккаунт —
   // забирать гостевые профили нужно и здесь, не только при регистрации.

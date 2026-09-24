@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import {
   REGISTRATIONS_PER_IP,
   checkRegistrationLimit,
   getClientIp,
 } from "@/lib/rateLimit";
-import { resolveBaseUrl } from "@/lib/site";
-import { translateAuthError } from "@/lib/authErrors";
+import { hashPassword, validatePassword } from "@/lib/password";
+import { issueCode } from "@/lib/emailCode";
+import { codeEmail, sendEmail } from "@/lib/mail";
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: NextRequest) {
   // Лимит проверяем до разбора тела: смысл в том, чтобы отсечь поток запросов
-  // как можно раньше, ещё до обращений к Supabase.
+  // как можно раньше, ещё до обращений к базе.
   const { allowed } = await checkRegistrationLimit(getClientIp(request));
   if (!allowed) {
     return NextResponse.json(
@@ -26,14 +27,21 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => null);
-  const email: string | undefined = body?.email;
-  const password: string | undefined = body?.password;
-  const phone: string | undefined = body?.phone;
+  const email: string = body?.email?.toString().trim().toLowerCase() ?? "";
+  const password: string = body?.password?.toString() ?? "";
+  const phone: string | undefined = body?.phone?.toString().trim() || undefined;
   const acceptTerms: boolean = body?.acceptTerms === true;
 
   if (!email || !password) {
     return NextResponse.json(
       { error: "Укажите email и пароль" },
+      { status: 400 },
+    );
+  }
+
+  if (!EMAIL_PATTERN.test(email)) {
+    return NextResponse.json(
+      { error: "Проверьте адрес почты: похоже, в нём опечатка" },
       { status: 400 },
     );
   }
@@ -50,35 +58,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    // Без этого Supabase вернёт человека на site_url, то есть на главную,
-    // где обменивать code на сессию некому.
-    options: {
-      emailRedirectTo: `${resolveBaseUrl(request.url)}/auth/callback`,
-    },
-  });
-
-  if (error || !data.user) {
-    return NextResponse.json(
-      {
-        error: translateAuthError(
-          error?.message,
-          "Не удалось зарегистрироваться. Попробуйте ещё раз.",
-        ),
-      },
-      { status: 400 },
-    );
+  const weak = validatePassword(password, email);
+  if (weak) {
+    return NextResponse.json({ error: weak }, { status: 400 });
   }
 
-  // Supabase намеренно не раскрывает, что адрес уже занят: вместо ошибки он
-  // возвращает пользователя со случайным id и пустым identities. Без этой
-  // проверки upsert ниже пытался создать вторую строку с тем же email, падал
-  // на уникальном индексе и отдавал HTML-страницу ошибки вместо JSON —
-  // форма на сайте после этого зависала в состоянии «Создаём аккаунт…».
-  if (Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+  const existing = await prisma.user.findUnique({ where: { email } });
+
+  if (existing?.emailConfirmedAt) {
     return NextResponse.json(
       {
         error:
@@ -88,38 +75,43 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let user;
-  try {
-    user = await prisma.user.upsert({
-      where: { id: data.user.id },
-      update: { email, phone },
-      create: { id: data.user.id, email, phone },
-    });
-  } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+  const passwordHash = await hashPassword(password);
+
+  // Незавершённая регистрация — не повод отправлять человека в тупик:
+  // аккаунт есть, войти в него нельзя, зарегистрироваться заново тоже.
+  // Перезаписываем пароль и высылаем код повторно.
+  const user = existing
+    ? await prisma.user.update({
+        where: { id: existing.id },
+        data: { passwordHash, phone },
+      })
+    : await prisma.user.create({ data: { email, passwordHash, phone } });
+
+  const issued = await issueCode(user.id, "confirm");
+
+  // Отказ по частоте здесь не ошибка: код отправлен минуту назад и всё ещё
+  // действует. Человеку показываем ту же форму ввода кода.
+  if (issued.ok) {
+    const letter = codeEmail(issued.code, "confirm");
+    const sent = await sendEmail({ to: email, ...letter });
+
+    if (!sent.ok) {
+      console.error("register: письмо не ушло", sent.error);
       return NextResponse.json(
         {
           error:
-            "Аккаунт с такой почтой уже существует. Войдите или восстановите пароль.",
+            "Не удалось отправить письмо на этот адрес. Проверьте его или напишите нам.",
         },
-        { status: 409 },
+        { status: 502 },
       );
     }
-    // Любую другую ошибку тоже отдаём как JSON: клиент разбирает ответ через
-    // res.json(), и HTML-страница ошибки сломала бы ему обработку.
-    console.error("register: не удалось создать пользователя", e);
-    return NextResponse.json(
-      { error: "Не удалось создать аккаунт. Попробуйте ещё раз." },
-      { status: 500 },
-    );
   }
 
   return NextResponse.json(
     {
       user: { id: user.id, email: user.email, phone: user.phone },
-      // Если в проекте Supabase включено подтверждение email,
-      // сессия появится только после перехода по ссылке из письма.
-      session: Boolean(data.session),
+      // Сессии пока нет: сначала подтверждение почты.
+      session: false,
     },
     { status: 201 },
   );

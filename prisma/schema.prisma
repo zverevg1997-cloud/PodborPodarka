@@ -7,23 +7,65 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Аутентификация выполняется через Supabase Auth (auth.users).
-// User.id совпадает с id пользователя в Supabase Auth — эта таблица
-// хранит только прикладные поля, пароль в ней не хранится.
+// Аутентификация своя: пароль, сессии и коды подтверждения живут в этой же
+// базе. Раньше за это отвечал Supabase Auth, но он хранил почты и пароли за
+// пределами России, а 152-ФЗ требует обратного.
 model User {
-  id         String   @id
-  email      String   @unique
-  phone      String?
-  telegramId String?  @unique
-  createdAt  DateTime @default(now())
+  id               String    @id @default(cuid())
+  email            String    @unique
+  phone            String?
+  telegramId       String?   @unique
+  // bcrypt. Хэши, перенесённые из Supabase, имеют формат $2a$ — библиотека
+  // проверяет и их, и новые $2b$, поэтому пароли никому менять не пришлось.
+  passwordHash     String
+  // Пока пусто, войти нельзя: адрес не подтверждён.
+  emailConfirmedAt DateTime?
+  createdAt        DateTime  @default(now())
 
-  profiles Profile[]
+  profiles    Profile[]
+  sessions    Session[]
+  emailTokens EmailToken[]
 
   @@map("users")
 }
 
-// Профиль получателя подарка ("Мама", "Коллега Андрей" и т.п.),
-// создаётся пользователем сервиса.
+// Сессия входа. В куке лежит случайный токен, здесь — его хэш: если база
+// когда-нибудь утечёт, выданные сессии по ней не восстановить.
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// Код из письма: подтверждение почты и восстановление пароля.
+// Хранится хэш — по той же причине, что и у сессий.
+model EmailToken {
+  id        String    @id @default(cuid())
+  userId    String
+  codeHash  String
+  // "confirm" — подтверждение почты, "reset" — восстановление пароля.
+  purpose   String
+  expiresAt DateTime
+  usedAt    DateTime?
+  // Счётчик неверных попыток: после нескольких код перестаёт действовать,
+  // иначе шестизначный код перебирается за минуты.
+  attempts  Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+  @@index([expiresAt])
+  @@map("email_tokens")
+}
+
 // Профиль получателя подарка ("Мама", "Коллега Андрей" и т.п.).
 // Принадлежит либо зарегистрированному пользователю, либо гостю: первый
 // подбор доступен без регистрации, иначе человек упирается в форму раньше,
@@ -73,7 +115,7 @@ model Search {
 
 // Попытки регистрации с одного IP — нужны, чтобы ограничить массовое
 // создание аккаунтов. В памяти процесса такой счётчик держать нельзя:
-// на Vercel запросы обслуживают разные инстансы и общего состояния у них нет.
+// запросы могут обслуживать разные инстансы, общего состояния у них нет.
 model RegistrationAttempt {
   id        String   @id @default(cuid())
   ip        String

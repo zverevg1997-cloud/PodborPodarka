@@ -1,14 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/session";
 
 /**
- * Текущий авторизованный пользователь Supabase Auth (или null),
- * для использования в Server Components и Route Handlers.
+ * Текущий авторизованный пользователь (или null) — для серверных компонентов
+ * и обработчиков маршрутов. Раньше за этим ходили в Supabase Auth, теперь
+ * сессия своя и лежит в нашей же базе.
  */
 export async function getCurrentUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  return user;
+  return getSessionUser();
 }
