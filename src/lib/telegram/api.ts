@@ -4,7 +4,8 @@
  * состояние и свой роутер, которые здесь только мешали бы.
  */
 
-const API_BASE = "https://api.telegram.org";
+const API_BASE =
+  process.env.TELEGRAM_API_BASE ?? "https://api.telegram.org";
 
 export interface InlineButton {
   text: string;

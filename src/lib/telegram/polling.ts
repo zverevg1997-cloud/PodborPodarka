@@ -13,7 +13,8 @@ import { handleCallback, handleMessage } from "@/lib/telegram/dialog";
  * сообщение, — это не опрос в цикле, а длинное ожидание. Нагрузки почти нет.
  */
 
-const API_BASE = "https://api.telegram.org";
+const API_BASE =
+  process.env.TELEGRAM_API_BASE ?? "https://api.telegram.org";
 
 /** Сколько телеграм держит запрос, ожидая сообщений. */
 const LONG_POLL_SECONDS = 30;
@@ -105,7 +106,12 @@ export async function startPolling(): Promise<void> {
       // Обрыв длинного запроса по таймауту — обычное дело, не ошибка.
       const message = String(error);
       if (!message.includes("TimeoutError")) {
-        console.error("telegram: опрос прервался", message);
+        const cause = (error as { cause?: unknown })?.cause;
+        console.error(
+          "telegram: опрос прервался",
+          message,
+          cause ? `| причина: ${String(cause)}` : "",
+        );
       }
       await new Promise((r) => setTimeout(r, ERROR_PAUSE_MS));
     }
