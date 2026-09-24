@@ -17,6 +17,8 @@ import { detyamNaNovyyGod } from "@/content/guides/detyam-na-novyy-god";
 import { kollegamNaNovyyGod } from "@/content/guides/kollegam-na-novyy-god";
 import { malchiku10Let } from "@/content/guides/malchiku-10-let";
 import { mameNaNovyyGod } from "@/content/guides/mame-na-novyy-god";
+import { papeNaNovyyGod } from "@/content/guides/pape-na-novyy-god";
+import { parnyuNaNovyyGod } from "@/content/guides/parnyu-na-novyy-god";
 
 export interface GuideIdea {
   name: string;
@@ -58,6 +60,8 @@ export const GIFT_GUIDES: GiftGuide[] = [
   kollegamNaNovyyGod,
   detyamNaNovyyGod,
   mameNaNovyyGod,
+  papeNaNovyyGod,
+  parnyuNaNovyyGod,
   malchiku10Let,
 ];
 
