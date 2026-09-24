@@ -1,4 +1,5 @@
 import { handleCallback, handleMessage } from "@/lib/telegram/dialog";
+import { holdLock, releaseLock } from "@/lib/systemLock";
 
 /**
  * Забираем сообщения у телеграма сами, вместо того чтобы он приходил к нам.
@@ -22,6 +23,9 @@ const LONG_POLL_SECONDS = 20;
 
 /** Пауза после ошибки сети, чтобы не долбить телеграм в цикле. */
 const ERROR_PAUSE_MS = 5000;
+
+/** Имя замка: слушатель должен быть ровно один на всю установку. */
+const LOCK = "telegram-poller";
 
 interface Update {
   update_id: number;
@@ -69,11 +73,25 @@ export async function startPolling(): Promise<void> {
   if (running) return;
   running = true;
 
+  // Ждём, пока освободится замок. При выкатке старый контейнер отпустит его
+  // сам, а если он умер молча — по истечении аренды.
+  while (!(await holdLock(LOCK))) {
+    await new Promise((r) => setTimeout(r, 15_000));
+  }
+
   // Телеграм не отдаёт обновления, пока зарегистрирован вебхук. Снимаем его,
   // иначе getUpdates будет отвечать ошибкой 409 на каждый запрос.
   await call(token, "deleteWebhook", { drop_pending_updates: false }).catch(
     () => {},
   );
+
+  // Отпускаем замок при остановке контейнера, чтобы следующий не ждал
+  // полторы минуты впустую.
+  const release = () => {
+    void releaseLock(LOCK);
+  };
+  process.once("SIGTERM", release);
+  process.once("SIGINT", release);
 
   console.log("telegram: слушаю обновления");
 
@@ -82,6 +100,14 @@ export async function startPolling(): Promise<void> {
   // Бесконечный цикл намеренный: он живёт столько же, сколько контейнер.
   for (;;) {
     try {
+      // Продлеваем аренду на каждом круге. Если замок перехватили — значит,
+      // нас считают умершим, и слушать дальше нельзя: будет Conflict.
+      if (!(await holdLock(LOCK))) {
+        console.log("telegram: замок потерян, слушателем стал другой процесс");
+        running = false;
+        return;
+      }
+
       const data = (await call(token, "getUpdates", {
         offset,
         timeout: LONG_POLL_SECONDS,
