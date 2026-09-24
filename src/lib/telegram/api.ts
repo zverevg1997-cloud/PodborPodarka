@@ -22,27 +22,62 @@ export function isTelegramConfigured(): boolean {
   return Boolean(process.env.TELEGRAM_BOT_TOKEN);
 }
 
-async function call(method: string, body: unknown): Promise<unknown> {
+/** Пауза между попытками. Связь с телеграмом рвётся через раз. */
+const RETRY_PAUSE_MS = 1500;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Обращение к API. Никогда не бросает исключение и никогда не роняет
+ * вызывающий код.
+ *
+ * Причина: путь до телеграма с российского сервера нестабилен, соединение
+ * не устанавливается через раз. Раньше первое же неудачное обращение
+ * обрывало обработку нажатия целиком — человек нажимал кнопку и не получал
+ * ничего, потому что падала попытка погасить «часики» на ней.
+ *
+ * Повторяем только сетевые сбои. Ошибку самого API повторять бессмысленно:
+ * она не станет другой от второй попытки.
+ */
+async function call(
+  method: string,
+  body: unknown,
+  attempts = 3,
+): Promise<unknown> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) throw new Error("TELEGRAM_BOT_TOKEN не задан");
 
-  const res = await fetch(`${API_BASE}/bot${token}/${method}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(15_000),
-  });
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      const res = await fetch(`${API_BASE}/bot${token}/${method}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(12_000),
+      });
 
-  const data = await res.json().catch(() => null);
+      const data = await res.json().catch(() => null);
 
-  if (!res.ok || !(data as { ok?: boolean })?.ok) {
-    // Не бросаем исключение выше: одно неотправленное сообщение не должно
-    // рушить обработку обновления целиком — иначе телеграм будет слать его
-    // снова и снова, и человек получит десять одинаковых ответов.
-    console.error(`telegram ${method}:`, JSON.stringify(data)?.slice(0, 300));
+      if (!res.ok || !(data as { ok?: boolean })?.ok) {
+        console.error(`telegram ${method}:`, JSON.stringify(data)?.slice(0, 300));
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      if (attempt === attempts) {
+        const cause = (error as { cause?: unknown })?.cause;
+        console.error(
+          `telegram ${method}: связь не установилась после ${attempts} попыток`,
+          String(cause ?? error).slice(0, 160),
+        );
+        return null;
+      }
+      await sleep(RETRY_PAUSE_MS);
+    }
   }
 
-  return data;
+  return null;
 }
 
 export function sendMessage(
@@ -66,7 +101,7 @@ export function sendMessage(
  * без этого человек успевает решить, что бот сломался.
  */
 export function sendTyping(chatId: string): Promise<unknown> {
-  return call("sendChatAction", { chat_id: chatId, action: "typing" });
+  return call("sendChatAction", { chat_id: chatId, action: "typing" }, 1);
 }
 
 /**
@@ -77,10 +112,11 @@ export function answerCallback(
   callbackQueryId: string,
   text?: string,
 ): Promise<unknown> {
-  return call("answerCallbackQuery", {
-    callback_query_id: callbackQueryId,
-    ...(text ? { text } : {}),
-  });
+  return call(
+    "answerCallbackQuery",
+    { callback_query_id: callbackQueryId, ...(text ? { text } : {}) },
+    1,
+  );
 }
 
 /** Убирает кнопки у прежнего сообщения, чтобы на них нельзя было нажать дважды. */
@@ -88,11 +124,11 @@ export function clearKeyboard(
   chatId: string,
   messageId: number,
 ): Promise<unknown> {
-  return call("editMessageReplyMarkup", {
-    chat_id: chatId,
-    message_id: messageId,
-    reply_markup: { inline_keyboard: [] },
-  });
+  return call(
+    "editMessageReplyMarkup",
+    { chat_id: chatId, message_id: messageId, reply_markup: { inline_keyboard: [] } },
+    1,
+  );
 }
 
 /**
