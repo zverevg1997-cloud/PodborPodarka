@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { getShowcaseIdeas } from "@/lib/showcase";
+import { GIFT_GUIDES } from "@/lib/giftGuides";
 
 // У главной несколько входов: апекс, www и второй домен. Канонический адрес
 // говорит поисковику, какой из них считать основным, иначе он видит
@@ -25,6 +26,33 @@ const STEPS = [
     emoji: "🎯",
     title: "Выбираете лучшую",
     text: "У каждой идеи — понятное объяснение, почему она подойдёт именно ему.",
+  },
+];
+
+const PARAMETERS = [
+  {
+    title: "Кому дарим",
+    text: "Возраст, пол, кем приходится. Подарок коллеге и подарок сестре не пересекаются, даже если обеим тридцать.",
+  },
+  {
+    title: "Увлечения и работа",
+    text: "Главный источник неочевидных идей: именно отсюда берётся то, что человек не купил бы себе сам.",
+  },
+  {
+    title: "Повод",
+    text: "Круглая дата, свадьба или повышение требуют более весомого подарка, чем рядовой день рождения.",
+  },
+  {
+    title: "Бюджет",
+    text: "Границы уходят в поиск по магазинам, поэтому в выдаче не будет ни грошовых вариантов, ни того, что вам не по карману.",
+  },
+  {
+    title: "Срок",
+    text: "Если подарок нужен сегодня, сервис ведёт в магазины вашего города, а не на маркетплейс с доставкой за неделю.",
+  },
+  {
+    title: "Город",
+    text: "Нужен для впечатлений и услуг: сертификаты, мастер-классы и экскурсии ищутся рядом с вами.",
   },
 ];
 
@@ -53,8 +81,9 @@ export default async function Home() {
           Дарить приятно, когда не мучаешься с выбором
         </span>
         <h1 className="font-display text-4xl font-extrabold leading-tight tracking-tight sm:text-6xl">
-          Дарить <span className="gradient-brand-text">точно в цель</span> —
-          <br className="hidden sm:block" /> за пару минут
+          Подбор подарков,
+          <br className="hidden sm:block" /> которые попадают{" "}
+          <span className="gradient-brand-text">точно в цель</span>
         </h1>
         <p className="max-w-xl text-lg text-muted-foreground">
           Расскажите, кому и по какому поводу нужен подарок — Дарибот
@@ -95,6 +124,60 @@ export default async function Home() {
               </p>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="relative mx-auto max-w-5xl px-6 pb-20">
+        <h2 className="font-display text-center text-2xl font-bold sm:text-3xl">
+          Подбор подарков по параметрам
+        </h2>
+        <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">
+          Сервис спрашивает не только про повод и сумму. Чем точнее ответы, тем
+          меньше в подборке очевидного — а очевидное вы и сами уже придумали.
+        </p>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {PARAMETERS.map((parameter) => (
+            <div
+              key={parameter.title}
+              className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+            >
+              <h3 className="font-display text-base font-bold">
+                {parameter.title}
+              </h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {parameter.text}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+
+      <section className="relative mx-auto max-w-5xl px-6 pb-20">
+        <h2 className="font-display text-center text-2xl font-bold sm:text-3xl">
+          Готовые подборки
+        </h2>
+        <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">
+          Если до анкеты пока не дошли — посмотрите идеи по поводу и получателю.
+        </p>
+        <div className="mt-8 flex flex-wrap justify-center gap-2">
+          {GIFT_GUIDES.map((guide) => (
+            <Link
+              key={guide.slug}
+              href={`/chto-podarit/${guide.slug}`}
+              className="rounded-full border border-border px-4 py-2 text-sm font-medium transition hover:border-primary/40 hover:text-primary"
+            >
+              {guide.title.split(":")[0]}
+            </Link>
+          ))}
+        </div>
+        <div className="mt-6 text-center">
+          <Link
+            href="/chto-podarit"
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            Все подборки →
+          </Link>
         </div>
       </section>
 
