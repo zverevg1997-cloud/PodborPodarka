@@ -1,8 +1,18 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
+import { GIFT_GUIDES } from "@/lib/giftGuides";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
+
+  // Подборки под поисковые запросы: страниц будет много, поэтому
+  // перечисляем их из того же списка, из которого они и строятся.
+  const guides: MetadataRoute.Sitemap = GIFT_GUIDES.map((guide) => ({
+    url: `${SITE_URL}/chto-podarit/${guide.slug}`,
+    lastModified,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
 
   return [
     // Со слешем на конце: без пути получается голый адрес хоста, и строгие
@@ -22,6 +32,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.9,
     },
+    {
+      url: `${SITE_URL}/chto-podarit`,
+      lastModified,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    ...guides,
     {
       url: `${SITE_URL}/register`,
       lastModified,
