@@ -6,7 +6,7 @@ import { buildYandexMapsUrl, buildYandexSearchUrl } from "@/lib/yandexMarket";
 import MoreIdeasButton from "@/components/MoreIdeasButton";
 import GiftLink from "@/components/GiftLink";
 import { readGuestId } from "@/lib/guest";
-import { parseBudget } from "@/lib/budget";
+import { marketPriceRange } from "@/lib/budget";
 import {
   marketDeliveryInterval,
   needsLocalPurchase,
@@ -66,7 +66,7 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
 
   // Модель цен не знает и в бюджет попадает на глаз. Поиск на Маркете
   // фильтровать умеет — передаём границы туда, где они действительно работают.
-  const price = parseBudget(search.budget);
+  const price = marketPriceRange(search.budget);
   const priceParams = [
     price.from ? `&from=${price.from}` : "",
     price.to ? `&to=${price.to}` : "",
