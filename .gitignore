@@ -44,4 +44,25 @@ next-env.d.ts
 # Временные скрипты переезда базы
 check-new-db.mjs
 setup-new-db.mjs
-migrate-data.mjs
+export-supabase.mjs
+import-timeweb.mjs
+migrate-new-db.mjs
+diag-net.mjs
+bot-stats.mjs
+vk-post.mjs
+diag-db.mjs
+bot-avatar.png
+data-export.json
+
+# Временные файлы сборки роликов: кадры, промежуточные склейки и готовые
+# видео весят сотни мегабайт. В репозитории держим только исходники —
+# скрипт сборки, тексты и тайминги.
+video/frames*/
+video/tmpframes/
+video/build*/
+video/audio*/
+video/shots/
+video/*.mp4
+
+# Разовая проверка открытых адресов Wildberries
+check-wb.mjs

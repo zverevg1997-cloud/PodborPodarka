@@ -37,7 +37,9 @@ export default {
     };
 
     if (request.method !== "GET" && request.method !== "HEAD") {
-      init.body = await request.text();
+      // Читаем как двоичные данные, а не как текст: через text() картинка
+      // портится, и отправить файл в телеграм становится нельзя.
+      init.body = await request.arrayBuffer();
     }
 
     try {
