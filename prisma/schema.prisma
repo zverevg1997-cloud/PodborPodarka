@@ -210,6 +210,9 @@ model ScheduledPost {
   publishedAt DateTime?
   // Почему не опубликовался. Показываем администратору, а не молчим.
   error       String?
+  // Когда предупредили, что картинки нет. Нужна, чтобы напомнить один раз,
+  // а не каждую минуту до самой публикации.
+  warnedAt    DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

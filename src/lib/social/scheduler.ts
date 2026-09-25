@@ -20,6 +20,9 @@ const LOCK = "social-scheduler";
 /** Как часто смотрим на очередь. Минуты достаточно: посты не срочные. */
 const TICK_MS = 60_000;
 
+/** За сколько предупреждаем, что к посту нет картинки. */
+const WARN_AHEAD_MS = 24 * 60 * 60 * 1000;
+
 /** Ограничение телеграма на подпись к картинке. */
 const CAPTION_LIMIT = 1024;
 
@@ -125,8 +128,65 @@ async function publish(post: {
   await tellAdmin(`Опубликован пост ${post.key}\n${where}`);
 }
 
+/**
+ * Напоминание за сутки о постах без картинки.
+ *
+ * Раньше об этом можно было узнать только в момент, когда пост уже не вышел,
+ * — то есть поздно. Суток хватает, чтобы подобрать товар и сфотографировать
+ * его или собрать карточку.
+ *
+ * Предупреждаем одним сообщением на все такие посты и ровно один раз: то же
+ * самое каждую минуту до публикации быстро научило бы не читать эти письма.
+ */
+async function warnAboutMissingPhotos(): Promise<void> {
+  const soon = new Date(Date.now() + WARN_AHEAD_MS);
+
+  const posts = await prisma.scheduledPost.findMany({
+    where: {
+      status: { in: ["draft", "approved"] },
+      // Опросы и видео публикуются руками, картинка им не нужна.
+      kind: "post",
+      photoFileId: null,
+      warnedAt: null,
+      publishAt: { lte: soon, gte: new Date() },
+    },
+    orderBy: { publishAt: "asc" },
+  });
+
+  if (posts.length === 0) return;
+
+  const when = new Intl.DateTimeFormat("ru-RU", {
+    timeZone: "Europe/Moscow",
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const lines = posts.map((post) => {
+    // Разница существенная: один пост без картинки просто выйдет хуже,
+    // а другой не выйдет вовсе, и это надо сказать разными словами.
+    const consequence = post.needsPhoto
+      ? "без неё не выйдет"
+      : "выйдет текстом, в ВК это заметно срежет охват";
+    return `${when.format(post.publishAt)} — ${post.key}\n   ${consequence}`;
+  });
+
+  await tellAdmin(
+    `Через сутки выходят посты без картинки:\n\n${lines.join("\n")}\n\n` +
+      "Пришлите картинку и укажите в подписи ключ поста.",
+  );
+
+  await prisma.scheduledPost.updateMany({
+    where: { id: { in: posts.map((post) => post.id) } },
+    data: { warnedAt: new Date() },
+  });
+}
+
 /** Один проход по очереди. */
 async function tick(): Promise<void> {
+  await warnAboutMissingPhotos();
+
   const due = await prisma.scheduledPost.findMany({
     where: { status: "approved", publishAt: { lte: new Date() } },
     orderBy: { publishAt: "asc" },
