@@ -1,4 +1,5 @@
 import { connect } from "node:net";
+import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -42,8 +43,23 @@ export async function GET(request: NextRequest) {
     probe("147.45.153.3", 5432),
   ]);
 
+  // С какого адреса приложение приходит в базу — так его видит сам Postgres.
+  // Без этой цифры нельзя составить правило фаервола: ошибёмся адресом —
+  // приложение потеряет базу и сайт ляжет.
+  let clientAddr = "не определился";
+  try {
+    const rows = await prisma.$queryRawUnsafe<{ addr: string | null }[]>(
+      "select host(inet_client_addr()) as addr",
+    );
+    clientAddr = rows[0]?.addr ?? "пусто";
+  } catch (error) {
+    clientAddr = String((error as Error).message).split("
+")[0];
+  }
+
   return NextResponse.json({
     "внутренний 192.168.0.4:5432": local,
     "внешний 147.45.153.3:5432": external,
+    "приложение приходит в базу с адреса": clientAddr,
   });
 }
