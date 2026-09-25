@@ -81,9 +81,16 @@ async function publish(post: {
   textTg: string;
   needsPhoto: boolean;
   photoFileId: string | null;
+  vkPostId: string | null;
+  tgMessageId: string | null;
 }): Promise<void> {
-  const toVk = post.networks === "both" || post.networks === "vk";
-  const toTg = post.networks === "both" || post.networks === "tg";
+  // Сеть, куда пост уже ушёл, пропускаем. Публикация идёт в две сети по
+  // очереди, и падение второй не отменяет первую: без этой проверки повтор
+  // выложил бы запись в канал ещё раз.
+  const toVk =
+    (post.networks === "both" || post.networks === "vk") && !post.vkPostId;
+  const toTg =
+    (post.networks === "both" || post.networks === "tg") && !post.tgMessageId;
 
   // Картинку скачиваем один раз: она нужна ВКонтакте в виде байтов, а
   // телеграму хватает его собственного идентификатора файла.
@@ -94,32 +101,42 @@ async function publish(post: {
     throw new Error("картинка не скачалась из телеграма");
   }
 
-  let vkPostId: string | null = null;
-  let tgMessageId: string | null = null;
-
-  // Телеграм первым: он надёжнее, и если упадёт ВКонтакте, пост хотя бы
-  // выйдет в канале, а не потеряется целиком.
-  if (toTg) {
-    tgMessageId = await publishToTelegram(post.textTg, post.photoFileId);
-  }
-
+  let vkPostId: string | null = post.vkPostId;
+  let tgMessageId: string | null = post.tgMessageId;
   let vkWithoutPhoto: string | null = null;
 
-  if (toVk) {
-    if (!isVkConfigured()) throw new Error("VK_TOKEN или VK_GROUP_ID не заданы");
-
-    try {
-      vkPostId = await postToWall(post.textVk, image);
-    } catch (error) {
-      // Пост, к которому фотография и есть содержание, без неё выпускать
-      // нельзя: список товаров без картинок хуже, чем ничего. А вот запись
-      // с карточкой лучше выпустить текстом, чем потерять целиком —
-      // расписание сдвигать некуда, время у неё одно.
-      if (post.needsPhoto || !image) throw error;
-
-      vkWithoutPhoto = String(error instanceof Error ? error.message : error).slice(0, 300);
-      vkPostId = await postToWall(post.textVk, null);
+  try {
+    // Телеграм первым: он надёжнее, и если упадёт ВКонтакте, пост хотя бы
+    // выйдет в канале, а не потеряется целиком.
+    if (toTg) {
+      tgMessageId = await publishToTelegram(post.textTg, post.photoFileId);
     }
+
+    if (toVk) {
+      if (!isVkConfigured()) throw new Error("VK_TOKEN или VK_GROUP_ID не заданы");
+
+      try {
+        vkPostId = await postToWall(post.textVk, image);
+      } catch (error) {
+        // Пост, к которому фотография и есть содержание, без неё выпускать
+        // нельзя: список товаров без картинок хуже, чем ничего. А вот запись
+        // с карточкой лучше выпустить текстом, чем потерять целиком —
+        // расписание сдвигать некуда, время у неё одно.
+        if (post.needsPhoto || !image) throw error;
+
+        vkWithoutPhoto = String(error instanceof Error ? error.message : error).slice(0, 300);
+        vkPostId = await postToWall(post.textVk, null);
+      }
+    }
+  } catch (error) {
+    // Запоминаем то, что уже получилось, и только потом отдаём ошибку выше.
+    // Иначе удачная половина работы потеряется, и повтор сделает её заново.
+    if (vkPostId !== post.vkPostId || tgMessageId !== post.tgMessageId) {
+      await prisma.scheduledPost
+        .update({ where: { id: post.id }, data: { vkPostId, tgMessageId } })
+        .catch(() => {});
+    }
+    throw error;
   }
 
   await prisma.scheduledPost.update({

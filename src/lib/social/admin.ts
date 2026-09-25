@@ -122,6 +122,32 @@ export async function handleAdminCommand(
     return true;
   }
 
+  if (command.startsWith("/mark ")) {
+    // «В этой сети пост уже вышел». Нужна, когда запись ушла, а отметиться
+    // не успела: до этой правки публикация в двух сетях могла отработать
+    // наполовину и не сохранить удачную половину.
+    const [, key, network] = text.trim().split(/s+/);
+    const field =
+      network === "tg" ? "tgMessageId" : network === "vk" ? "vkPostId" : null;
+
+    if (!key || !field) {
+      await sendMessage(chatId, "Нужно так: /mark <ключ> tg — или vk.");
+      return true;
+    }
+
+    const updated = await prisma.scheduledPost.updateMany({
+      where: { key },
+      data: { [field]: "вручную" },
+    });
+    await sendMessage(
+      chatId,
+      updated.count > 0
+        ? `Отметил: ${key} уже вышел в ${network === "tg" ? "телеграме" : "вк"}. Повтор туда больше не пойдёт.`
+        : `Не нашёл пост ${key}.`,
+    );
+    return true;
+  }
+
   if (command.startsWith("/retry ")) {
     const key = text.trim().slice(7).trim();
     // Возвращаем в очередь только упавшие: «повторить» для опубликованного
