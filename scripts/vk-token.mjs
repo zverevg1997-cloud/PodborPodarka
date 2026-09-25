@@ -9,7 +9,12 @@
 // код меняется на токен, и обмен подписывается секретом, который мы сами же
 // придумали в начале. Руками это не делается, поэтому есть этот скрипт.
 //
-// Запуск:  node scripts/vk-token.mjs <ID приложения>
+// Запуск:  node scripts/vk-token.mjs <ID приложения> [адрес возврата]
+//
+// Адрес возврата должен быть прописан в настройках приложения на dev.vk.com,
+// в «Доверенные redirect URI». Служебный oauth.vk.com/blank.html из старого
+// входа новый не принимает — страница просто не грузится, поэтому по
+// умолчанию возвращаемся на свою.
 //
 // Токен нигде не печатается: скрипт сам кладёт его в .env.
 
@@ -18,7 +23,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
 
 const APP_ID = process.argv[2];
-const REDIRECT = "https://oauth.vk.com/blank.html";
+const REDIRECT = process.argv[3] ?? "https://xn--80achr5ajr.xn--p1ai/vk-callback";
 const SCOPE = "photos wall groups offline";
 const ENV = new URL("../.env", import.meta.url).pathname.slice(1);
 
