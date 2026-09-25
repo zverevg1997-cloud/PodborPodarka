@@ -3,6 +3,7 @@ import {
   buildYandexMarketSearchUrl,
   createYandexMarketAffiliateLink,
 } from "@/lib/yandexMarket";
+import { prisma } from "@/lib/prisma";
 
 // Редирект по поисковому запросу идеи подарка на Яндекс Маркет.
 // Оборачивает ссылку в партнёрскую (реферальную) через API партнёрской
@@ -34,6 +35,16 @@ export async function GET(request: NextRequest) {
     to: toNumber(params.get("to")),
     deliveryInterval,
   });
+
+  // Клик по идее — главное полезное действие сервиса. На сайте его считала
+  // Метрика, но в боте нашего кода нет вовсе, поэтому считаем здесь: это
+  // единственная точка, через которую проходят все источники сразу.
+  const source = params.get("src") ?? "site";
+  void prisma.linkClick
+    .create({ data: { source: source.slice(0, 20), query: query.slice(0, 200) } })
+    .catch(() => {
+      // Не считать клик неприятно, но не повод задерживать человека.
+    });
 
   const affiliateUrl = await createYandexMarketAffiliateLink(searchUrl);
 

@@ -181,7 +181,7 @@ function ideaUrl(idea: GiftIdea, draft: Draft): string {
   const price = marketPriceRange(draft.budget);
   const delivery = marketDeliveryInterval(urgency);
 
-  const params = new URLSearchParams({ q: idea.searchQuery });
+  const params = new URLSearchParams({ q: idea.searchQuery, src: "tg" });
   if (price.from) params.set("from", String(price.from));
   if (price.to) params.set("to", String(price.to));
   if (delivery !== undefined) params.set("d", String(delivery));
@@ -317,7 +317,17 @@ export async function handleMessage(
   const draft = (chat.draftJson as Draft | null) ?? {};
   const trimmed = text.trim();
 
-  if (trimmed === "/start" || trimmed === "/help") {
+  if (trimmed.startsWith("/start") || trimmed === "/help") {
+    // Ссылка вида t.me/бот?start=vc приходит сюда как «/start vc». Метку
+    // запоминаем один раз: иначе повторный /start затрёт настоящий источник.
+    const tag = trimmed.split(/s+/)[1]?.slice(0, 20);
+    if (tag && !chat.source) {
+      await prisma.telegramChat.update({
+        where: { id: chatId },
+        data: { source: tag },
+      });
+    }
+
     await save(chatId, "recipient", {});
     await sendMessage(chatId, GREETING);
     await askRecipient(chatId);

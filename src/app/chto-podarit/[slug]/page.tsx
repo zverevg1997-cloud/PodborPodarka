@@ -35,7 +35,7 @@ function IdeaCard({ idea }: { idea: GuideIdea }) {
         {idea.priceTo.toLocaleString("ru")} ₽
       </span>
       <GiftLink
-        href={`/api/market-link?q=${encodeURIComponent(idea.searchQuery)}&from=${idea.priceFrom}&to=${idea.priceTo}`}
+        href={`/api/market-link?q=${encodeURIComponent(idea.searchQuery)}&from=${idea.priceFrom}&to=${idea.priceTo}&src=guide`}
         label="Посмотреть на Яндекс Маркете →"
         kind="product"
         query={idea.searchQuery}
