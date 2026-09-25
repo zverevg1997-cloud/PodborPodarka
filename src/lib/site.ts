@@ -57,3 +57,17 @@ export const OPERATOR_INCOMPLETE = Object.values(OPERATOR).some((value) =>
 
 // Дата последней редакции юридических документов.
 export const LEGAL_REVISION = "23 сентября 2026 года";
+
+/** Имя бота в телеграме. */
+export const BOT_USERNAME = "daribot_ru_bot";
+
+/**
+ * Ссылка на бота с меткой источника.
+ *
+ * Метка приходит боту первым сообщением как «/start <метка>», и по ней потом
+ * видно, какой канал привёл человека. Без неё через месяц будет сто
+ * подписчиков и ноль понимания, что сработало.
+ */
+export function botLink(source: string): string {
+  return `https://t.me/${BOT_USERNAME}?start=${encodeURIComponent(source)}`;
+}

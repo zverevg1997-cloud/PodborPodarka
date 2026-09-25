@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { getShowcaseIdeas } from "@/lib/showcase";
 import { GIFT_GUIDES } from "@/lib/giftGuides";
+import { botLink } from "@/lib/site";
 
 // У главной несколько входов: апекс, www и второй домен. Канонический адрес
 // говорит поисковику, какой из них считать основным, иначе он видит
@@ -104,6 +105,15 @@ export default async function Home() {
             Первый подбор — без регистрации
           </p>
         )}
+
+        <a
+          href={botLink("site")}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm font-semibold text-primary hover:underline"
+        >
+          Или спросите бота в Телеграме →
+        </a>
       </section>
 
       <section className="relative mx-auto max-w-5xl px-6 pb-20">

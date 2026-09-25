@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import GiftLink from "@/components/GiftLink";
 import { GIFT_GUIDES, findGuide, type GuideIdea } from "@/lib/giftGuides";
+import { botLink } from "@/lib/site";
 
 export function generateStaticParams() {
   return GIFT_GUIDES.map((guide) => ({ slug: guide.slug }));
@@ -108,12 +109,22 @@ export default async function GuidePage({
           Ничего не подошло?
         </h2>
         <p className="text-sm text-muted-foreground">{guide.cta}</p>
-        <Link
-          href="/search"
-          className="gradient-brand mx-auto rounded-full px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 transition hover:opacity-90"
-        >
-          Подобрать подарок 🎁
-        </Link>
+        <div className="mx-auto flex flex-col gap-2 sm:flex-row">
+          <Link
+            href="/search"
+            className="gradient-brand rounded-full px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 transition hover:opacity-90"
+          >
+            Подобрать подарок 🎁
+          </Link>
+          <a
+            href={botLink("guide")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full border border-border bg-background px-6 py-3 text-sm font-semibold transition hover:border-primary/40 hover:text-primary"
+          >
+            Спросить бота в Телеграме
+          </a>
+        </div>
       </section>
 
       {others.length > 0 && (

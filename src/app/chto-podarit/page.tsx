@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GIFT_GUIDES } from "@/lib/giftGuides";
+import { botLink } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Что подарить — подборки по возрасту и поводу",
@@ -46,12 +47,22 @@ export default function GuidesIndexPage() {
           Заполните короткую анкету — Дарибот предложит идеи под него, а не под
           возраст вообще. Первый подбор без регистрации.
         </p>
-        <Link
-          href="/search"
-          className="gradient-brand mx-auto rounded-full px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 transition hover:opacity-90"
-        >
-          Подобрать подарок 🎁
-        </Link>
+        <div className="mx-auto flex flex-col gap-2 sm:flex-row">
+          <Link
+            href="/search"
+            className="gradient-brand rounded-full px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 transition hover:opacity-90"
+          >
+            Подобрать подарок 🎁
+          </Link>
+          <a
+            href={botLink("guides-index")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full border border-border bg-background px-6 py-3 text-sm font-semibold transition hover:border-primary/40 hover:text-primary"
+          >
+            Спросить бота в Телеграме
+          </a>
+        </div>
       </div>
     </div>
   );
