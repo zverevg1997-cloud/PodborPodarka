@@ -1,16 +1,16 @@
 import { connect } from "node:net";
-import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 /**
- * Временная проверка: достаёт ли приложение базу по внутреннему адресу.
+ * Временная проверка сети между приложением и базой.
  *
  * Нужна, чтобы закрыть базу снаружи безопасно. Сейчас она доступна из
  * интернета — так в неё заливали данные при переезде, — и это стоит убрать.
- * Но если внутренняя сеть между приложением и базой не работает, отключение
- * внешнего адреса положит сайт целиком. Сначала проверяем, потом отключаем.
+ * Но приложение ходит в неё по тому же внешнему адресу, а внутренняя сеть
+ * между ними не работает, поэтому просто отключить адрес нельзя.
  *
- * Удалить, как только вопрос закроется.
+ * Удалить, как только фаервол будет настроен.
  */
 function probe(host: string, port: number): Promise<string> {
   return new Promise((resolve) => {
@@ -44,8 +44,8 @@ export async function GET(request: NextRequest) {
   ]);
 
   // С какого адреса приложение приходит в базу — так его видит сам Postgres.
-  // Без этой цифры нельзя составить правило фаервола: ошибёмся адресом —
-  // приложение потеряет базу и сайт ляжет.
+  // Без этой цифры нельзя составить правило фаервола: ошибёмся адресом, и
+  // приложение потеряет базу вместе с сайтом.
   let clientAddr = "не определился";
   try {
     const rows = await prisma.$queryRawUnsafe<{ addr: string | null }[]>(
@@ -53,8 +53,7 @@ export async function GET(request: NextRequest) {
     );
     clientAddr = rows[0]?.addr ?? "пусто";
   } catch (error) {
-    clientAddr = String((error as Error).message).split("
-")[0];
+    clientAddr = String((error as Error).message).split("\n")[0];
   }
 
   return NextResponse.json({
