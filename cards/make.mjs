@@ -4,13 +4,18 @@
 // голым текстом нельзя: в ленте ВК запись без картинки почти не
 // показывается, а в Телеграме её пролистывают.
 //
-// Поэтому карточка не иллюстрация, а сам тезис, набранный крупно. Человек
-// читает его, не открывая пост, и через пару недель узнаёт наши карточки в
-// ленте по одному фону.
+// Поэтому карточка не иллюстрация к тезису, а сам тезис, набранный крупно
+// поверх подходящего снимка. Человек читает его, не открывая пост, и через
+// пару недель узнаёт наши карточки в ленте.
+//
+// Фоны рисует cards/art.mjs — если фон есть, текст ложится на него, и снизу
+// добавляется затемнение, иначе белые буквы теряются на светлых местах
+// снимка. Если фона нет, карточка выходит кремовой: это запасной вариант,
+// а не отдельный стиль.
 //
 // Запуск: node cards/make.mjs  →  cards/out/*.png
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import sharp from "sharp";
 
 const SIZE = 1200;
@@ -147,7 +152,7 @@ function wrap(text, fontSize, maxWidth) {
   return lines;
 }
 
-/** Длинному тезису — кегль поменьше, чтобы он не уехал за нижний край. */
+/** Длинному тезису — кегль поменьше, чтобы он не уехал за край. */
 function pickFontSize(text) {
   if (text.length <= 28) return 108;
   if (text.length <= 48) return 92;
@@ -155,37 +160,54 @@ function pickFontSize(text) {
   return 68;
 }
 
-function render({ tag, text, note }) {
+function render({ tag, text, note }, onPhoto) {
+  const ink = onPhoto ? "#ffffff" : INK;
+  const accent = onPhoto ? "#ffffff" : VIOLET;
+
   const fontSize = pickFontSize(text);
   const lines = wrap(text, fontSize, WIDTH);
   const lineHeight = Math.round(fontSize * 1.22);
+  const noteLines = note ? wrap(note, 34, WIDTH) : [];
 
-  // Блок с тезисом ставим по центру, а подпись отсчитываем от его низа:
-  // так карточка из одной строки и карточка из четырёх выглядят одинаково
-  // уравновешенными.
   const blockHeight = lines.length * lineHeight;
-  const top = Math.round((SIZE - blockHeight) / 2) - 40;
+  const noteHeight = noteLines.length * 46;
+
+  // На фотографии текст прижимаем к низу: там затемнение, и туда же смотрит
+  // глаз. На пустом фоне — по центру, иначе карточка выглядит перекошенной.
+  const top = onPhoto
+    ? SIZE - 230 - noteHeight - 50 - blockHeight
+    : Math.round((SIZE - blockHeight) / 2) - 40;
 
   const heading = lines
     .map(
       (line, i) =>
-        `<text x="${MARGIN}" y="${top + (i + 1) * lineHeight}" font-family="Segoe UI" font-size="${fontSize}" font-weight="700" fill="${INK}">${esc(line)}</text>`,
+        `<text x="${MARGIN}" y="${top + (i + 1) * lineHeight}" font-family="Segoe UI" font-size="${fontSize}" font-weight="700" fill="${ink}">${esc(line)}</text>`,
     )
     .join("\n  ");
 
-  const noteLines = note ? wrap(note, 34, WIDTH) : [];
   const noteBlock = noteLines
     .map(
       (line, i) =>
-        `<text x="${MARGIN}" y="${top + blockHeight + 64 + i * 46}" font-family="Segoe UI" font-size="34" font-weight="400" fill="${INK}" opacity="0.62">${esc(line)}</text>`,
+        `<text x="${MARGIN}" y="${top + blockHeight + 64 + i * 46}" font-family="Segoe UI" font-size="34" font-weight="400" fill="${ink}" opacity="${onPhoto ? 0.88 : 0.62}">${esc(line)}</text>`,
     )
     .join("\n  ");
+
+  const backdrop = onPhoto
+    ? `<rect width="${SIZE}" height="${SIZE}" fill="url(#scrim)"/>`
+    : `<rect width="${SIZE}" height="${SIZE}" fill="${CREAM}"/>
+  <circle cx="${SIZE - 120}" cy="180" r="420" fill="url(#glow)"/>
+  <circle cx="60" cy="${SIZE - 80}" r="380" fill="url(#glow2)"/>`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}">
   <defs>
     <linearGradient id="brand" x1="0" y1="0" x2="${SIZE}" y2="${SIZE}" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="${PINK}"/>
       <stop offset="1" stop-color="${VIOLET}"/>
+    </linearGradient>
+    <linearGradient id="scrim" x1="0" y1="0" x2="0" y2="${SIZE}" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1a1225" stop-opacity="0.18"/>
+      <stop offset="0.3" stop-color="#1a1225" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#1a1225" stop-opacity="0.93"/>
     </linearGradient>
     <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
       <stop offset="0" stop-color="${VIOLET}" stop-opacity="0.16"/>
@@ -197,13 +219,11 @@ function render({ tag, text, note }) {
     </radialGradient>
   </defs>
 
-  <rect width="${SIZE}" height="${SIZE}" fill="${CREAM}"/>
-  <circle cx="${SIZE - 120}" cy="180" r="420" fill="url(#glow)"/>
-  <circle cx="60" cy="${SIZE - 80}" r="380" fill="url(#glow2)"/>
+  ${backdrop}
   <rect width="${SIZE}" height="14" fill="url(#brand)"/>
 
-  <rect x="${MARGIN}" y="140" width="${tag.length * 20 + 56}" height="58" rx="29" fill="${VIOLET}" opacity="0.1"/>
-  <text x="${MARGIN + 28}" y="178" font-family="Segoe UI" font-size="28" font-weight="600" fill="${VIOLET}" letter-spacing="1.5">${esc(tag.toUpperCase())}</text>
+  <rect x="${MARGIN}" y="140" width="${tag.length * 20 + 56}" height="58" rx="29" fill="${accent}" opacity="${onPhoto ? 0.22 : 0.1}"/>
+  <text x="${MARGIN + 28}" y="178" font-family="Segoe UI" font-size="28" font-weight="600" fill="${accent}" letter-spacing="1.5">${esc(tag.toUpperCase())}</text>
 
   ${heading}
   ${noteBlock}
@@ -216,18 +236,32 @@ function render({ tag, text, note }) {
     <rect x="16" y="32" width="32" height="20" rx="3" fill="#fff"/>
     <rect x="28.5" y="20" width="7" height="32" fill="${GOLD}"/>
   </g>
-  <text x="${MARGIN + 86}" y="${SIZE - 117}" font-family="Segoe UI" font-size="38" font-weight="700" fill="${INK}">Дарибот</text>
-  <text x="${MARGIN + 86}" y="${SIZE - 80}" font-family="Segoe UI" font-size="27" font-weight="400" fill="${INK}" opacity="0.5">подбор подарков с ИИ · дарибот.рф</text>
+  <text x="${MARGIN + 86}" y="${SIZE - 117}" font-family="Segoe UI" font-size="38" font-weight="700" fill="${ink}">Дарибот</text>
+  <text x="${MARGIN + 86}" y="${SIZE - 80}" font-family="Segoe UI" font-size="27" font-weight="400" fill="${ink}" opacity="${onPhoto ? 0.75 : 0.5}">подбор подарков с ИИ · дарибот.рф</text>
 </svg>`;
 }
 
-mkdirSync(new URL("out/", import.meta.url), { recursive: true });
+const dir = (name) => new URL(name, import.meta.url).pathname.slice(1);
+
+mkdirSync(dir("out/"), { recursive: true });
 
 for (const card of CARDS) {
-  const svg = render(card);
-  const out = new URL(`out/${card.id}.png`, import.meta.url);
-  await sharp(Buffer.from(svg)).png().toFile(out.pathname.slice(1));
-  console.log(`${card.id}.png`);
+  const bg = dir(`bg/${card.id}.jpg`);
+  const onPhoto = existsSync(bg);
+  const svg = Buffer.from(render(card, onPhoto));
+
+  const base = onPhoto
+    ? sharp(bg).resize(SIZE, SIZE, { fit: "cover" })
+    : sharp({
+        create: { width: SIZE, height: SIZE, channels: 4, background: CREAM },
+      });
+
+  await base
+    .composite([{ input: svg, top: 0, left: 0 }])
+    .png()
+    .toFile(dir(`out/${card.id}.png`));
+
+  console.log(`${card.id}.png${onPhoto ? " — на фото" : ""}`);
 }
 
 console.log(`\nготово: ${CARDS.length} карточек в cards/out/`);
