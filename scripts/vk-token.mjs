@@ -55,12 +55,15 @@ const authorize =
     scope: SCOPE,
   });
 
-console.log("\n1. Откройте эту ссылку в браузере, где вы вошли как");
+console.log(`\nАдрес возврата: ${REDIRECT}`);
+console.log("Он должен быть прописан в настройках приложения на dev.vk.com,");
+console.log("в «Доверенные redirect URI» — иначе ВК покажет «Ошибка загрузки»");
+console.log("вместо страницы входа.\n");
+console.log("1. Откройте эту ссылку в браузере, где вы вошли как");
 console.log("   администратор сообщества:\n");
 console.log(authorize);
-console.log("\n2. Разрешите доступ. Откроется пустая страница.");
-console.log("3. Скопируйте из адресной строки ВЕСЬ адрес целиком");
-console.log("   и вставьте сюда.\n");
+console.log("\n2. Разрешите доступ — вас вернёт на нашу страницу.");
+console.log("3. Нажмите там «Скопировать адрес» и вставьте сюда.\n");
 
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 const answer = (await rl.question("Адрес: ")).trim();
