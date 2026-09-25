@@ -1,43 +1,57 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { GIFT_GUIDES } from "@/lib/giftGuides";
+import { groupedGuides } from "@/lib/giftGuides";
 import { botLink } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Что подарить — подборки по возрасту и поводу",
+  title: "Что подарить — подборки по возрасту, поводу и получателю",
   description:
     "Подборки идей подарков с объяснением, почему каждая подойдёт. " +
-    "По возрасту получателя и поводу.",
+    "Учителям и воспитателям, детям по возрасту, на Новый год.",
   alternates: { canonical: "/chto-podarit" },
 };
 
 export default function GuidesIndexPage() {
+  const groups = groupedGuides();
+  const total = groups.reduce((sum, group) => sum + group.guides.length, 0);
+
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-12">
+    <div className="mx-auto flex max-w-2xl flex-col gap-10 px-6 py-12">
       <header className="flex flex-col gap-3">
         <h1 className="font-display text-3xl font-extrabold">Что подарить</h1>
         <p className="text-muted-foreground">
-          Готовые подборки по возрасту и поводу. У каждой идеи — объяснение,
+          {total} подборки по получателю и поводу. У каждой идеи — объяснение,
           почему она подойдёт, и ссылка, где посмотреть цены.
         </p>
       </header>
 
-      <div className="flex flex-col gap-3">
-        {GIFT_GUIDES.map((guide) => (
-          <Link
-            key={guide.slug}
-            href={`/chto-podarit/${guide.slug}`}
-            className="flex flex-col gap-1 rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <span className="font-display text-base font-bold">
-              {guide.title}
-            </span>
-            <span className="text-sm text-muted-foreground">
-              {guide.description}
-            </span>
-          </Link>
-        ))}
-      </div>
+      {groups.map((group) => (
+        <section key={group.title} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-display text-xl font-bold">{group.title}</h2>
+            {group.note ? (
+              <p className="text-sm text-muted-foreground">{group.note}</p>
+            ) : null}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {group.guides.map((guide) => (
+              <Link
+                key={guide.slug}
+                href={`/chto-podarit/${guide.slug}`}
+                className="flex flex-col gap-1 rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <span className="font-display text-base font-bold">
+                  {guide.title}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {guide.description}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ))}
 
       <div className="flex flex-col gap-3 rounded-2xl border border-primary/40 bg-primary/5 p-6 text-center">
         <p className="font-display text-base font-bold">
