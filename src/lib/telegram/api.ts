@@ -143,3 +143,46 @@ export function setWebhook(url: string, secret: string): Promise<unknown> {
     drop_pending_updates: true,
   });
 }
+
+/**
+ * Пост с картинкой. Подпись ограничена 1024 знаками — это ограничение
+ * телеграма, а не наше, и длинный текст придётся слать отдельно.
+ */
+export function sendPhoto(
+  chatId: string,
+  photo: string,
+  caption: string,
+): Promise<unknown> {
+  return call("sendPhoto", { chat_id: chatId, photo, caption, parse_mode: "HTML" });
+}
+
+/**
+ * Скачивает файл, присланный боту.
+ *
+ * Нужно, чтобы переложить картинку из телеграма во ВКонтакте: там file_id
+ * телеграма ничего не значит, нужны сами байты. Путь до файла идёт через
+ * того же посредника, что и остальные запросы, — прямой до телеграма с
+ * нашего сервера не работает.
+ */
+export async function getFileBytes(fileId: string): Promise<Buffer | null> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return null;
+
+  const info = (await call("getFile", { file_id: fileId })) as {
+    result?: { file_path?: string };
+  } | null;
+
+  const path = info?.result?.file_path;
+  if (!path) return null;
+
+  try {
+    const res = await fetch(`${API_BASE}/file/bot${token}/${path}`, {
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!res.ok) return null;
+    return Buffer.from(await res.arrayBuffer());
+  } catch (error) {
+    console.error("telegram getFile: не скачался", String(error).slice(0, 160));
+    return null;
+  }
+}

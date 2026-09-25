@@ -178,3 +178,41 @@ model RegistrationAttempt {
   @@index([createdAt])
   @@map("registration_attempts")
 }
+
+// Запланированный пост в сообщество и канал.
+//
+// Тексты живут в коде (src/lib/social/plan.ts) и оттуда заливаются сюда по
+// ключу. В базе хранится то, чего в коде быть не может: одобрение, картинка
+// и отметка о публикации. Поэтому правка текста в коде не сбивает состояние,
+// а перезапуск не публикует всё заново.
+model ScheduledPost {
+  id          String    @id @default(cuid())
+  // Стабильный ключ из плана. По нему обновляем текст, не плодя дублей.
+  key         String    @unique
+  publishAt   DateTime
+  // Что это: обычный пост, опрос или видео. Опросы и видео публикуются
+  // руками — у них другой формат в каждой сети, и автоматизировать это
+  // ради трёх записей не стоит.
+  kind        String    @default("post")
+  // Куда: "vk", "tg" или "both".
+  networks    String
+  textVk      String
+  textTg      String
+  // Нужна ли фотография товара. Пост с этой отметкой без картинки не уйдёт.
+  needsPhoto  Boolean   @default(false)
+  // file_id картинки в телеграме: администратор присылает её боту, а мы
+  // потом скачиваем и перекладываем во ВКонтакте.
+  photoFileId String?
+  // draft → approved → published. Ещё бывает skipped, если пост отменили.
+  status      String    @default("draft")
+  vkPostId    String?
+  tgMessageId String?
+  publishedAt DateTime?
+  // Почему не опубликовался. Показываем администратору, а не молчим.
+  error       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, publishAt])
+  @@map("scheduled_posts")
+}

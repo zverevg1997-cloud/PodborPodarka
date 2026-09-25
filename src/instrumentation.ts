@@ -15,10 +15,18 @@ export async function register() {
   if (process.env.TELEGRAM_POLLING !== "1") return;
 
   const { startPolling } = await import("@/lib/telegram/polling");
+  const { startScheduler } = await import("@/lib/social/scheduler");
 
   // Намеренно не ждём: цикл живёт столько же, сколько процесс, и если его
   // дождаться, сервер не начнёт принимать запросы.
   void startPolling().catch((error) => {
     console.error("telegram: слушатель не запустился", error);
+  });
+
+  // Расписание постов ведёт тот же контейнер, что слушает телеграм: обе
+  // задачи фоновые, и обе берут свой замок, так что лишний экземпляр просто
+  // подождёт своей очереди и ничего не продублирует.
+  void startScheduler().catch((error) => {
+    console.error("посты: планировщик не запустился", error);
   });
 }

@@ -11,6 +11,10 @@ import {
 import { buildYandexMapsUrl, buildYandexSearchUrl } from "@/lib/yandexMarket";
 import type { GiftIdea } from "@/lib/types";
 import {
+  handleAdminCallback,
+  handleAdminCommand,
+} from "@/lib/social/admin";
+import {
   answerCallback,
   clearKeyboard,
   sendMessage,
@@ -313,6 +317,10 @@ export async function handleMessage(
   chatId: string,
   text: string,
 ): Promise<void> {
+  // Команды расписания понимает только владелец, и они не должны попадать
+  // в обычный разговор: «/plan» не вопрос про подарок.
+  if (await handleAdminCommand(chatId, text)) return;
+
   const chat = await loadChat(chatId);
   const draft = (chat.draftJson as Draft | null) ?? {};
   const trimmed = text.trim();
@@ -385,6 +393,8 @@ export async function handleCallback(
   data: string,
   callbackId: string,
 ): Promise<void> {
+  if (await handleAdminCallback(chatId, data, callbackId)) return;
+
   await answerCallback(callbackId);
 
   const chat = await loadChat(chatId);

@@ -1,0 +1,233 @@
+// Карточки к постам-рассуждениям.
+//
+// У таких постов нет товара, а значит нет и фотографии. Выкладывать их
+// голым текстом нельзя: в ленте ВК запись без картинки почти не
+// показывается, а в Телеграме её пролистывают.
+//
+// Поэтому карточка не иллюстрация, а сам тезис, набранный крупно. Человек
+// читает его, не открывая пост, и через пару недель узнаёт наши карточки в
+// ленте по одному фону.
+//
+// Запуск: node cards/make.mjs  →  cards/out/*.png
+
+import { mkdirSync, writeFileSync } from "node:fs";
+import sharp from "sharp";
+
+const SIZE = 1200;
+const MARGIN = 96;
+const WIDTH = SIZE - MARGIN * 2;
+
+// Цвета взяты из src/app/icon.svg и globals.css, чтобы карточки и сайт
+// выглядели одним целым.
+const CREAM = "#fff8f3";
+const INK = "#2b1b3d";
+const PINK = "#ff5c7a";
+const VIOLET = "#7c5cfc";
+const GOLD = "#ffb020";
+
+const CARDS = [
+  {
+    id: "01-tri-voprosa",
+    tag: "правило",
+    text: "Три вопроса, которые заменяют любую подборку",
+    note: "Чем занимается по своей воле · Что у него ломается · Что откладывает на потом",
+  },
+  {
+    id: "02-svechi",
+    tag: "правило",
+    text: "Свечи дарят все. Не зажигает никто",
+    note: "Они подходят всем — то есть никому конкретно",
+  },
+  {
+    id: "03-vyvedat",
+    tag: "правило",
+    text: "«Что тебе подарить?» — вопрос, на который не отвечают",
+    note: "Спросите, что ему подарили в прошлом году. И как, пригодилось",
+  },
+  {
+    id: "04-upakovka",
+    tag: "правило",
+    text: "Вещь за 500 в хорошей упаковке дороже вещи за 1500 в пакете",
+    note: "Отложите из бюджета двести рублей на коробку и ленту",
+  },
+  {
+    id: "05-rashodnoe",
+    tag: "правило",
+    text: "Чем хуже знаете человека, тем расходнее должен быть подарок",
+    note: "Малознакомому — то, что кончится. Близкому — то, что останется",
+  },
+  {
+    id: "06-fraza",
+    tag: "правило",
+    text: "«Я не знал, что тебе подарить»",
+    note: "Фраза, которая обесценивает даже хороший подарок",
+  },
+  {
+    id: "07-dva-podarka",
+    tag: "правило",
+    text: "Три подарка по тысяче хуже одного на три",
+    note: "Если из них не складывается предложение «чтобы ты мог…» — берите один",
+  },
+  {
+    id: "08-gorshok",
+    tag: "день учителя",
+    text: "Букет живёт четыре дня. Растение в горшке — годы",
+    note: "Стоят они одинаково",
+  },
+  {
+    id: "09-otkrytka",
+    tag: "день учителя",
+    text: "«Спасибо за ваш труд» забудут через час",
+    note: "Напишите одну конкретную вещь, которую человек изменил",
+  },
+  {
+    id: "10-nedelya",
+    tag: "день учителя",
+    text: "Через неделю День учителя",
+    note: "В родительских чатах уже начали собирать",
+  },
+  {
+    id: "11-nelzya",
+    tag: "день учителя",
+    text: "Дороже 3000 ₽ учителю дарить нельзя. По закону",
+    note: "Статья 575 ГК РФ. И это на весь класс, а не с человека",
+  },
+  {
+    id: "12-ot-klassa",
+    tag: "день учителя",
+    text: "Сто рублей сдают молча. Пятьсот — обсуждают три дня",
+    note: "Как собрать деньги с класса и не поссориться",
+  },
+  {
+    id: "13-neudachnyy",
+    tag: "разговор",
+    text: "Какой самый неудачный подарок вам дарили?",
+    note: "Чаще всего дарят не вещь, а образ жизни, которого у человека нет",
+  },
+  {
+    id: "14-itog",
+    tag: "разговор",
+    text: "Дарить в пространство, а не в руки",
+    note: "Чайник в кабинет живёт десять лет. Кружка — до первой уборки в шкафу",
+  },
+  {
+    id: "15-prazdnik",
+    tag: "день учителя",
+    text: "С Днём учителя",
+    note: "Результат виден через десять лет, а претензии приходят сегодня",
+  },
+];
+
+/** В SVG нельзя отдавать сырые & < >, иначе разметка ломается молча. */
+function esc(text) {
+  return text.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+}
+
+/**
+ * Перенос по словам. Ширину символа считаем приближённо: точных метрик у
+ * нас нет, а для заголовка в три-четыре строки приближения достаточно —
+ * ошибка в пару процентов не видна, потому что справа остаётся поле.
+ */
+function wrap(text, fontSize, maxWidth) {
+  const perChar = fontSize * 0.53;
+  const limit = Math.floor(maxWidth / perChar);
+  const lines = [];
+  let line = "";
+
+  for (const word of text.split(" ")) {
+    const candidate = line ? `${line} ${word}` : word;
+    if (candidate.length > limit && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = candidate;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+/** Длинному тезису — кегль поменьше, чтобы он не уехал за нижний край. */
+function pickFontSize(text) {
+  if (text.length <= 28) return 108;
+  if (text.length <= 48) return 92;
+  if (text.length <= 70) return 78;
+  return 68;
+}
+
+function render({ tag, text, note }) {
+  const fontSize = pickFontSize(text);
+  const lines = wrap(text, fontSize, WIDTH);
+  const lineHeight = Math.round(fontSize * 1.22);
+
+  // Блок с тезисом ставим по центру, а подпись отсчитываем от его низа:
+  // так карточка из одной строки и карточка из четырёх выглядят одинаково
+  // уравновешенными.
+  const blockHeight = lines.length * lineHeight;
+  const top = Math.round((SIZE - blockHeight) / 2) - 40;
+
+  const heading = lines
+    .map(
+      (line, i) =>
+        `<text x="${MARGIN}" y="${top + (i + 1) * lineHeight}" font-family="Segoe UI" font-size="${fontSize}" font-weight="700" fill="${INK}">${esc(line)}</text>`,
+    )
+    .join("\n  ");
+
+  const noteLines = note ? wrap(note, 34, WIDTH) : [];
+  const noteBlock = noteLines
+    .map(
+      (line, i) =>
+        `<text x="${MARGIN}" y="${top + blockHeight + 64 + i * 46}" font-family="Segoe UI" font-size="34" font-weight="400" fill="${INK}" opacity="0.62">${esc(line)}</text>`,
+    )
+    .join("\n  ");
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}">
+  <defs>
+    <linearGradient id="brand" x1="0" y1="0" x2="${SIZE}" y2="${SIZE}" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="${PINK}"/>
+      <stop offset="1" stop-color="${VIOLET}"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="${VIOLET}" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="${VIOLET}" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="${PINK}" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="${PINK}" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="${SIZE}" height="${SIZE}" fill="${CREAM}"/>
+  <circle cx="${SIZE - 120}" cy="180" r="420" fill="url(#glow)"/>
+  <circle cx="60" cy="${SIZE - 80}" r="380" fill="url(#glow2)"/>
+  <rect width="${SIZE}" height="14" fill="url(#brand)"/>
+
+  <rect x="${MARGIN}" y="140" width="${tag.length * 20 + 56}" height="58" rx="29" fill="${VIOLET}" opacity="0.1"/>
+  <text x="${MARGIN + 28}" y="178" font-family="Segoe UI" font-size="28" font-weight="600" fill="${VIOLET}" letter-spacing="1.5">${esc(tag.toUpperCase())}</text>
+
+  ${heading}
+  ${noteBlock}
+
+  <g transform="translate(${MARGIN}, ${SIZE - 150}) scale(0.95)">
+    <rect width="64" height="64" rx="14" fill="url(#brand)"/>
+    <circle cx="25" cy="17" r="6" fill="${GOLD}"/>
+    <circle cx="39" cy="17" r="6" fill="${GOLD}"/>
+    <rect x="12" y="20" width="40" height="12" rx="3" fill="#fff"/>
+    <rect x="16" y="32" width="32" height="20" rx="3" fill="#fff"/>
+    <rect x="28.5" y="20" width="7" height="32" fill="${GOLD}"/>
+  </g>
+  <text x="${MARGIN + 86}" y="${SIZE - 117}" font-family="Segoe UI" font-size="38" font-weight="700" fill="${INK}">Дарибот</text>
+  <text x="${MARGIN + 86}" y="${SIZE - 80}" font-family="Segoe UI" font-size="27" font-weight="400" fill="${INK}" opacity="0.5">подбор подарков с ИИ · дарибот.рф</text>
+</svg>`;
+}
+
+mkdirSync(new URL("out/", import.meta.url), { recursive: true });
+
+for (const card of CARDS) {
+  const svg = render(card);
+  const out = new URL(`out/${card.id}.png`, import.meta.url);
+  await sharp(Buffer.from(svg)).png().toFile(out.pathname.slice(1));
+  console.log(`${card.id}.png`);
+}
+
+console.log(`\nготово: ${CARDS.length} карточек в cards/out/`);

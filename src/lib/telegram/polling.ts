@@ -1,4 +1,5 @@
 import { handleCallback, handleMessage } from "@/lib/telegram/dialog";
+import { handleAdminPhoto } from "@/lib/social/admin";
 import { holdLock, releaseLock } from "@/lib/systemLock";
 
 /**
@@ -29,7 +30,14 @@ const LOCK = "telegram-poller";
 
 interface Update {
   update_id: number;
-  message?: { chat: { id: number }; text?: string };
+  message?: {
+    chat: { id: number };
+    text?: string;
+    caption?: string;
+    // Телеграм присылает несколько размеров одной картинки; нам нужен
+    // последний — он самый большой.
+    photo?: Array<{ file_id: string }>;
+  };
   callback_query?: {
     id: string;
     data?: string;
@@ -57,6 +65,16 @@ async function dispatch(update: Update): Promise<void> {
       update.callback_query.message.message_id,
       update.callback_query.data,
       update.callback_query.id,
+    );
+    return;
+  }
+
+  const photo = update.message?.photo;
+  if (photo?.length) {
+    await handleAdminPhoto(
+      String(update.message!.chat.id),
+      photo[photo.length - 1].file_id,
+      update.message!.caption,
     );
     return;
   }
