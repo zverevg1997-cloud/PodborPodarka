@@ -79,6 +79,7 @@ async function publish(post: {
   networks: string;
   textVk: string;
   textTg: string;
+  needsPhoto: boolean;
   photoFileId: string | null;
 }): Promise<void> {
   const toVk = post.networks === "both" || post.networks === "vk";
@@ -102,9 +103,23 @@ async function publish(post: {
     tgMessageId = await publishToTelegram(post.textTg, post.photoFileId);
   }
 
+  let vkWithoutPhoto: string | null = null;
+
   if (toVk) {
     if (!isVkConfigured()) throw new Error("VK_TOKEN или VK_GROUP_ID не заданы");
-    vkPostId = await postToWall(post.textVk, image);
+
+    try {
+      vkPostId = await postToWall(post.textVk, image);
+    } catch (error) {
+      // Пост, к которому фотография и есть содержание, без неё выпускать
+      // нельзя: список товаров без картинок хуже, чем ничего. А вот запись
+      // с карточкой лучше выпустить текстом, чем потерять целиком —
+      // расписание сдвигать некуда, время у неё одно.
+      if (post.needsPhoto || !image) throw error;
+
+      vkWithoutPhoto = String(error instanceof Error ? error.message : error).slice(0, 300);
+      vkPostId = await postToWall(post.textVk, null);
+    }
   }
 
   await prisma.scheduledPost.update({

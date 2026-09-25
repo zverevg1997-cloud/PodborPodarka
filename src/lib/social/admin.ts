@@ -122,6 +122,23 @@ export async function handleAdminCommand(
     return true;
   }
 
+  if (command.startsWith("/retry ")) {
+    const key = text.trim().slice(7).trim();
+    // Возвращаем в очередь только упавшие: «повторить» для опубликованного
+    // означало бы выпустить его вторым разом.
+    const updated = await prisma.scheduledPost.updateMany({
+      where: { key, status: { in: ["failed", "manual", "skipped"] } },
+      data: { status: "approved", error: null },
+    });
+    await sendMessage(
+      chatId,
+      updated.count > 0
+        ? `Пост ${key} вернулся в очередь. Если его время уже прошло, выйдет в ближайшую минуту.`
+        : `Не нашёл упавший пост ${key}. Список — в /plan.`,
+    );
+    return true;
+  }
+
   if (command.startsWith("/skip ")) {
     const key = text.trim().slice(6).trim();
     const updated = await prisma.scheduledPost.updateMany({
