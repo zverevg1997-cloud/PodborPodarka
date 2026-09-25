@@ -71,3 +71,21 @@ export const BOT_USERNAME = "daribot_ru_bot";
 export function botLink(source: string): string {
   return `https://t.me/${BOT_USERNAME}?start=${encodeURIComponent(source)}`;
 }
+
+/** Сообщество во ВКонтакте. */
+export const VK_GROUP = "daribot_podarki";
+
+/** Канал в телеграме — не путать с ботом: там публикации, в боте подбор. */
+export const TELEGRAM_CHANNEL = "daribot_podarki";
+
+/**
+ * Площадки, на которых у сервиса есть представительство.
+ *
+ * Список нужен в двух местах сразу: значками в подвале и полем sameAs в
+ * разметке организации. Второе важнее, чем кажется: по нему поисковик
+ * связывает сайт с сообществами и перестаёт считать их разными брендами.
+ */
+export const SOCIAL_LINKS = [
+  { name: "ВКонтакте", href: `https://vk.com/${VK_GROUP}` },
+  { name: "Телеграм", href: `https://t.me/${TELEGRAM_CHANNEL}` },
+] as const;

@@ -12,8 +12,10 @@ import {
 import {
   SITE_DESCRIPTION,
   SITE_NAME,
+  SITE_NAME_RU,
   SITE_TITLE,
   SITE_URL,
+  SOCIAL_LINKS,
 } from "@/lib/site";
 
 const bodyFont = Nunito({
@@ -65,6 +67,20 @@ export const metadata: Metadata = {
   },
 };
 
+// Разметка организации для поисковиков. Главное здесь — sameAs: по нему
+// Яндекс и Google связывают сайт с сообществами и перестают считать их
+// разными брендами. Без этого по запросу «дарибот» они конкурируют между
+// собой, вместо того чтобы усиливать друг друга.
+const ORGANIZATION = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: SITE_NAME_RU,
+  alternateName: SITE_NAME,
+  url: SITE_URL,
+  description: SITE_DESCRIPTION,
+  sameAs: SOCIAL_LINKS.map((social) => social.href),
+};
+
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const user = await getCurrentUser();
   const usedToday = user ? await countTodaySearches(user.id) : 0;
@@ -83,6 +99,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <main className="flex-1">{children}</main>
         <Footer />
         <Metrika />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION) }}
+        />
       </body>
     </html>
   );
