@@ -144,13 +144,31 @@ export async function handleAdminCommand(
 
   if (command.startsWith("/feed ")) {
     // Название может быть из нескольких слов, адрес всегда последний.
+    // Отбор разделов, если он нужен, идёт следом за адресом — иначе
+    // большой каталог придётся грузить дважды: сперва целиком, потом
+    // заново с отбором.
     const parts = text.trim().split(/\s+/).slice(1);
-    const url = parts.pop() ?? "";
-    const name = parts.join(" ");
+    const at = parts.findIndex((part) => /^https?:\/\//.test(part));
 
-    if (!name || !/^https?:\/\//.test(url)) {
-      await sendMessage(chatId, "Нужно так: /feed Название https://адрес");
+    if (at < 1) {
+      await sendMessage(
+        chatId,
+        "Нужно так: /feed Название https://адрес\nили с отбором: /feed Название https://адрес книг|детск",
+      );
       return true;
+    }
+
+    const name = parts.slice(0, at).join(" ");
+    const url = parts[at];
+    const include = parts.slice(at + 1).join(" ") || null;
+
+    if (include) {
+      try {
+        new RegExp(include);
+      } catch {
+        await sendMessage(chatId, "Отбор непонятен. Разделы через | — например: книг|детск");
+        return true;
+      }
     }
 
     // Повторная отправка с тем же названием заменяет адрес, а не заводит
@@ -160,9 +178,11 @@ export async function handleAdminCommand(
     const feed = before
       ? await prisma.productFeed.update({
           where: { id: before.id },
-          data: { url, enabled: true, error: null },
+          // Отбор, если он не указан заново, сохраняем: менять адрес и
+          // случайно снять фильтр — значит утащить к себе весь каталог.
+          data: { url, enabled: true, error: null, ...(include ? { include } : {}) },
         })
-      : await prisma.productFeed.create({ data: { name, url } });
+      : await prisma.productFeed.create({ data: { name, url, include } });
 
     await sendMessage(
       chatId,
