@@ -229,3 +229,16 @@ model ScheduledPost {
   @@index([status, publishAt])
   @@map("scheduled_posts")
 }
+
+// Значения, которые меняются сами и должны пережить перезапуск.
+//
+// Переменные окружения для этого не годятся: их задают снаружи и только при
+// запуске контейнера. Токен ВКонтакте, который приложение обновляет себе
+// каждый час, положить туда нельзя.
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}

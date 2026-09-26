@@ -14,6 +14,8 @@
  * только текстом, и это выясняется в момент публикации, а не при настройке.
  */
 
+import { vkAccessToken } from "@/lib/social/vkToken";
+
 const API = "https://api.vk.com/method";
 const VERSION = "5.199";
 
@@ -33,8 +35,10 @@ async function call(
   method: string,
   params: Record<string, string>,
 ): Promise<unknown> {
-  const token = process.env.VK_TOKEN;
-  if (!token) throw new Error("VK_TOKEN не задан");
+  // Токен берём не из переменных напрямую: у нового входа он живёт час и
+  // продлевается сам, см. vkToken.ts.
+  const token = await vkAccessToken();
+  if (!token) throw new Error("токен ВКонтакте не задан и не продлился");
 
   const body = new URLSearchParams({
     ...params,
