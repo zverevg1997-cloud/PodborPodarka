@@ -153,8 +153,21 @@ export async function handleAdminCommand(
       return true;
     }
 
-    const feed = await prisma.productFeed.create({ data: { name, url } });
-    await sendMessage(chatId, `Добавил «${name}». Загружаю, это займёт минуту-другую.`);
+    // Повторная отправка с тем же названием заменяет адрес, а не заводит
+    // второй магазин. Первая попытка часто уходит с неполным адресом, и
+    // список не должен зарастать её обломками.
+    const before = await prisma.productFeed.findFirst({ where: { name } });
+    const feed = before
+      ? await prisma.productFeed.update({
+          where: { id: before.id },
+          data: { url, enabled: true, error: null },
+        })
+      : await prisma.productFeed.create({ data: { name, url } });
+
+    await sendMessage(
+      chatId,
+      `${before ? "Заменил адрес" : "Добавил"} «${name}». Загружаю, это займёт минуту-другую.`,
+    );
 
     const { importFeed } = await import("@/lib/products/import");
     const result = await importFeed(feed);
@@ -164,6 +177,20 @@ export async function handleAdminCommand(
       result.error
         ? `Не вышло: ${result.error}`
         : `Готово: товаров ${result.added}.`,
+    );
+    return true;
+  }
+
+  if (command.startsWith("/unfeed ")) {
+    const name = text.trim().slice(8).trim();
+    // Товары уходят вместе с магазином: ссылки на них партнёрские, и без
+    // магазина они всё равно ничего не стоят.
+    const removed = await prisma.productFeed.deleteMany({ where: { name } });
+    await sendMessage(
+      chatId,
+      removed.count > 0
+        ? `Убрал «${name}» и его товары.`
+        : `Не нашёл магазин «${name}». Список — в /feeds.`,
     );
     return true;
   }
