@@ -104,7 +104,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <Header
-          userEmail={user?.email ?? null}
+          userLabel={user?.name ?? user?.email ?? null}
           usedToday={usedToday}
           dailyLimit={DAILY_RECOMMEND_LIMIT}
         />

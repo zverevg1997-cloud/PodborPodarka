@@ -4,6 +4,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import VkLoginButton from "@/components/VkLoginButton";
+
+/** Чем закончился неудачный вход через ВКонтакте — словами, а не кодом. */
+const VK_ERRORS: Record<string, string> = {
+  vk: "Войти через ВКонтакте не получилось. Попробуйте ещё раз или войдите по почте.",
+  vk_denied: "Вы не дали доступ во ВКонтакте, поэтому вход не состоялся.",
+};
 
 const inputClass =
   "rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/25";
@@ -15,7 +22,12 @@ function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  // Вход через ВКонтакте возвращает сюда с пометкой, если не сложилось:
+  // показать сообщение на той же странице честнее, чем молча открыть форму,
+  // будто человек ничего и не нажимал.
+  const [error, setError] = useState<string | null>(
+    VK_ERRORS[searchParams.get("error") ?? ""] ?? null,
+  );
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
@@ -111,6 +123,8 @@ function LoginForm() {
           {loading ? "Входим…" : "Войти"}
         </button>
       </form>
+
+      <VkLoginButton hint="Пароль при этом не нужен" />
 
       <p className="text-center text-sm text-muted-foreground">
         Ещё нет аккаунта?{" "}

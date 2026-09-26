@@ -12,12 +12,22 @@ datasource db {
 // пределами России, а 152-ФЗ требует обратного.
 model User {
   id               String    @id @default(cuid())
-  email            String    @unique
+  // Почты может не быть: во ВКонтакте аккаунт заводят на телефон, и адрес
+  // он отдаёт не всегда. Уникальность при этом сохраняется — Postgres
+  // считает пустые значения разными.
+  email            String?   @unique
   phone            String?
   telegramId       String?   @unique
+  // Кто вошёл через ВКонтакте. По нему узнаём человека при следующем входе.
+  vkId             String?   @unique
+  // Показываем в шапке вместо почты, когда почты нет.
+  name             String?
+  avatarUrl        String?
   // bcrypt. Хэши, перенесённые из Supabase, имеют формат $2a$ — библиотека
   // проверяет и их, и новые $2b$, поэтому пароли никому менять не пришлось.
-  passwordHash     String
+  //
+  // Пусто у тех, кто вошёл через ВКонтакте и пароля не заводил.
+  passwordHash     String?
   // Пока пусто, войти нельзя: адрес не подтверждён.
   emailConfirmedAt DateTime?
   createdAt        DateTime  @default(now())

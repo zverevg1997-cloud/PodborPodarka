@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import VkLoginButton from "@/components/VkLoginButton";
 import { GOALS, reachGoal } from "@/lib/metrika";
 
 const inputClass =
@@ -284,6 +285,8 @@ export default function RegisterPage() {
           {loading ? "Создаём аккаунт…" : "Зарегистрироваться"}
         </button>
       </form>
+
+      <VkLoginButton hint="Быстрее: ни почты, ни пароля, ни письма с кодом" />
 
       <p className="text-center text-sm text-muted-foreground">
         Уже есть аккаунт?{" "}

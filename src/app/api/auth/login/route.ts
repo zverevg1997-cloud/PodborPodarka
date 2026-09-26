@@ -26,6 +26,21 @@ export async function POST(request: NextRequest) {
   );
 
   if (!user) return wrong;
+
+  // Пароля нет у тех, кто заводил аккаунт через ВКонтакте. Говорим об этом
+  // прямо: «неверный пароль» отправило бы человека восстанавливать тот,
+  // которого он никогда не задавал.
+  if (!user.passwordHash) {
+    return NextResponse.json(
+      {
+        error:
+          "Этот аккаунт заведён через ВКонтакте — войдите тем же способом. " +
+          "Пароль можно задать потом, через восстановление.",
+      },
+      { status: 409 },
+    );
+  }
+
   if (!(await verifyPassword(password, user.passwordHash))) return wrong;
 
   if (!user.emailConfirmedAt) {

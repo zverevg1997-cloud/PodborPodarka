@@ -5,13 +5,15 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 interface HeaderProps {
-  userEmail: string | null;
+  /** Имя или почта — то, чем человек называется. У входа через ВКонтакте
+   * почты может не быть вовсе. */
+  userLabel: string | null;
   usedToday: number;
   dailyLimit: number;
 }
 
 export default function Header({
-  userEmail,
+  userLabel,
   usedToday,
   dailyLimit,
 }: HeaderProps) {
@@ -39,7 +41,7 @@ export default function Header({
         </Link>
 
         <nav className="flex items-center gap-2 text-sm sm:gap-3">
-          {userEmail ? (
+          {userLabel ? (
             <>
               <Link
                 href="/search"
@@ -72,7 +74,7 @@ export default function Header({
               </span>
 
               <span className="hidden max-w-[10rem] truncate text-muted-foreground md:inline">
-                {userEmail}
+                {userLabel}
               </span>
               <button
                 onClick={handleLogout}

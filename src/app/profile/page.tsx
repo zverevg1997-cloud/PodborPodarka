@@ -35,7 +35,9 @@ export default async function ProfilePage() {
           <h1 className="font-display text-2xl font-extrabold">
             Личный кабинет
           </h1>
-          <p className="text-sm text-muted-foreground">{user.email}</p>
+          <p className="text-sm text-muted-foreground">
+            {user.email ?? user.name ?? "Вход через ВКонтакте"}
+          </p>
         </div>
       </div>
 
