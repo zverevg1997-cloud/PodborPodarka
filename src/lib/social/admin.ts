@@ -115,6 +115,79 @@ export async function handleAdminCommand(
     return true;
   }
 
+  if (command === "/feeds") {
+    const feeds = await prisma.productFeed.findMany({
+      orderBy: { createdAt: "asc" },
+    });
+
+    if (feeds.length === 0) {
+      await sendMessage(
+        chatId,
+        "Выгрузок нет. Добавить: /feed Название https://адрес",
+      );
+      return true;
+    }
+
+    const total = await prisma.product.count({ where: { available: true } });
+    const lines = feeds.map((feed) => {
+      const when = feed.importedAt ? MOSCOW.format(feed.importedAt) : "ни разу";
+      const trouble = feed.error ? `\n   ошибка: ${feed.error}` : "";
+      return `${feed.name} — товаров ${feed.count}, обновлено ${when}${trouble}`;
+    });
+
+    await sendMessage(
+      chatId,
+      `<b>Выгрузки</b>\n\n${lines.join("\n")}\n\nВсего в наличии: ${total}`,
+    );
+    return true;
+  }
+
+  if (command.startsWith("/feed ")) {
+    // Название может быть из нескольких слов, адрес всегда последний.
+    const parts = text.trim().split(/\s+/).slice(1);
+    const url = parts.pop() ?? "";
+    const name = parts.join(" ");
+
+    if (!name || !/^https?:\/\//.test(url)) {
+      await sendMessage(chatId, "Нужно так: /feed Название https://адрес");
+      return true;
+    }
+
+    const feed = await prisma.productFeed.create({ data: { name, url } });
+    await sendMessage(chatId, `Добавил «${name}». Загружаю, это займёт минуту-другую.`);
+
+    const { importFeed } = await import("@/lib/products/import");
+    const result = await importFeed(feed);
+
+    await sendMessage(
+      chatId,
+      result.error
+        ? `Не вышло: ${result.error}`
+        : `Готово: товаров ${result.added}.`,
+    );
+    return true;
+  }
+
+  if (command === "/import") {
+    await sendMessage(chatId, "Обновляю выгрузки…");
+    const { importDueFeeds } = await import("@/lib/products/import");
+    const results = await importDueFeeds(true);
+
+    await sendMessage(
+      chatId,
+      results.length === 0
+        ? "Выгрузок нет."
+        : results
+            .map((r) =>
+              r.error
+                ? `${r.feed}: ${r.error}`
+                : `${r.feed}: новых ${r.added}, обновлено ${r.updated}, пропало ${r.gone}`,
+            )
+            .join("\n"),
+    );
+    return true;
+  }
+
   if (command === "/seed") {
     await sendMessage(chatId, await seedPlan());
     const { text: body, keyboard } = await planText();

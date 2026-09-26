@@ -242,3 +242,55 @@ model Setting {
 
   @@map("settings")
 }
+
+// Товарная выгрузка партнёрского магазина.
+//
+// Адреса хранятся в базе, а не в переменных окружения: магазины добавляются
+// по ходу дела, и каждый раз пересобирать приложение ради одной строки
+// глупо. В адресе лежит ключ доступа, поэтому наружу он не показывается.
+model ProductFeed {
+  id       String   @id @default(cuid())
+  name     String
+  url      String
+  enabled  Boolean  @default(true)
+  // Когда выгрузка последний раз разбиралась и сколько товаров в ней было.
+  importedAt DateTime?
+  count      Int      @default(0)
+  error      String?
+  createdAt  DateTime @default(now())
+
+  products Product[]
+
+  @@map("product_feeds")
+}
+
+// Товар из выгрузки.
+//
+// Держим у себя, а не ходим в выгрузку при каждом обращении: файл весит
+// мегабайты и обновляется раз в сутки, а выбирать из него надо по цене и
+// словам в названии.
+model Product {
+  id         String   @id @default(cuid())
+  feedId     String
+  feed       ProductFeed @relation(fields: [feedId], references: [id], onDelete: Cascade)
+  // Идентификатор товара в самой выгрузке.
+  externalId String
+  name       String
+  description String?
+  brand      String?
+  // Целые рубли: копейки в подборках не нужны, а сравнивать проще.
+  price      Int
+  oldPrice   Int?
+  // Партнёрская ссылка. В выгрузках Адмитада она уже с erid, то есть
+  // промаркирована как реклама, и отдельно этим заниматься не нужно.
+  url        String
+  picture    String
+  category   String?
+  available  Boolean  @default(true)
+  updatedAt  DateTime @updatedAt
+
+  @@unique([feedId, externalId])
+  @@index([available, price])
+  @@index([category])
+  @@map("products")
+}

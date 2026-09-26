@@ -26,7 +26,36 @@ const WARN_AHEAD_MS = 24 * 60 * 60 * 1000;
 /** Ограничение телеграма на подпись к картинке. */
 const CAPTION_LIMIT = 1024;
 
+/** Как часто заглядываем, не устарели ли товарные выгрузки. */
+const FEED_CHECK_MS = 30 * 60 * 1000;
+
 let running = false;
+let feedsCheckedAt = 0;
+
+/**
+ * Обновление выгрузок.
+ *
+ * Запускаем в стороне, не дожидаясь: разбор нескольких мегабайт занимает
+ * минуты, а расписание постов ждать не может — пост, назначенный на это
+ * время, вышел бы с опозданием.
+ */
+function refreshFeedsInBackground(): void {
+  if (Date.now() - feedsCheckedAt < FEED_CHECK_MS) return;
+  feedsCheckedAt = Date.now();
+
+  void import("@/lib/products/import")
+    .then(({ importDueFeeds }) => importDueFeeds())
+    .then((results) => {
+      for (const r of results) {
+        console.log(
+          r.error
+            ? `выгрузка «${r.feed}»: ${r.error}`
+            : `выгрузка «${r.feed}»: новых ${r.added}, обновлено ${r.updated}, пропало ${r.gone}`,
+        );
+      }
+    })
+    .catch((error) => console.error("выгрузки: обновить не вышло", error));
+}
 
 function channel(): string | null {
   return process.env.TELEGRAM_CHANNEL ?? null;
@@ -287,6 +316,7 @@ export async function startScheduler(): Promise<void> {
         return;
       }
 
+      refreshFeedsInBackground();
       await tick();
     } catch (error) {
       console.error("посты: проход не удался", error);
