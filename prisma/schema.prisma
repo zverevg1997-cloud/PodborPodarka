@@ -253,6 +253,10 @@ model ProductFeed {
   name     String
   url      String
   enabled  Boolean  @default(true)
+  // Какие разделы брать: выражение по названию категории. Пусто — все.
+  // У Читай-города триста тысяч книг, и тащить к себе весь каталог ради
+  // подарочных изданий незачем.
+  include  String?
   // Когда выгрузка последний раз разбиралась и сколько товаров в ней было.
   importedAt DateTime?
   count      Int      @default(0)

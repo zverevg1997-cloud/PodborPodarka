@@ -50,7 +50,7 @@ function refreshFeedsInBackground(): void {
         console.log(
           r.error
             ? `выгрузка «${r.feed}»: ${r.error}`
-            : `выгрузка «${r.feed}»: новых ${r.added}, обновлено ${r.updated}, пропало ${r.gone}`,
+            : `выгрузка «${r.feed}»: товаров ${r.saved}, пропало ${r.gone}`,
         );
       }
     })

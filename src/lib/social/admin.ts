@@ -176,7 +176,55 @@ export async function handleAdminCommand(
       chatId,
       result.error
         ? `Не вышло: ${result.error}`
-        : `Готово: товаров ${result.added}.`,
+        : `Готово: товаров ${result.saved}${result.skipped ? `, отсеяно ${result.skipped}` : ""}.`,
+    );
+    return true;
+  }
+
+  if (command.startsWith("/filter ")) {
+    // Какие разделы магазина брать. Без этого большие каталоги приносят
+    // сотни тысяч товаров, из которых в подарок годятся единицы.
+    const rest = text.trim().slice(8).trim();
+    const space = rest.indexOf(" ");
+    const name = space === -1 ? rest : rest.slice(0, space);
+    const include = space === -1 ? "" : rest.slice(space + 1).trim();
+
+    const feed = await prisma.productFeed.findFirst({ where: { name } });
+    if (!feed) {
+      await sendMessage(chatId, `Не нашёл магазин «${name}». Список — в /feeds.`);
+      return true;
+    }
+
+    try {
+      if (include) new RegExp(include);
+    } catch {
+      await sendMessage(chatId, "Это выражение мне непонятно. Разделы через | — например: книги|подарочн");
+      return true;
+    }
+
+    await prisma.productFeed.update({
+      where: { id: feed.id },
+      data: { include: include || null },
+    });
+
+    await sendMessage(
+      chatId,
+      include
+        ? `«${name}»: беру только разделы по «${include}». Загружаю заново…`
+        : `«${name}»: беру все разделы. Загружаю заново…`,
+    );
+
+    // Старое чистим: товары из отсеянных разделов иначе остались бы висеть.
+    await prisma.product.deleteMany({ where: { feedId: feed.id } });
+
+    const { importFeed } = await import("@/lib/products/import");
+    const result = await importFeed({ ...feed, include: include || null });
+
+    await sendMessage(
+      chatId,
+      result.error
+        ? `Не вышло: ${result.error}`
+        : `Готово: товаров ${result.saved}, отсеяно ${result.skipped}.`,
     );
     return true;
   }
@@ -208,7 +256,7 @@ export async function handleAdminCommand(
             .map((r) =>
               r.error
                 ? `${r.feed}: ${r.error}`
-                : `${r.feed}: новых ${r.added}, обновлено ${r.updated}, пропало ${r.gone}`,
+                : `${r.feed}: товаров ${r.saved}, пропало ${r.gone}`,
             )
             .join("\n"),
     );
