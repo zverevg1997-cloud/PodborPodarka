@@ -24,7 +24,10 @@ import { createInterface } from "node:readline/promises";
 
 const APP_ID = process.argv[2];
 const REDIRECT = process.argv[3] ?? "https://xn--80achr5ajr.xn--p1ai/vk-callback";
-const SCOPE = "photos wall groups offline";
+// Права можно задать третьим доводом: ВК то принимает их через пробел, то
+// через запятую, и это одна из двух причин, по которым он может выдать
+// пустой набор.
+const SCOPE = process.argv[4] ?? "photos wall groups offline";
 const ENV = new URL("../.env", import.meta.url).pathname.slice(1);
 
 if (!APP_ID || !/^\d+$/.test(APP_ID)) {
@@ -53,10 +56,15 @@ const authorize =
     redirect_uri: REDIRECT,
     state,
     scope: SCOPE,
+    // Вторая причина: разрешив приложению доступ однажды, человек больше не
+    // видит страницу согласия — ВК пускает молча и новых прав не добавляет.
+    // Этим доводом просим спросить заново.
+    prompt: "consent",
   });
 
 console.log(`\nАдрес возврата: ${REDIRECT}`);
-console.log("Он должен быть прописан в настройках приложения на dev.vk.com,");
+console.log(`Запрашиваем права: ${SCOPE}`);
+console.log("Адрес возврата должен быть прописан в настройках приложения,");
 console.log("в «Доверенные redirect URI» — иначе ВК покажет «Ошибка загрузки»");
 console.log("вместо страницы входа.\n");
 console.log("1. Откройте эту ссылку в браузере, где вы вошли как");
