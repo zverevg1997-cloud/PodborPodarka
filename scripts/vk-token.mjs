@@ -11,12 +11,14 @@
 // «cannot be called with current scopes». Классические права API там взять
 // негде, поэтому здесь старый способ авторизации — он их выдаёт.
 //
+// Неявную выдачу — когда токен приходит прямо в адресе — ВК у этого
+// приложения тоже закрыл: отвечает «Security Error». Поэтому здесь
+// остаток старого способа, который ещё работает: сначала одноразовый код,
+// потом обмен его на токен с предъявлением секрета приложения.
+//
 // У старого способа есть приятное следствие: с правом offline токен
 // бессрочный, и продлевать его не нужно.
 //
-// Токен приходит в адресной строке за решёткой, то есть до сервера не
-// доходит вовсе — его показывает страница /vk-callback, а забираем мы его
-// отсюда, вручную. Так он не попадает ни в чужие журналы, ни в переписку.
 //
 // Запуск:  node scripts/vk-token.mjs <ID приложения> [адрес возврата] [права]
 
@@ -41,7 +43,7 @@ const authorize =
     display: "page",
     redirect_uri: REDIRECT,
     scope: SCOPE,
-    response_type: "token",
+    response_type: "code",
     v: "5.199",
     // Иначе ВК пускает молча по прежнему разрешению и новых прав не даёт.
     revoke: "1",
@@ -66,9 +68,8 @@ rl.close();
 let returned;
 try {
   const url = new URL(answer);
-  // Токен приходит за решёткой. Запрос тоже разбираем — там приезжают отказы.
   returned = new URLSearchParams(
-    url.hash.length > 1 ? url.hash.slice(1) : url.search.slice(1),
+    url.search.length > 1 ? url.search.slice(1) : url.hash.slice(1),
   );
 } catch {
   console.log("\nЭто не похоже на адрес. Нужен он целиком, вместе с https://");
@@ -81,11 +82,38 @@ if (returned.get("error")) {
   process.exit(1);
 }
 
-const token = returned.get("access_token");
+const code = returned.get("code");
+
+if (!code) {
+  console.log("\nВ адресе нет кода. Возможно, скопировалась не та страница");
+  console.log("или доступ не был разрешён.");
+  process.exit(1);
+}
+
+// Секрет приложения берём из .env, чтобы он не мелькал в командной строке:
+// её содержимое попадает в историю оболочки и видно в списке процессов.
+const secret = (readFileSync(ENV, "utf8").match(/^VK_APP_SECRET="?([^"\r\n]+)/m) ?? [])[1];
+
+if (!secret) {
+  console.log("\nВ .env нет VK_APP_SECRET — без него код не обменять.");
+  process.exit(1);
+}
+
+const exchanged = await fetch(
+  "https://oauth.vk.com/access_token?" +
+    new URLSearchParams({
+      client_id: APP_ID,
+      client_secret: secret,
+      redirect_uri: REDIRECT,
+      code,
+    }),
+).then((res) => res.json());
+
+const token = exchanged.access_token;
 
 if (!token) {
-  console.log("\nВ адресе нет токена. Возможно, скопировалась не та страница");
-  console.log("или доступ не был разрешён.");
+  console.log("\nОбмен кода на токен не удался:");
+  console.log(JSON.stringify(exchanged).slice(0, 400));
   process.exit(1);
 }
 
