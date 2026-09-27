@@ -69,6 +69,12 @@ export default async function GuidePage({
 
   const others = GIFT_GUIDES.filter((g) => g.slug !== guide.slug).slice(0, 6);
 
+  // У хаба это главное содержимое страницы, а не довесок: за ним человек
+  // сюда и пришёл.
+  const related = (guide.related ?? [])
+    .map((slug) => findGuide(slug))
+    .filter((g): g is NonNullable<typeof g> => Boolean(g));
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-10 px-6 py-12">
       <header className="flex flex-col gap-4">
@@ -92,6 +98,27 @@ export default async function GuidePage({
           ))}
         </ul>
       </section>
+
+      {related.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="font-display text-2xl font-bold">Выберите возраст</h2>
+          <p className="text-sm text-muted-foreground">
+            Год разницы в детстве меняет всё, поэтому под каждый возраст своя
+            подборка.
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {related.map((page) => (
+              <Link
+                key={page.slug}
+                href={`/chto-podarit/${page.slug}`}
+                className="rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold transition hover:border-primary/40 hover:text-primary"
+              >
+                {page.title.split(":")[0]}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="flex flex-col gap-4">
         <h2 className="font-display text-2xl font-bold">

@@ -36,6 +36,7 @@ import { muzhchineNaNovyyGod } from "@/content/guides/muzhchine-na-novyy-god";
 import { papeNaNovyyGod } from "@/content/guides/pape-na-novyy-god";
 import { parnyuNaNovyyGod } from "@/content/guides/parnyu-na-novyy-god";
 import { podrugeNaNovyyGod } from "@/content/guides/podruge-na-novyy-god";
+import { rebenkuNaDenRozhdeniya } from "@/content/guides/rebenku-na-den-rozhdeniya";
 import { uchitelyu } from "@/content/guides/uchitelyu";
 import { uchitelyuOtKlassa } from "@/content/guides/uchitelyu-ot-klassa";
 import { vospitatelyu } from "@/content/guides/vospitatelyu";
@@ -83,6 +84,18 @@ export interface GiftGuide {
   };
   /** Приглашение в анкету — про конкретного получателя, а не вообще. */
   cta: string;
+  /**
+   * Страницы, на которые эта ссылается. Заполнена у страниц-хабов.
+   *
+   * Хаб отвечает на общий запрос вроде «что подарить ребёнку на день
+   * рождения», на который одной подборкой не ответишь: всё зависит от
+   * возраста. Его задача — развести людей по частным страницам и связать
+   * раздел перелинковкой, без которой поисковик не видит его вес целиком.
+   *
+   * Заводить хаб имеет смысл, только когда частных страниц уже несколько.
+   * Хаб, ведущий на одну страницу, — её дубль, и засчитан будет так же.
+   */
+  related?: string[];
 }
 
 export const GIFT_GUIDES: GiftGuide[] = [
@@ -101,6 +114,7 @@ export const GIFT_GUIDES: GiftGuide[] = [
   vospitatelyu,
   malchiku5Let,
   malchiku8Let,
+  rebenkuNaDenRozhdeniya,
   devochke8Let,
   devochke10Let,
   devochke14Let,
@@ -130,6 +144,11 @@ export const GUIDE_GROUPS: Array<{
   note: string;
   slugs: string[];
 }> = [
+  {
+    title: "С чего начать",
+    note: "Общий вопрос, на который одной подборкой не ответить: всё зависит от возраста. Эта страница разводит по остальным.",
+    slugs: ["rebenku-na-den-rozhdeniya"],
+  },
   {
     title: "Учителям и воспитателям",
     note: "Здесь у подарка есть потолок по закону — три тысячи рублей на человека. Разбираем, как в него уложиться.",
