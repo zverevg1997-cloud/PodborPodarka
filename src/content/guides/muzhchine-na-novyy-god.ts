@@ -44,6 +44,7 @@ export const muzhchineNaNovyyGod: GiftGuide = {
       priceFrom: 1000,
       priceTo: 4000,
       searchQuery: "внешний аккумулятор для телефона",
+      productQuery: "внешний аккумулятор",
     },
     {
       name: "Хороший зонт",
@@ -52,6 +53,7 @@ export const muzhchineNaNovyyGod: GiftGuide = {
       priceFrom: 1000,
       priceTo: 3500,
       searchQuery: "зонт мужской автомат прочный",
+      productQuery: "зонт мужской",
     },
     {
       name: "Термос",
@@ -76,6 +78,7 @@ export const muzhchineNaNovyyGod: GiftGuide = {
       priceFrom: 2000,
       priceTo: 10000,
       searchQuery: "беспроводные наушники",
+      productQuery: "беспроводные наушники",
     },
     {
       name: "Мультитул",
@@ -124,6 +127,7 @@ export const muzhchineNaNovyyGod: GiftGuide = {
       priceFrom: 3000,
       priceTo: 10000,
       searchQuery: "умная колонка с голосовым помощником",
+      productQuery: "умная колонка",
     },
     {
       name: "Набор для гриля или мангал",

@@ -60,6 +60,7 @@ export const detyamNaNovyyGod: GiftGuide = {
       priceFrom: 700,
       priceTo: 2500,
       searchQuery: "детский планшет для рисования",
+      productQuery: "планшет для рисования",
     },
     {
       name: "Конструктор по интересам (5–10 лет)",
@@ -116,6 +117,7 @@ export const detyamNaNovyyGod: GiftGuide = {
       priceFrom: 1500,
       priceTo: 6000,
       searchQuery: "портативная колонка bluetooth",
+      productQuery: "портативная колонка",
     },
     {
       name: "Световая лампа для комнаты (10–16 лет)",

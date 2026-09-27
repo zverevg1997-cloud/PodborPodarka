@@ -27,6 +27,7 @@ export const parnyuNaNovyyGod: GiftGuide = {
       priceFrom: 2000,
       priceTo: 12000,
       searchQuery: "беспроводные наушники",
+      productQuery: "беспроводные наушники",
     },
     {
       name: "Настольная игра на двоих",
@@ -59,6 +60,7 @@ export const parnyuNaNovyyGod: GiftGuide = {
       priceFrom: 2000,
       priceTo: 8000,
       searchQuery: "портативная колонка bluetooth влагозащищенная",
+      productQuery: "портативная колонка",
     },
     {
       name: "Термокружка",
@@ -91,6 +93,7 @@ export const parnyuNaNovyyGod: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "внешний аккумулятор 20000 мач",
+      productQuery: "внешний аккумулятор",
     },
     {
       name: "Набор для его хобби",
@@ -131,6 +134,7 @@ export const parnyuNaNovyyGod: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "настольная лампа для рабочего стола",
+      productQuery: "настольная лампа",
     },
     {
       name: "Фотокнига или печать ваших снимков",

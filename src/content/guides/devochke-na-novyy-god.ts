@@ -115,6 +115,7 @@ export const devochkeNaNovyyGod: GiftGuide = {
       priceFrom: 1500,
       priceTo: 6000,
       searchQuery: "портативная колонка bluetooth",
+      productQuery: "портативная колонка",
     },
     {
       name: "Сумка или рюкзак, который она выбрала бы сама (12–16 лет)",

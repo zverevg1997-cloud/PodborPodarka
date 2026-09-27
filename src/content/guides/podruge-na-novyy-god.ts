@@ -116,6 +116,7 @@ export const podrugeNaNovyyGod: GiftGuide = {
       priceFrom: 1500,
       priceTo: 6000,
       searchQuery: "портативная колонка bluetooth",
+      productQuery: "портативная колонка",
     },
     {
       name: "Набор постельного белья из сатина",

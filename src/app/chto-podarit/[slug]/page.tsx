@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import GiftLink from "@/components/GiftLink";
+import ProductCards from "@/components/ProductCards";
+import { findProducts } from "@/lib/products/match";
 import { GIFT_GUIDES, findGuide, type GuideIdea } from "@/lib/giftGuides";
 import { botLink } from "@/lib/site";
 
@@ -26,7 +28,13 @@ export async function generateMetadata({
   };
 }
 
-function IdeaCard({ idea }: { idea: GuideIdea }) {
+async function IdeaCard({ idea }: { idea: GuideIdea }) {
+  // Товары ищем только по выверенной фразе. Её нет у большинства идей —
+  // каталог пока узкий, и притягивать к ним что попало нельзя.
+  const products = idea.productQuery
+    ? await findProducts(idea.productQuery, idea.priceFrom, idea.priceTo)
+    : [];
+
   return (
     <div className="flex flex-col gap-1.5 rounded-2xl border border-border bg-card p-5 shadow-sm">
       <h3 className="font-display text-base font-bold">{idea.name}</h3>
@@ -35,9 +43,15 @@ function IdeaCard({ idea }: { idea: GuideIdea }) {
         примерно {idea.priceFrom.toLocaleString("ru")}–
         {idea.priceTo.toLocaleString("ru")} ₽
       </span>
+      <ProductCards products={products} query={idea.productQuery ?? idea.searchQuery} />
+
       <GiftLink
         href={`/api/market-link?q=${encodeURIComponent(idea.searchQuery)}&from=${idea.priceFrom}&to=${idea.priceTo}&src=guide`}
-        label="Посмотреть на Яндекс Маркете →"
+        label={
+          products.length > 0
+            ? "Другие варианты на Яндекс Маркете →"
+            : "Посмотреть на Яндекс Маркете →"
+        }
         kind="product"
         query={idea.searchQuery}
       />

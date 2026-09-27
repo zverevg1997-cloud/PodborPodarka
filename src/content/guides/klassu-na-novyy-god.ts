@@ -108,6 +108,7 @@ export const klassuNaNovyyGod: GiftGuide = {
       priceFrom: 400,
       priceTo: 1200,
       searchQuery: "наушники проводные вкладыши",
+      productQuery: "наушники",
     },
     {
       name: "Подарочный сертификат в книжный или маркетплейс",
@@ -148,6 +149,7 @@ export const klassuNaNovyyGod: GiftGuide = {
         priceFrom: 2000,
         priceTo: 7000,
         searchQuery: "увлажнитель воздуха для помещения",
+      productQuery: "увлажнитель воздуха",
       },
       {
         name: "Настольная лампа на учительский стол",
@@ -156,6 +158,7 @@ export const klassuNaNovyyGod: GiftGuide = {
         priceFrom: 1500,
         priceTo: 5000,
         searchQuery: "настольная лампа для работы",
+      productQuery: "настольная лампа",
       },
       {
         name: "Сертификат в спа или на массаж",

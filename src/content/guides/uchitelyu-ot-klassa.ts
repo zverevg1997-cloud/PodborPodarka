@@ -26,6 +26,7 @@ export const uchitelyuOtKlassa: GiftGuide = {
       priceFrom: 1800,
       priceTo: 3000,
       searchQuery: "чайник электрический стеклянный 1.7 л",
+      productQuery: "электрический чайник",
     },
     {
       name: "Увлажнитель воздуха",
@@ -34,6 +35,7 @@ export const uchitelyuOtKlassa: GiftGuide = {
       priceFrom: 2000,
       priceTo: 3000,
       searchQuery: "увлажнитель воздуха ультразвуковой небольшой",
+      productQuery: "увлажнитель воздуха",
     },
     {
       name: "Крупное растение в напольном горшке",

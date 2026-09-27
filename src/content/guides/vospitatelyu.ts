@@ -59,6 +59,7 @@ export const vospitatelyu: GiftGuide = {
       priceFrom: 2000,
       priceTo: 3000,
       searchQuery: "увлажнитель воздуха для детской комнаты",
+      productQuery: "увлажнитель воздуха",
     },
     {
       name: "Чай в жестяной коробке",

@@ -50,6 +50,7 @@ export const mameNaNovyyGod: GiftGuide = {
       priceFrom: 2000,
       priceTo: 7000,
       searchQuery: "увлажнитель воздуха для дома",
+      productQuery: "увлажнитель воздуха",
     },
     {
       name: "Массажёр для шеи и плеч",
@@ -114,6 +115,7 @@ export const mameNaNovyyGod: GiftGuide = {
       priceFrom: 1500,
       priceTo: 6000,
       searchQuery: "электрическая зубная щетка",
+      productQuery: "электрическая зубная щетка",
     },
     {
       name: "Комнатное растение в хорошем горшке",

@@ -52,6 +52,7 @@ export const kollegamNaNovyyGod: GiftGuide = {
       priceFrom: 1200,
       priceTo: 3500,
       searchQuery: "настольная лампа светодиодная с регулировкой",
+      productQuery: "настольная лампа",
     },
     {
       name: "Кофе в зёрнах от местной обжарки",
@@ -68,6 +69,7 @@ export const kollegamNaNovyyGod: GiftGuide = {
       priceFrom: 900,
       priceTo: 2500,
       searchQuery: "увлажнитель воздуха настольный",
+      productQuery: "увлажнитель воздуха",
     },
     {
       name: "Подставка для ноутбука",
@@ -92,6 +94,7 @@ export const kollegamNaNovyyGod: GiftGuide = {
       priceFrom: 900,
       priceTo: 3000,
       searchQuery: "внешний аккумулятор компактный",
+      productQuery: "внешний аккумулятор",
     },
     {
       name: "Ежедневник или планер на год",

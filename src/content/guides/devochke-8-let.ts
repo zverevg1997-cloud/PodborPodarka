@@ -120,6 +120,7 @@ export const devochke8Let: GiftGuide = {
         priceFrom: 700,
         priceTo: 1500,
         searchQuery: "детский рюкзак для девочки небольшой",
+      productQuery: "рюкзак",
       },
     ],
   },

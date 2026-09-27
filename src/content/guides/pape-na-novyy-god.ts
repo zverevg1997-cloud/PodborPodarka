@@ -68,6 +68,7 @@ export const papeNaNovyyGod: GiftGuide = {
       priceFrom: 2000,
       priceTo: 8000,
       searchQuery: "беспроводные наушники",
+      productQuery: "беспроводные наушники",
     },
     {
       name: "Умная колонка",
@@ -76,6 +77,7 @@ export const papeNaNovyyGod: GiftGuide = {
       priceFrom: 3000,
       priceTo: 10000,
       searchQuery: "умная колонка с голосовым помощником",
+      productQuery: "умная колонка",
     },
     {
       name: "Мангал или набор для гриля",
