@@ -15,6 +15,16 @@
 
 import { detyamNaNovyyGod } from "@/content/guides/detyam-na-novyy-god";
 import { devochke8Let } from "@/content/guides/devochke-8-let";
+import { malchiku9Let } from "@/content/guides/malchiku-9-let";
+import { malchiku7Let } from "@/content/guides/malchiku-7-let";
+import { malchiku6Let } from "@/content/guides/malchiku-6-let";
+import { malchiku2Goda } from "@/content/guides/malchiku-2-goda";
+import { malchiku12Let } from "@/content/guides/malchiku-12-let";
+import { malchiku11Let } from "@/content/guides/malchiku-11-let";
+import { devochke5Let } from "@/content/guides/devochke-5-let";
+import { devochke3Goda } from "@/content/guides/devochke-3-goda";
+import { devochke14Let } from "@/content/guides/devochke-14-let";
+import { devochke10Let } from "@/content/guides/devochke-10-let";
 import { devochkeNaNovyyGod } from "@/content/guides/devochke-na-novyy-god";
 import { klassuNaNovyyGod } from "@/content/guides/klassu-na-novyy-god";
 import { kollegamNaNovyyGod } from "@/content/guides/kollegam-na-novyy-god";
@@ -92,6 +102,16 @@ export const GIFT_GUIDES: GiftGuide[] = [
   malchiku5Let,
   malchiku8Let,
   devochke8Let,
+  devochke10Let,
+  devochke14Let,
+  devochke3Goda,
+  devochke5Let,
+  malchiku11Let,
+  malchiku12Let,
+  malchiku2Goda,
+  malchiku6Let,
+  malchiku7Let,
+  malchiku9Let,
 ];
 
 /**
@@ -116,9 +136,30 @@ export const GUIDE_GROUPS: Array<{
     slugs: ["uchitelyu", "uchitelyu-ot-klassa", "vospitatelyu", "klassu-na-novyy-god"],
   },
   {
-    title: "Детям по возрасту",
+    title: "Мальчикам по возрасту",
     note: "Год разницы в детстве меняет всё. Поэтому страницы отдельные, а не «детям от 5 до 10».",
-    slugs: ["malchiku-5-let", "malchiku-8-let", "malchiku-10-let", "devochke-8-let"],
+    slugs: [
+      "malchiku-2-goda",
+      "malchiku-5-let",
+      "malchiku-6-let",
+      "malchiku-7-let",
+      "malchiku-8-let",
+      "malchiku-9-let",
+      "malchiku-10-let",
+      "malchiku-11-let",
+      "malchiku-12-let",
+    ],
+  },
+  {
+    title: "Девочкам по возрасту",
+    note: "То же самое и по тем же причинам: в три года и в четырнадцать это разные люди.",
+    slugs: [
+      "devochke-3-goda",
+      "devochke-5-let",
+      "devochke-8-let",
+      "devochke-10-let",
+      "devochke-14-let",
+    ],
   },
   {
     title: "На Новый год",
