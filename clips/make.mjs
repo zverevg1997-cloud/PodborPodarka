@@ -3,15 +3,15 @@
 // Для ВК Клипов и Телеграма. Без озвучки — и это главное решение здесь.
 //
 // Трендовый клип держится на звуке: попадание в рекомендации даёт музыка,
-// которую накладывают в редакторе ВК при загрузке, из встроенной
-// библиотеки. Закадровый голос с ней спорит — слышно либо одно, либо
-// другое. Поэтому всё, что надо сказать, написано на экране, а звук
-// выбирается в момент публикации, когда видно, что сейчас в тренде.
+// которую накладывают в редакторе ВК при загрузке, из встроенной библиотеки.
+// Закадровый голос с ней спорит — слышно либо одно, либо другое. Поэтому всё,
+// что надо сказать, написано на экране, а звук выбирается в момент
+// публикации, когда видно, что сейчас в тренде.
 //
 // Запуск: node clips/make.mjs
 
 import { execFileSync } from "node:child_process";
-import { mkdirSync, writeFileSync, existsSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import sharp from "sharp";
 
 const FFMPEG =
@@ -24,6 +24,12 @@ const H = 1920;
 /** Сколько держится один товар. Меньше пяти секунд прочитать не успевают. */
 const PER_SLIDE = 5;
 
+/**
+ * Сколько снизу занимает интерфейс ВК: кнопки, описание, имя сообщества.
+ * Туда нельзя класть ничего, что нужно прочесть.
+ */
+const VK_UI = 300;
+
 const CREAM = "#fff8f3";
 const INK = "#2b1b3d";
 const PINK = "#ff5c7a";
@@ -33,14 +39,18 @@ const TITLE = "5 подарков до 2000 ₽";
 const SUBTITLE = "которые не выглядят дёшево";
 
 const ITEMS = [
-  { name: "Датчик температуры и влажности", price: 941, note: "Покажет, почему дома душно", url: "https://mi-shop.com/upload/iblock/8ae/mcu0rmy5s3e07nub1ei3rw8oxnd31w1d.png" },
+  { name: "Датчик температуры", price: 941, note: "Покажет, почему дома душно", url: "https://mi-shop.com/upload/iblock/8ae/mcu0rmy5s3e07nub1ei3rw8oxnd31w1d.png" },
   { name: "Портативная колонка", price: 1131, note: "В сумку, на дачу, в ванную", url: "https://mi-shop.com/upload/iblock/957/rhq6mnyu0tsgu04kjvlzvkmh4xlwxqb9.png" },
   { name: "Термокружка", price: 1399, note: "Горячее шесть часов, а не сорок минут", url: "https://shop-polaris.ru/upload/iblock/ad8/Kontur-500TM-A.jpg" },
   { name: "Настольная лампа", price: 1416, note: "Для тех, кто работает по вечерам", url: "https://mi-shop.com/upload/iblock/50b/50b9438a568f4e033875d8e7a2489d49.jpg" },
   { name: "Увлажнитель воздуха", price: 2110, note: "С октября по апрель — незаменим", url: "https://shop-polaris.ru/upload/iblock/cd4/PUH%205004_K01-min.jpg" },
 ];
 
-const dir = (name) => new URL(name, import.meta.url).pathname.slice(1);
+// Кириллица в имени файла иначе приезжает в виде %D0%BF%D1%80: URL её
+// кодирует, а файловой системе это не нужно.
+const dir = (name) =>
+  decodeURIComponent(new URL(name, import.meta.url).pathname.slice(1));
+
 mkdirSync(dir("out/"), { recursive: true });
 mkdirSync(dir("tmp/"), { recursive: true });
 
@@ -68,11 +78,11 @@ function backdrop() {
   <rect width="${W}" height="14" fill="url(#brand)"/>`;
 }
 
-/** Подпись с брендом внизу — одинаковая на всех кадрах. */
+/** Подпись с брендом — над зоной, которую перекрывает интерфейс ВК. */
 function mark() {
   return `
-  <text x="60" y="${H - 96}" font-family="Segoe UI" font-size="40" font-weight="700" fill="${INK}">🎁 Дарибот</text>
-  <text x="60" y="${H - 52}" font-family="Segoe UI" font-size="30" font-weight="400" fill="${INK}" opacity="0.5">подбор подарков с ИИ · дарибот.рф</text>`;
+  <text x="70" y="${H - VK_UI - 54}" font-family="Segoe UI" font-size="40" font-weight="700" fill="${INK}">🎁 Дарибот</text>
+  <text x="70" y="${H - VK_UI - 10}" font-family="Segoe UI" font-size="30" font-weight="400" fill="${INK}" opacity="0.5">дарибот.рф</text>`;
 }
 
 /** Перенос по словам — метрик у нас нет, ширину символа берём приближённо. */
@@ -88,30 +98,19 @@ function wrap(text, size, maxWidth) {
   return lines;
 }
 
-async function titleFrame(file) {
-  const lines = wrap(TITLE, 110, W - 120);
-  const head = lines
-    .map((l, i) => `<text x="60" y="${760 + i * 130}" font-family="Segoe UI" font-size="110" font-weight="700" fill="${INK}">${esc(l)}</text>`)
-    .join("");
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
-    ${backdrop()}
-    ${head}
-    <text x="60" y="${760 + lines.length * 130 + 20}" font-family="Segoe UI" font-size="46" font-weight="400" fill="${INK}" opacity="0.6">${esc(SUBTITLE)}</text>
-    ${mark()}
-  </svg>`;
-
-  await sharp(Buffer.from(svg)).png().toFile(file);
-}
-
 /**
  * Скачивание фотографии товара.
  *
+ * Путь вместо адреса — значит, картинка своя и лежит рядом. Пригождается и
+ * для проверки сборки, когда магазины недоступны.
+ *
  * С повторами: магазины отвечают не всегда с первого раза. А если не
- * отвечают вовсе — почти наверняка включён VPN, магазины его не любят
- * ровно так же, как наш собственный сервер.
+ * отвечают вовсе — почти наверняка включён VPN, магазины его не любят ровно
+ * так же, как наш собственный сервер.
  */
 async function fetchPhoto(url) {
+  if (!/^https?:\/\//.test(url)) return readFileSync(url);
+
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
@@ -130,35 +129,51 @@ async function fetchPhoto(url) {
   }
 }
 
+async function titleFrame(file) {
+  const lines = wrap(TITLE, 110, W - 180);
+  const head = lines
+    .map((l, i) => `<text x="70" y="${700 + i * 130}" font-family="Segoe UI" font-size="110" font-weight="700" fill="${INK}">${esc(l)}</text>`)
+    .join("");
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+    ${backdrop()}
+    ${head}
+    <text x="70" y="${700 + lines.length * 130 + 20}" font-family="Segoe UI" font-size="46" font-weight="400" fill="${INK}" opacity="0.6">${esc(SUBTITLE)}</text>
+    ${mark()}
+  </svg>`;
+
+  await sharp(Buffer.from(svg)).png().toFile(file);
+}
+
 async function itemFrame(item, index, file) {
   const photo = await fetchPhoto(item.url);
 
   // Фотографию кладём на белую карточку: у товаров фон то белый, то серый,
   // и без карточки кадры выглядят разнородно.
   const card = await sharp(Buffer.from(photo))
-    .resize(760, 760, { fit: "contain", background: "#ffffff" })
+    .resize(680, 680, { fit: "contain", background: "#ffffff" })
     .toBuffer();
 
-  const nameLines = wrap(item.name, 64, W - 120);
+  const nameLines = wrap(item.name, 64, W - 160);
   const name = nameLines
-    .map((l, i) => `<text x="60" y="${1330 + i * 76}" font-family="Segoe UI" font-size="64" font-weight="700" fill="${INK}">${esc(l)}</text>`)
+    .map((l, i) => `<text x="70" y="${1210 + i * 76}" font-family="Segoe UI" font-size="64" font-weight="700" fill="${INK}">${esc(l)}</text>`)
     .join("");
 
-  const below = 1330 + nameLines.length * 76;
+  const below = 1210 + nameLines.length * 76;
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
     ${backdrop()}
-    <rect x="100" y="340" width="880" height="880" rx="48" fill="#ffffff"/>
-    <circle cx="150" cy="270" r="54" fill="url(#brand)"/>
-    <text x="150" y="288" text-anchor="middle" font-family="Segoe UI" font-size="52" font-weight="700" fill="#ffffff">${index}</text>
+    <rect x="140" y="300" width="800" height="800" rx="48" fill="#ffffff"/>
+    <circle cx="190" cy="228" r="54" fill="url(#brand)"/>
+    <text x="190" y="246" text-anchor="middle" font-family="Segoe UI" font-size="52" font-weight="700" fill="#ffffff">${index}</text>
     ${name}
-    <text x="60" y="${below + 30}" font-family="Segoe UI" font-size="40" font-weight="400" fill="${INK}" opacity="0.62">${esc(item.note)}</text>
-    <text x="60" y="${below + 130}" font-family="Segoe UI" font-size="86" font-weight="700" fill="${PINK}">${item.price.toLocaleString("ru")} ₽</text>
+    <text x="70" y="${below + 20}" font-family="Segoe UI" font-size="40" font-weight="400" fill="${INK}" opacity="0.62">${esc(item.note)}</text>
+    <text x="70" y="${below + 120}" font-family="Segoe UI" font-size="86" font-weight="700" fill="${PINK}">${item.price.toLocaleString("ru")} ₽</text>
     ${mark()}
   </svg>`;
 
   await sharp(Buffer.from(svg))
-    .composite([{ input: card, top: 400, left: 160 }])
+    .composite([{ input: card, top: 360, left: 200 }])
     .png()
     .toFile(file);
 }
@@ -175,23 +190,34 @@ for (const [i, item] of ITEMS.entries()) {
   console.log(`кадр ${i + 1}: ${item.name}`);
 }
 
-// Медленный наезд на каждый кадр: статичная картинка пять секунд читается
-// как зависшее видео, а не как клип.
 const inputs = [];
 const parts = [];
 
 frames.forEach((frame, i) => {
-  inputs.push("-loop", "1", "-t", String(frame.seconds), "-i", frame.file);
+  // Ровно один кадр на слайд.
+  //
+  // zoompan выдаёт d кадров на КАЖДЫЙ входной. Если подать зацикленную
+  // картинку как поток на пять секунд, войдёт сто пятьдесят одинаковых
+  // кадров и выйдет сто пятьдесят на сто пятьдесят — двадцать две тысячи
+  // вместо ста пятидесяти. Так ролик в полминуты считался двадцать пять
+  // минут, пока я не разобрался.
+  //
+  // Сужающейся обрезкой то же самое не сделать: crop вычисляет размер один
+  // раз при настройке, и времени в этот момент ещё нет.
+  inputs.push("-framerate", "1", "-loop", "1", "-t", "1", "-i", frame.file);
+
   const d = Math.round(frame.seconds * 30);
   parts.push(
-    `[${i}:v]scale=${W * 2}:${H * 2},zoompan=z='min(zoom+0.0008,1.12)':d=${d}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${W}x${H}:fps=30,setsar=1[v${i}]`,
+    `[${i}:v]zoompan=z='min(1+0.0009*on,1.12)':d=${d}:` +
+      `x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${W}x${H}:fps=30,setsar=1[v${i}]`,
   );
 });
 
 const chain = frames.map((_, i) => `[v${i}]`).join("");
-const filter = `${parts.join(";")};${chain}concat=n=${frames.length}:v=1:a=0[out]`;
-
-writeFileSync(dir("tmp/filter.txt"), filter);
+writeFileSync(
+  dir("tmp/filter.txt"),
+  `${parts.join(";")};${chain}concat=n=${frames.length}:v=1:a=0[out]`,
+);
 
 const out = dir("out/nahodki-do-2000.mp4");
 
@@ -201,8 +227,11 @@ execFileSync(
     "-y", ...inputs,
     "-/filter_complex", dir("tmp/filter.txt"),
     "-map", "[out]",
-    "-c:v", "libx264", "-preset", "medium", "-crf", "20",
+    "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
     "-pix_fmt", "yuv420p", "-r", "30",
+    // Оглавление в начало файла: иначе ВК и телеграм начинают показывать
+    // ролик только после того, как скачают его целиком.
+    "-movflags", "+faststart",
     out,
   ],
   { stdio: ["ignore", "ignore", "pipe"] },
