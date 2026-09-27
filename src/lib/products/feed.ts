@@ -99,6 +99,10 @@ export function parseOffer(
   // подборка собирается ровно из этих четырёх вещей.
   if (!externalId || !name || !url || !picture || !price) return null;
 
+  // Встречается и буквальное «None» вместо названия — так выгрузка
+  // показывает, что у товара его нет. Пустым оно при этом не считается.
+  if (name === "None" || name.length < 3) return null;
+
   return {
     externalId,
     name,
