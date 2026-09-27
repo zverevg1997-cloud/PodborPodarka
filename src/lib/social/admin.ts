@@ -283,6 +283,108 @@ export async function handleAdminCommand(
     return true;
   }
 
+  if (command === "/sources") {
+    const sources = await prisma.trendSource.findMany({
+      orderBy: { createdAt: "asc" },
+    });
+
+    if (sources.length === 0) {
+      await sendMessage(
+        chatId,
+        "Слежу пока ни за кем. Добавить: /source короткое_имя_сообщества",
+      );
+      return true;
+    }
+
+    const rows = sources.map((source) => {
+      const when = source.checkedAt ? MOSCOW.format(source.checkedAt) : "ни разу";
+      const trouble = source.error ? ` · ${source.error}` : "";
+      return `${source.handle} — медиана ${source.median}, смотрел ${when}${trouble}`;
+    });
+
+    await sendMessage(chatId, `<b>За кем слежу</b>\n\n${rows.join("\n")}`);
+    return true;
+  }
+
+  if (command.startsWith("/source ")) {
+    // Принимаем и ссылку целиком: копировать из адресной строки удобнее,
+    // чем выковыривать короткое имя.
+    const handle = text
+      .trim()
+      .slice(8)
+      .trim()
+      .replace(/^https?:\/\/(m\.)?vk\.(com|ru)\//i, "")
+      .replace(/\/.*$/, "");
+
+    if (!handle) {
+      await sendMessage(chatId, "Нужно так: /source nahodki_wb");
+      return true;
+    }
+
+    await prisma.trendSource.upsert({
+      where: { network_handle: { network: "vk", handle } },
+      update: { enabled: true, error: null },
+      create: { network: "vk", handle },
+    });
+
+    await sendMessage(chatId, `Добавил «${handle}». Смотрю…`);
+
+    const { scanSource } = await import("@/lib/social/trends");
+    const source = await prisma.trendSource.findFirst({ where: { handle } });
+
+    try {
+      const found = await scanSource(source!);
+      const after = await prisma.trendSource.findFirst({ where: { handle } });
+      await sendMessage(
+        chatId,
+        `Готово. Медиана просмотров — ${after?.median ?? 0}, взлетевших записей сейчас: ${found.length}.`,
+      );
+    } catch (error) {
+      await sendMessage(
+        chatId,
+        `Не вышло прочитать: ${String(error instanceof Error ? error.message : error).slice(0, 200)}`,
+      );
+    }
+    return true;
+  }
+
+  if (command.startsWith("/unsource ")) {
+    const handle = text.trim().slice(10).trim();
+    const removed = await prisma.trendSource.deleteMany({ where: { handle } });
+    await sendMessage(
+      chatId,
+      removed.count > 0
+        ? `Больше не слежу за «${handle}».`
+        : `Не нашёл «${handle}». Список — в /sources.`,
+    );
+    return true;
+  }
+
+  if (command === "/trends") {
+    await sendMessage(chatId, "Смотрю чужие сообщества…");
+
+    const { findTrends } = await import("@/lib/social/trends");
+    const { trends, errors } = await findTrends();
+
+    if (trends.length === 0) {
+      await sendMessage(
+        chatId,
+        errors.length > 0
+          ? `Ничего не взлетело. Не прочитались: ${errors.join("; ")}`
+          : "Ничего не взлетело — ни одна запись не обогнала своё сообщество втрое.",
+      );
+      return true;
+    }
+
+    const rows = trends.slice(0, 5).map((trend) => {
+      const head = `<b>${trend.handle}</b> — ${trend.views} просмотров при медиане ${trend.median} (в ${trend.ratio} раза)`;
+      return `${head}\n${trend.text.slice(0, 220).replace(/\s+/g, " ")}\n${trend.url}`;
+    });
+
+    await sendMessage(chatId, rows.join("\n\n"));
+    return true;
+  }
+
   if (command === "/seed") {
     await sendMessage(chatId, await seedPlan());
     const { text: body, keyboard } = await planText();

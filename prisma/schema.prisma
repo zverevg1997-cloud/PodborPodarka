@@ -298,3 +298,49 @@ model Product {
   @@index([category])
   @@map("products")
 }
+
+// Сообщество, за которым следим ради тем.
+model TrendSource {
+  id        String    @id @default(cuid())
+  /// Пока только "vk": телеграм публичной статистики просмотров не отдаёт.
+  network   String    @default("vk")
+  /// Короткое имя сообщества, как в адресе.
+  handle    String
+  title     String?
+  enabled   Boolean   @default(true)
+  checkedAt DateTime?
+  /// Медиана просмотров этого сообщества на последней проверке. Сравнивать
+  /// надо именно с ней: сообщество на 513 подписчиков собирает больше
+  /// витрины на 209 тысяч, и единой планки для обоих не существует.
+  median    Int       @default(0)
+  error     String?
+  createdAt DateTime  @default(now())
+
+  @@unique([network, handle])
+  @@map("trend_sources")
+}
+
+// Найденная запись, обогнавшая своё сообщество.
+//
+// Храним не ради истории, а ради молчания: без этого один удачный сюжет
+// приходил бы пять дней подряд, пока держится в ленте.
+model TrendFind {
+  id       String   @id @default(cuid())
+  network  String
+  handle   String
+  postId   String
+  views    Int
+  median   Int
+  /// Во сколько раз обогнала медиану своего сообщества.
+  ratio    Float
+  /// Ключ темы: по нему отсеиваем повторы за последнюю неделю.
+  topicKey String
+  text     String
+  url      String
+  foundAt  DateTime @default(now())
+
+  @@unique([network, postId])
+  @@index([foundAt])
+  @@index([topicKey, foundAt])
+  @@map("trend_finds")
+}

@@ -26,6 +26,9 @@ const WARN_AHEAD_MS = 24 * 60 * 60 * 1000;
 /** Ограничение телеграма на подпись к картинке. */
 const CAPTION_LIMIT = 1024;
 
+/** Часы по Москве, когда смотрим чужие сообщества. */
+const TREND_HOURS = [11, 20];
+
 /** Как часто заглядываем, не устарели ли товарные выгрузки. */
 const FEED_CHECK_MS = 30 * 60 * 1000;
 
@@ -292,6 +295,59 @@ async function tick(): Promise<void> {
   }
 }
 
+/**
+ * Разбор чужих сообществ — дважды в день.
+ *
+ * Отметку о последнем заходе держим не в памяти, а в самих сообществах:
+ * перезапуск контейнера посреди дня иначе запускал бы разбор заново.
+ *
+ * Молчим, когда находок нет. Сообщение «ничего не нашлось» дважды в день
+ * быстро научило бы не читать эти письма — а вместе с ними и те, в которых
+ * что-то есть.
+ */
+async function scanTrendsInBackground(): Promise<void> {
+  const hour = Number(
+    new Intl.DateTimeFormat("ru-RU", {
+      timeZone: "Europe/Moscow",
+      hour: "numeric",
+      hour12: false,
+    }).format(new Date()),
+  );
+
+  if (!TREND_HOURS.includes(hour)) return;
+
+  const recently = await prisma.trendSource.findFirst({
+    where: {
+      enabled: true,
+      checkedAt: { gte: new Date(Date.now() - 6 * 60 * 60 * 1000) },
+    },
+  });
+  if (recently) return;
+
+  const { findTrends } = await import("@/lib/social/trends");
+  const { trends, errors } = await findTrends();
+
+  for (const error of errors) console.error("тренды:", error);
+  if (trends.length === 0) return;
+
+  const lines = trends.slice(0, 5).map((trend) => {
+    const head = `<b>${trend.handle}</b> — ${trend.views} просмотров при медиане ${trend.median} (в ${trend.ratio} раза)`;
+    // Переводы строк схлопываем: в сообщении их и так хватает.
+    const body = trend.text.slice(0, 220).replace(/\s+/g, " ");
+    return `${head}
+${body}
+${trend.url}`;
+  });
+
+  await tellAdmin(
+    `Взлетело в чужих сообществах:
+
+${lines.join("\n\n")}
+
+Сделать похожее у нас?`,
+  );
+}
+
 export async function startScheduler(): Promise<void> {
   if (running) return;
   running = true;
@@ -317,6 +373,9 @@ export async function startScheduler(): Promise<void> {
       }
 
       refreshFeedsInBackground();
+      await scanTrendsInBackground().catch((error) =>
+        console.error("тренды: разбор не удался", error),
+      );
       await tick();
     } catch (error) {
       console.error("посты: проход не удался", error);
