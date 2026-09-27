@@ -74,3 +74,4 @@ cards/out/
 # Кадры и готовые клипы: пересобираются из clips/make.mjs
 clips/tmp/
 clips/out/
+clips/input/
