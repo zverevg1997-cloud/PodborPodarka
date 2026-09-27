@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { buildYandexMapsUrl, buildYandexSearchUrl } from "@/lib/yandexMarket";
 import MoreIdeasButton from "@/components/MoreIdeasButton";
 import GiftLink from "@/components/GiftLink";
+import ProductCards from "@/components/ProductCards";
+import { findProducts } from "@/lib/products/match";
 import { readGuestId } from "@/lib/guest";
 import { marketPriceRange } from "@/lib/budget";
 import {
@@ -81,6 +83,20 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
   const delivery = marketDeliveryInterval(urgency);
   const deliveryParam = delivery !== undefined ? `&d=${delivery}` : "";
 
+  // Сначала смотрим в своих выгрузках, и только если там точного совпадения
+  // нет — отправляем на Маркет. Правило совпадения строгое (см. match.ts):
+  // лучше показать пустоту и ссылку на поиск, чем не тот товар.
+  //
+  // Впечатления и услуги ищем не здесь: их берут в своём городе, а наши
+  // выгрузки к городу не привязаны.
+  const found = await Promise.all(
+    ideas.map((idea) =>
+      idea.kind === "local" || buyLocally
+        ? Promise.resolve([])
+        : findProducts(idea.searchQuery, price.from ?? 0, price.to ?? 1_000_000),
+    ),
+  );
+
   const linkFor = (idea: GiftIdea) => {
     if (idea.kind === "local") {
       return {
@@ -150,9 +166,15 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
                 {idea.name}
               </h3>
               <p className="text-sm text-muted-foreground">{idea.reason}</p>
+              <ProductCards products={found[i]} query={idea.searchQuery} />
+
               <GiftLink
                 href={linkFor(idea).href}
-                label={linkFor(idea).label}
+                label={
+                  found[i].length > 0
+                    ? "Другие варианты на Яндекс Маркете →"
+                    : linkFor(idea).label
+                }
                 kind={idea.kind === "local" ? "local" : "product"}
                 query={idea.searchQuery}
               />
