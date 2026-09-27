@@ -35,6 +35,12 @@ import { mameNaNovyyGod } from "@/content/guides/mame-na-novyy-god";
 import { muzhchineNaNovyyGod } from "@/content/guides/muzhchine-na-novyy-god";
 import { papeNaNovyyGod } from "@/content/guides/pape-na-novyy-god";
 import { parnyuNaNovyyGod } from "@/content/guides/parnyu-na-novyy-god";
+import { kollege } from "@/content/guides/kollege";
+import { kollegeMuzhchine } from "@/content/guides/kollege-muzhchine";
+import { kollegeZhenshchine } from "@/content/guides/kollege-zhenshchine";
+import { pape } from "@/content/guides/pape";
+import { papeNa23Fevralya } from "@/content/guides/pape-na-23-fevralya";
+import { papeNaDenRozhdeniya } from "@/content/guides/pape-na-den-rozhdeniya";
 import { podrugeNaNovyyGod } from "@/content/guides/podruge-na-novyy-god";
 import { rebenkuNaDenRozhdeniya } from "@/content/guides/rebenku-na-den-rozhdeniya";
 import { uchitelyu } from "@/content/guides/uchitelyu";
@@ -115,6 +121,12 @@ export const GIFT_GUIDES: GiftGuide[] = [
   malchiku5Let,
   malchiku8Let,
   rebenkuNaDenRozhdeniya,
+  kollege,
+  kollegeMuzhchine,
+  kollegeZhenshchine,
+  pape,
+  papeNa23Fevralya,
+  papeNaDenRozhdeniya,
   devochke8Let,
   devochke10Let,
   devochke14Let,
@@ -147,7 +159,7 @@ export const GUIDE_GROUPS: Array<{
   {
     title: "С чего начать",
     note: "Общий вопрос, на который одной подборкой не ответить: всё зависит от возраста. Эта страница разводит по остальным.",
-    slugs: ["rebenku-na-den-rozhdeniya"],
+    slugs: ["rebenku-na-den-rozhdeniya", "pape", "kollege"],
   },
   {
     title: "Учителям и воспитателям",
@@ -179,6 +191,16 @@ export const GUIDE_GROUPS: Array<{
       "devochke-10-let",
       "devochke-14-let",
     ],
+  },
+  {
+    title: "Папе",
+    note: "Самый трудный получатель в семье: на «что тебе подарить» отвечает «ничего не надо» — и не лукавит.",
+    slugs: ["pape-na-den-rozhdeniya", "pape-na-23-fevralya", "pape-na-novyy-god"],
+  },
+  {
+    title: "Коллегам",
+    note: "Здесь важнее не попасть в душу, а не поставить человека в неловкое положение.",
+    slugs: ["kollege-zhenshchine", "kollege-muzhchine", "kollegam-na-novyy-god"],
   },
   {
     title: "На Новый год",
