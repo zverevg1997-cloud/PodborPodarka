@@ -59,6 +59,7 @@ export const zheneNaGodovshchinu: GiftGuide = {
       priceFrom: 6000,
       priceTo: 50000,
       searchQuery: "золотое кольцо женское классическое",
+      productQuery: "золотое кольцо",
     },
     {
       name: "Фотосессия для двоих",
@@ -67,6 +68,7 @@ export const zheneNaGodovshchinu: GiftGuide = {
       priceFrom: 5000,
       priceTo: 25000,
       searchQuery: "сертификат фотосессия для пары",
+      productQuery: "сертификат фотосессия",
     },
     {
       name: "Письмо о том, что изменилось за эти годы",
@@ -97,6 +99,7 @@ export const zheneNaGodovshchinu: GiftGuide = {
         priceFrom: 500,
         priceTo: 2000,
         searchQuery: "фоторамка деревянная настольная",
+        productQuery: "фоторамка деревянная",
       },
       {
         name: "Ужин, приготовленный вами",

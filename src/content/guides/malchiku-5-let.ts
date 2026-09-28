@@ -26,6 +26,7 @@ export const malchiku5Let: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "конструктор детский для 5 лет с инструкцией",
+      productQuery: "конструктор детский",
     },
     {
       name: "Беговел или самокат на два колеса",
@@ -43,6 +44,7 @@ export const malchiku5Let: GiftGuide = {
       priceFrom: 800,
       priceTo: 2500,
       searchQuery: "настольная игра для детей 5 лет ходилка",
+      productQuery: "настольная игра",
     },
     {
       name: "Набор доктора, мастерской или кухни",
@@ -59,6 +61,7 @@ export const malchiku5Let: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "магнитный конструктор детский набор",
+      productQuery: "магнитный конструктор",
     },
     {
       name: "Детский микроскоп или набор опытов",
@@ -67,6 +70,7 @@ export const malchiku5Let: GiftGuide = {
       priceFrom: 1200,
       priceTo: 4000,
       searchQuery: "набор для опытов детский от 5 лет",
+      productQuery: "набор опытов",
     },
     {
       name: "Большие мягкие пазлы или напольная мозаика",
@@ -75,6 +79,7 @@ export const malchiku5Let: GiftGuide = {
       priceFrom: 700,
       priceTo: 2000,
       searchQuery: "пазл детский напольный крупный от 5 лет",
+      productQuery: "пазл детский",
     },
     {
       name: "Железная дорога или трек для машинок",
@@ -83,6 +88,7 @@ export const malchiku5Let: GiftGuide = {
       priceFrom: 2000,
       priceTo: 8000,
       searchQuery: "детская железная дорога набор",
+      productQuery: "железная дорога",
     },
   ],
   budget: {
@@ -97,6 +103,7 @@ export const malchiku5Let: GiftGuide = {
         priceFrom: 500,
         priceTo: 1500,
         searchQuery: "набор фигурок динозавров детский",
+        productQuery: "набор фигурок",
       },
       {
         name: "Кинетический песок",
@@ -105,6 +112,7 @@ export const malchiku5Let: GiftGuide = {
         priceFrom: 500,
         priceTo: 1400,
         searchQuery: "кинетический песок набор с формочками",
+        productQuery: "кинетический песок",
       },
       {
         name: "Книга с крупными картинками и разворотами",
@@ -113,6 +121,7 @@ export const malchiku5Let: GiftGuide = {
         priceFrom: 500,
         priceTo: 1500,
         searchQuery: "детская книга виммельбух с окошками",
+        productQuery: "детская книга",
       },
       {
         name: "Набор для рисования водой или доска для маркеров",
@@ -121,6 +130,7 @@ export const malchiku5Let: GiftGuide = {
         priceFrom: 600,
         priceTo: 1500,
         searchQuery: "детская доска для рисования маркерами",
+        productQuery: "детская доска",
       },
     ],
   },

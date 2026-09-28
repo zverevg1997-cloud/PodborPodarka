@@ -44,6 +44,7 @@ export const mameNaDenRozhdeniya: GiftGuide = {
       priceFrom: 700,
       priceTo: 3000,
       searchQuery: "чайная пара фарфор подарочная",
+      productQuery: "чайная пара",
     },
     {
       name: "Плед из хорошей шерсти",
@@ -109,6 +110,7 @@ export const mameNaDenRozhdeniya: GiftGuide = {
         priceFrom: 500,
         priceTo: 1500,
         searchQuery: "крем для рук питательный",
+        productQuery: "крем для рук",
       },
       {
         name: "Растение в горшке",

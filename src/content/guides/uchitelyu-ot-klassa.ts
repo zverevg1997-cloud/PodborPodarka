@@ -52,6 +52,7 @@ export const uchitelyuOtKlassa: GiftGuide = {
       priceFrom: 900,
       priceTo: 2500,
       searchQuery: "настенные часы бесшумные большие",
+      productQuery: "настенные часы",
     },
     {
       name: "Хороший набор канцелярии для доски",
@@ -84,6 +85,7 @@ export const uchitelyuOtKlassa: GiftGuide = {
       priceFrom: 800,
       priceTo: 2000,
       searchQuery: "органайзер настольный деревянный для канцелярии",
+      productQuery: "органайзер настольный",
     },
   ],
   budget: {
@@ -106,6 +108,7 @@ export const uchitelyuOtKlassa: GiftGuide = {
         priceFrom: 1000,
         priceTo: 1800,
         searchQuery: "плед флисовый 130х170",
+        productQuery: "плед флисовый",
       },
       {
         name: "Набор чая и кофе",

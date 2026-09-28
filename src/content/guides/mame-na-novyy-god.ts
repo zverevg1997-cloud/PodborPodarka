@@ -67,6 +67,7 @@ export const mameNaNovyyGod: GiftGuide = {
       priceFrom: 1500,
       priceTo: 6000,
       searchQuery: "шарф женский шерстяной",
+      productQuery: "шарф женский",
     },
     {
       name: "Электрическая турка или капельная кофеварка",
@@ -157,6 +158,7 @@ export const mameNaNovyyGod: GiftGuide = {
         priceFrom: 400,
         priceTo: 1000,
         searchQuery: "носки женские шерстяные",
+        productQuery: "носки женские",
       },
       {
         name: "Кружка приличной формы",
@@ -165,6 +167,7 @@ export const mameNaNovyyGod: GiftGuide = {
         priceFrom: 300,
         priceTo: 900,
         searchQuery: "кружка керамическая однотонная",
+        productQuery: "кружка керамическая",
       },
       {
         name: "Ароматическая свеча",
@@ -173,6 +176,7 @@ export const mameNaNovyyGod: GiftGuide = {
         priceFrom: 400,
         priceTo: 1000,
         searchQuery: "ароматическая свеча",
+        productQuery: "ароматическая свеча",
       },
       {
         name: "Чайный набор с понятным составом",
@@ -189,6 +193,7 @@ export const mameNaNovyyGod: GiftGuide = {
         priceFrom: 250,
         priceTo: 800,
         searchQuery: "гирлянда на батарейках для дома",
+        productQuery: "гирлянда батарейках",
       },
     ],
   },

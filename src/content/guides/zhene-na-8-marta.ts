@@ -61,6 +61,7 @@ export const zheneNa8Marta: GiftGuide = {
       priceFrom: 3000,
       priceTo: 20000,
       searchQuery: "серебряная цепочка тонкая",
+      productQuery: "серебряная цепочка",
     },
     {
       name: "Хороший чай или кофе с чем-то к нему",
@@ -115,6 +116,7 @@ export const zheneNa8Marta: GiftGuide = {
         priceFrom: 500,
         priceTo: 1500,
         searchQuery: "крем для рук питательный",
+        productQuery: "крем для рук",
       },
       {
         name: "Термокружка",

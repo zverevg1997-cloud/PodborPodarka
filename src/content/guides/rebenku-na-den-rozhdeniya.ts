@@ -29,6 +29,7 @@ export const rebenkuNaDenRozhdeniya: GiftGuide = {
       priceFrom: 800,
       priceTo: 4000,
       searchQuery: "настольная игра детская по возрасту",
+      productQuery: "настольная игра",
     },
     {
       name: "Транспорт: самокат, беговел, велосипед",
@@ -37,6 +38,7 @@ export const rebenkuNaDenRozhdeniya: GiftGuide = {
       priceFrom: 2000,
       priceTo: 20000,
       searchQuery: "детский самокат велосипед по возрасту",
+      productQuery: "детский самокат",
     },
     {
       name: "Конструктор подходящей сложности",
@@ -45,6 +47,7 @@ export const rebenkuNaDenRozhdeniya: GiftGuide = {
       priceFrom: 1000,
       priceTo: 7000,
       searchQuery: "детский конструктор по возрасту",
+      productQuery: "детский конструктор",
     },
     {
       name: "Набор для творчества с готовым результатом",
@@ -70,6 +73,7 @@ export const rebenkuNaDenRozhdeniya: GiftGuide = {
       priceFrom: 400,
       priceTo: 2500,
       searchQuery: "детская книга по возрасту серия",
+      productQuery: "детская книга",
     },
   ],
   budget: {
@@ -100,6 +104,7 @@ export const rebenkuNaDenRozhdeniya: GiftGuide = {
         priceFrom: 300,
         priceTo: 1000,
         searchQuery: "набор для рисования детский",
+        productQuery: "набор рисования",
       },
       {
         name: "Налобный фонарь",
@@ -108,6 +113,7 @@ export const rebenkuNaDenRozhdeniya: GiftGuide = {
         priceFrom: 400,
         priceTo: 1000,
         searchQuery: "налобный фонарь детский",
+        productQuery: "налобный фонарь",
       },
     ],
   },

@@ -36,6 +36,7 @@ export const devochke7Let: GiftGuide = {
       priceFrom: 600,
       priceTo: 2500,
       searchQuery: "набор для творчества девочке 7 лет",
+      productQuery: "набор творчества",
     },
     {
       name: "Шкатулка или дневник с замком",
@@ -44,6 +45,7 @@ export const devochke7Let: GiftGuide = {
       priceFrom: 600,
       priceTo: 2000,
       searchQuery: "шкатулка с замком для девочки",
+      productQuery: "шкатулка замком",
     },
     {
       name: "Наручные часы",
@@ -60,6 +62,7 @@ export const devochke7Let: GiftGuide = {
       priceFrom: 900,
       priceTo: 3000,
       searchQuery: "настольная игра для детей 7 лет компанией",
+      productQuery: "настольная игра",
     },
     {
       name: "Самокат или ролики по росту",
@@ -77,6 +80,7 @@ export const devochke7Let: GiftGuide = {
       priceFrom: 800,
       priceTo: 3000,
       searchQuery: "набор маркеров для скетчинга со скетчбуком",
+      productQuery: "набор маркеров",
     },
     {
       name: "Первая книга длинной серии",
@@ -99,6 +103,7 @@ export const devochke7Let: GiftGuide = {
         priceFrom: 200,
         priceTo: 800,
         searchQuery: "наклейки для детей набор",
+        productQuery: "наклейки детей",
       },
       {
         name: "Копилка или кошелёк",

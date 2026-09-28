@@ -26,6 +26,7 @@ export const malchiku8Let: GiftGuide = {
       priceFrom: 2000,
       priceTo: 7000,
       searchQuery: "конструктор для детей 8 лет механический",
+      productQuery: "конструктор",
     },
     {
       name: "Велосипед или трюковой самокат",
@@ -43,6 +44,7 @@ export const malchiku8Let: GiftGuide = {
       priceFrom: 1200,
       priceTo: 4000,
       searchQuery: "настольная игра для детей 8 лет на компанию",
+      productQuery: "настольная игра",
     },
     {
       name: "Набор для опытов с заметным результатом",
@@ -51,6 +53,7 @@ export const malchiku8Let: GiftGuide = {
       priceFrom: 1000,
       priceTo: 3500,
       searchQuery: "набор для опытов химических детский",
+      productQuery: "набор опытов",
     },
     {
       name: "Радиоуправляемая машина или квадрокоптер начального уровня",
@@ -59,6 +62,7 @@ export const malchiku8Let: GiftGuide = {
       priceFrom: 2000,
       priceTo: 8000,
       searchQuery: "радиоуправляемая машина внедорожник детская",
+      productQuery: "радиоуправляемая машина",
     },
     {
       name: "Футбольный или баскетбольный мяч хорошего качества",
@@ -114,6 +118,7 @@ export const malchiku8Let: GiftGuide = {
         priceFrom: 500,
         priceTo: 1400,
         searchQuery: "налобный фонарь детский",
+        productQuery: "налобный фонарь",
       },
       {
         name: "Набор для сборки деревянной модели",
@@ -122,6 +127,7 @@ export const malchiku8Let: GiftGuide = {
         priceFrom: 500,
         priceTo: 1500,
         searchQuery: "деревянный конструктор сборная модель",
+        productQuery: "деревянный конструктор",
       },
     ],
   },

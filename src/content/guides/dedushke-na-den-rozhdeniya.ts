@@ -100,6 +100,7 @@ export const dedushkeNaDenRozhdeniya: GiftGuide = {
         priceFrom: 400,
         priceTo: 1500,
         searchQuery: "фоторамка деревянная настольная",
+        productQuery: "фоторамка деревянная",
       },
       {
         name: "Хороший чай или кофе",

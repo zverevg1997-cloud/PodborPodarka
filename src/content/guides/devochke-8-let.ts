@@ -26,6 +26,7 @@ export const devochke8Let: GiftGuide = {
       priceFrom: 700,
       priceTo: 2500,
       searchQuery: "набор для творчества девочке 8 лет",
+      productQuery: "набор творчества",
     },
     {
       name: "Хорошие материалы для рисования",
@@ -34,6 +35,7 @@ export const devochke8Let: GiftGuide = {
       priceFrom: 1000,
       priceTo: 4000,
       searchQuery: "набор маркеров для скетчинга со скетчбуком",
+      productQuery: "набор маркеров",
     },
     {
       name: "Настольная игра на компанию",
@@ -42,6 +44,7 @@ export const devochke8Let: GiftGuide = {
       priceFrom: 1000,
       priceTo: 3500,
       searchQuery: "настольная игра для детей 8 лет весёлая компания",
+      productQuery: "настольная игра",
     },
     {
       name: "Ролики или самокат",
@@ -59,6 +62,7 @@ export const devochke8Let: GiftGuide = {
       priceFrom: 600,
       priceTo: 2000,
       searchQuery: "шкатулка с замком для девочки",
+      productQuery: "шкатулка замком",
     },
     {
       name: "Набор для опытов или выращивания",
@@ -67,6 +71,7 @@ export const devochke8Let: GiftGuide = {
       priceFrom: 900,
       priceTo: 3000,
       searchQuery: "набор для выращивания кристаллов детский",
+      productQuery: "набор выращивания",
     },
     {
       name: "Книжная серия про дружбу и приключения",
@@ -97,6 +102,7 @@ export const devochke8Let: GiftGuide = {
         priceFrom: 400,
         priceTo: 1200,
         searchQuery: "набор для плетения браслетов из резинок",
+        productQuery: "набор плетения",
       },
       {
         name: "Скетчбук с плотной бумагой",
@@ -113,6 +119,7 @@ export const devochke8Let: GiftGuide = {
         priceFrom: 500,
         priceTo: 1500,
         searchQuery: "логическая игра головоломка для детей",
+        productQuery: "логическая игра",
       },
       {
         name: "Сумка или рюкзак для прогулок",

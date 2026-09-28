@@ -61,6 +61,7 @@ export const muzhuNa23Fevralya: GiftGuide = {
       priceFrom: 1500,
       priceTo: 6000,
       searchQuery: "плед флисовый большой плотный",
+      productQuery: "плед флисовый",
     },
     {
       name: "Хороший кофе или чай",

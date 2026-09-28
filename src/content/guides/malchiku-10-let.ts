@@ -50,6 +50,7 @@ export const malchiku10Let: GiftGuide = {
       priceFrom: 1200,
       priceTo: 4000,
       searchQuery: "настольная игра для детей 10 лет компанией",
+      productQuery: "настольная игра",
     },
     {
       name: "Телескоп начального уровня",
@@ -82,6 +83,7 @@ export const malchiku10Let: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "набор для опытов по химии детский",
+      productQuery: "набор опытов",
     },
     {
       name: "Электронные шахматы",
@@ -122,6 +124,7 @@ export const malchiku10Let: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "бластер с мягкими пулями детский",
+      productQuery: "бластер мягкими",
     },
     {
       name: "Графический роман или комикс",
@@ -159,6 +162,7 @@ export const malchiku10Let: GiftGuide = {
         priceFrom: 700,
         priceTo: 1500,
         searchQuery: "маркеры для скетчинга набор",
+        productQuery: "маркеры скетчинга",
       },
       {
         name: "Мешок для сменной обуви",
@@ -167,6 +171,7 @@ export const malchiku10Let: GiftGuide = {
         priceFrom: 600,
         priceTo: 1500,
         searchQuery: "мешок для сменной обуви детский",
+        productQuery: "мешок сменной",
       },
       {
         name: "Игровой мяч",

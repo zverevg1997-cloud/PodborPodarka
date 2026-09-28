@@ -78,6 +78,7 @@ export const uchitelyuNaDenRozhdeniya: GiftGuide = {
       priceFrom: 800,
       priceTo: 2200,
       searchQuery: "ежедневник недатированный плотная бумага",
+      productQuery: "ежедневник недатированный",
     },
     {
       name: "Плед на кресло",
@@ -86,6 +87,7 @@ export const uchitelyuNaDenRozhdeniya: GiftGuide = {
       priceFrom: 1200,
       priceTo: 3000,
       searchQuery: "плед флисовый 130х170",
+      productQuery: "плед флисовый",
     },
   ],
   budget: {
@@ -116,6 +118,7 @@ export const uchitelyuNaDenRozhdeniya: GiftGuide = {
         priceFrom: 400,
         priceTo: 1000,
         searchQuery: "крем для рук питательный 75 мл",
+        productQuery: "крем для рук",
       },
       {
         name: "Открытка с конкретными словами",

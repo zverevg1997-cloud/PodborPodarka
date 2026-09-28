@@ -87,6 +87,7 @@ export const malchiku12Let: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "настольная игра для подростков стратегия",
+      productQuery: "настольная игра",
     },
   ],
   budget: {

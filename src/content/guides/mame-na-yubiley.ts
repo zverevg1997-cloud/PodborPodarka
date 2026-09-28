@@ -42,6 +42,7 @@ export const mameNaYubiley: GiftGuide = {
       priceFrom: 8000,
       priceTo: 60000,
       searchQuery: "золотые серьги классические",
+      productQuery: "золотые серьги",
     },
     {
       name: "Сертификат в спа на полный день",
@@ -59,6 +60,7 @@ export const mameNaYubiley: GiftGuide = {
       priceFrom: 15000,
       priceTo: 60000,
       searchQuery: "робот пылесос для дома",
+      productQuery: "робот пылесос",
     },
     {
       name: "Мастер-класс по тому, чем она всегда хотела заняться",
@@ -98,6 +100,7 @@ export const mameNaYubiley: GiftGuide = {
         priceFrom: 500,
         priceTo: 2500,
         searchQuery: "фоторамка деревянная настольная",
+        productQuery: "фоторамка деревянная",
       },
       {
         name: "Чайная пара или красивая кружка",
@@ -106,6 +109,7 @@ export const mameNaYubiley: GiftGuide = {
         priceFrom: 800,
         priceTo: 3000,
         searchQuery: "чайная пара фарфор подарочная",
+        productQuery: "чайная пара",
       },
       {
         name: "Письмо, написанное от руки",

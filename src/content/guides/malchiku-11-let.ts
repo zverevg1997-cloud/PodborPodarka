@@ -71,6 +71,7 @@ export const malchiku11Let: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "настольная игра для подростков компанией",
+      productQuery: "настольная игра",
     },
     {
       name: "Сертификат в магазин игр или на маркетплейс",
@@ -128,6 +129,7 @@ export const malchiku11Let: GiftGuide = {
         priceFrom: 700,
         priceTo: 2000,
         searchQuery: "настольная лампа на прищепке",
+        productQuery: "настольная лампа",
       },
     ],
   },

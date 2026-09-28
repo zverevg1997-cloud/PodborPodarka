@@ -45,6 +45,7 @@ export const malchiku9Let: GiftGuide = {
       priceFrom: 2000,
       priceTo: 8000,
       searchQuery: "сборная модель для детей 9 лет",
+      productQuery: "сборная модель",
     },
     {
       name: "Экшн-камера",
@@ -61,6 +62,7 @@ export const malchiku9Let: GiftGuide = {
       priceFrom: 1500,
       priceTo: 4500,
       searchQuery: "настольная игра для детей 9 лет стратегия",
+      productQuery: "настольная игра",
     },
     {
       name: "Скейтборд или ролики",
@@ -85,6 +87,7 @@ export const malchiku9Let: GiftGuide = {
       priceFrom: 600,
       priceTo: 2500,
       searchQuery: "детская энциклопедия для 9 лет",
+      productQuery: "детская энциклопедия",
     },
   ],
   budget: {
@@ -107,6 +110,7 @@ export const malchiku9Let: GiftGuide = {
         priceFrom: 500,
         priceTo: 1500,
         searchQuery: "налобный фонарь детский",
+        productQuery: "налобный фонарь",
       },
       {
         name: "Перочинный нож или мультитул",
@@ -123,6 +127,7 @@ export const malchiku9Let: GiftGuide = {
         priceFrom: 400,
         priceTo: 1500,
         searchQuery: "металлическая головоломка набор",
+        productQuery: "металлическая головоломка",
       },
     ],
   },

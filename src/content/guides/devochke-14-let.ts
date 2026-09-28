@@ -76,6 +76,7 @@ export const devochke14Let: GiftGuide = {
       priceFrom: 1500,
       priceTo: 8000,
       searchQuery: "серебряная цепочка тонкая",
+      productQuery: "серебряная цепочка",
     },
     {
       name: "Хороший рюкзак",

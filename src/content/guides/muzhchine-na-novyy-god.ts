@@ -70,6 +70,7 @@ export const muzhchineNaNovyyGod: GiftGuide = {
       priceFrom: 600,
       priceTo: 2500,
       searchQuery: "фонарь налобный светодиодный",
+      productQuery: "фонарь налобный",
     },
     {
       name: "Беспроводные наушники",
@@ -95,6 +96,7 @@ export const muzhchineNaNovyyGod: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "компрессор автомобильный",
+      productQuery: "компрессор автомобильный",
     },
     {
       name: "Флисовая кофта или жилет",
@@ -103,6 +105,7 @@ export const muzhchineNaNovyyGod: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "мужской флисовый жилет",
+      productQuery: "мужской флисовый",
     },
     {
       name: "Настольная игра",
@@ -111,6 +114,7 @@ export const muzhchineNaNovyyGod: GiftGuide = {
       priceFrom: 1200,
       priceTo: 4000,
       searchQuery: "настольная игра для компании",
+      productQuery: "настольная игра",
     },
     {
       name: "Электрическая точилка для ножей",
@@ -160,6 +164,7 @@ export const muzhchineNaNovyyGod: GiftGuide = {
         priceFrom: 400,
         priceTo: 1200,
         searchQuery: "носки мужские шерстяные",
+        productQuery: "носки мужские",
       },
       {
         name: "Перчатки для сенсорного экрана",
@@ -176,6 +181,7 @@ export const muzhchineNaNovyyGod: GiftGuide = {
         priceFrom: 300,
         priceTo: 1200,
         searchQuery: "держатель для телефона в машину",
+        productQuery: "держатель телефона",
       },
       {
         name: "Чай или кофе в приличной упаковке",

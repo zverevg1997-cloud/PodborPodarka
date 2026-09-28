@@ -36,6 +36,7 @@ export const papeNaNovyyGod: GiftGuide = {
       priceFrom: 600,
       priceTo: 2500,
       searchQuery: "фонарь налобный светодиодный",
+      productQuery: "фонарь налобный",
     },
     {
       name: "Термос",
@@ -52,6 +53,7 @@ export const papeNaNovyyGod: GiftGuide = {
       priceFrom: 2500,
       priceTo: 9000,
       searchQuery: "видеорегистратор автомобильный",
+      productQuery: "видеорегистратор автомобильный",
     },
     {
       name: "Компрессор для подкачки шин",
@@ -60,6 +62,7 @@ export const papeNaNovyyGod: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "компрессор автомобильный для шин",
+      productQuery: "компрессор автомобильный",
     },
     {
       name: "Беспроводные наушники",
@@ -102,6 +105,7 @@ export const papeNaNovyyGod: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "мужской флисовый жилет",
+      productQuery: "мужской флисовый",
     },
     {
       name: "Хороший плед на диван",
@@ -110,6 +114,7 @@ export const papeNaNovyyGod: GiftGuide = {
       priceFrom: 1200,
       priceTo: 4000,
       searchQuery: "плед на диван шерстяной",
+      productQuery: "плед диван",
     },
     {
       name: "Набор для ухода за бородой",
@@ -142,6 +147,7 @@ export const papeNaNovyyGod: GiftGuide = {
       priceFrom: 500,
       priceTo: 2500,
       searchQuery: "фоторамка настольная",
+      productQuery: "фоторамка настольная",
     },
   ],
   budget: {
@@ -165,6 +171,7 @@ export const papeNaNovyyGod: GiftGuide = {
         priceFrom: 400,
         priceTo: 1200,
         searchQuery: "носки мужские шерстяные",
+        productQuery: "носки мужские",
       },
       {
         name: "Скребок и щётка для машины",
@@ -189,6 +196,7 @@ export const papeNaNovyyGod: GiftGuide = {
         priceFrom: 300,
         priceTo: 1200,
         searchQuery: "держатель для телефона в машину магнитный",
+        productQuery: "держатель телефона",
       },
     ],
   },

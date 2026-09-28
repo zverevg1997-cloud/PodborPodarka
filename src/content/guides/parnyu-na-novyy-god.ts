@@ -36,6 +36,7 @@ export const parnyuNaNovyyGod: GiftGuide = {
       priceFrom: 1200,
       priceTo: 4000,
       searchQuery: "настольная игра на двоих",
+      productQuery: "настольная игра",
     },
     {
       name: "Рюкзак или сумка через плечо",
@@ -44,6 +45,7 @@ export const parnyuNaNovyyGod: GiftGuide = {
       priceFrom: 2500,
       priceTo: 9000,
       searchQuery: "мужской рюкзак городской",
+      productQuery: "мужской рюкзак",
     },
     {
       name: "Механическая клавиатура",
@@ -86,6 +88,7 @@ export const parnyuNaNovyyGod: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "мужская шапка шерстяная",
+      productQuery: "мужская шапка",
     },
     {
       name: "Внешний аккумулятор на большую ёмкость",

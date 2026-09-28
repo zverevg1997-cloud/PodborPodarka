@@ -53,6 +53,7 @@ export const mame: GiftGuide = {
       priceFrom: 800,
       priceTo: 5000,
       searchQuery: "чайная пара фарфор подарочная",
+      productQuery: "чайная пара",
     },
     {
       name: "Увлажнитель воздуха",
@@ -101,6 +102,7 @@ export const mame: GiftGuide = {
         priceFrom: 500,
         priceTo: 1500,
         searchQuery: "крем для рук питательный",
+        productQuery: "крем для рук",
       },
       {
         name: "Письмо, написанное от руки",

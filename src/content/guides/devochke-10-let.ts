@@ -26,6 +26,7 @@ export const devochke10Let: GiftGuide = {
       priceFrom: 1000,
       priceTo: 4000,
       searchQuery: "набор маркеров для скетчинга со скетчбуком",
+      productQuery: "набор маркеров",
     },
     {
       name: "Фотоаппарат моментальной печати",
@@ -51,6 +52,7 @@ export const devochke10Let: GiftGuide = {
       priceFrom: 1000,
       priceTo: 3500,
       searchQuery: "настольная игра для детей 10 лет компанией",
+      productQuery: "настольная игра",
     },
     {
       name: "Портативная колонка",
@@ -76,6 +78,7 @@ export const devochke10Let: GiftGuide = {
       priceFrom: 600,
       priceTo: 2000,
       searchQuery: "шкатулка с замком для девочки",
+      productQuery: "шкатулка замком",
     },
     {
       name: "Книжная серия или комиксы",
@@ -106,6 +109,7 @@ export const devochke10Let: GiftGuide = {
         priceFrom: 400,
         priceTo: 1500,
         searchQuery: "набор для вышивки детский начинающих",
+        productQuery: "набор вышивки",
       },
       {
         name: "Термокружка",

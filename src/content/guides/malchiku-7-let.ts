@@ -44,6 +44,7 @@ export const malchiku7Let: GiftGuide = {
       priceFrom: 2000,
       priceTo: 6000,
       searchQuery: "конструктор для детей 7 лет механический",
+      productQuery: "конструктор",
     },
     {
       name: "Велосипед или трюковой самокат",
@@ -61,6 +62,7 @@ export const malchiku7Let: GiftGuide = {
       priceFrom: 1000,
       priceTo: 3500,
       searchQuery: "настольная игра для детей 7 лет компанией",
+      productQuery: "настольная игра",
     },
     {
       name: "Набор для опытов с заметным результатом",
@@ -69,6 +71,7 @@ export const malchiku7Let: GiftGuide = {
       priceFrom: 1000,
       priceTo: 3500,
       searchQuery: "набор для опытов химических детский",
+      productQuery: "набор опытов",
     },
     {
       name: "Футбольный или баскетбольный мяч",

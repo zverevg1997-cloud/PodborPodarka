@@ -26,6 +26,7 @@ export const devochke5Let: GiftGuide = {
       priceFrom: 800,
       priceTo: 2500,
       searchQuery: "настольная игра для детей 5 лет ходилка",
+      productQuery: "настольная игра",
     },
     {
       name: "Набор для творчества с готовым результатом",
@@ -51,6 +52,7 @@ export const devochke5Let: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "магнитный конструктор детский набор",
+      productQuery: "магнитный конструктор",
     },
     {
       name: "Кукольный домик или набор мебели к нему",
@@ -75,6 +77,7 @@ export const devochke5Let: GiftGuide = {
       priceFrom: 900,
       priceTo: 3000,
       searchQuery: "набор для опытов детский от 5 лет",
+      productQuery: "набор опытов",
     },
     {
       name: "Напольный пазл или большая мозаика",
@@ -83,6 +86,7 @@ export const devochke5Let: GiftGuide = {
       priceFrom: 600,
       priceTo: 2000,
       searchQuery: "пазл детский напольный крупный",
+      productQuery: "пазл детский",
     },
   ],
   budget: {
@@ -97,6 +101,7 @@ export const devochke5Let: GiftGuide = {
         priceFrom: 500,
         priceTo: 1400,
         searchQuery: "кинетический песок набор с формочками",
+        productQuery: "кинетический песок",
       },
       {
         name: "Набор для плетения браслетов",
@@ -105,6 +110,7 @@ export const devochke5Let: GiftGuide = {
         priceFrom: 400,
         priceTo: 1200,
         searchQuery: "набор для плетения браслетов детский",
+        productQuery: "набор плетения",
       },
       {
         name: "Книга-находилка",
@@ -113,6 +119,7 @@ export const devochke5Let: GiftGuide = {
         priceFrom: 500,
         priceTo: 1500,
         searchQuery: "детская книга виммельбух находилка",
+        productQuery: "детская книга",
       },
       {
         name: "Доска для рисования маркерами",
@@ -121,6 +128,7 @@ export const devochke5Let: GiftGuide = {
         priceFrom: 600,
         priceTo: 1500,
         searchQuery: "детская доска для рисования маркерами",
+        productQuery: "детская доска",
       },
     ],
   },

@@ -100,6 +100,7 @@ export const babushkeNaDenRozhdeniya: GiftGuide = {
         priceFrom: 400,
         priceTo: 1500,
         searchQuery: "фоторамка деревянная настольная",
+        productQuery: "фоторамка деревянная",
       },
       {
         name: "Её любимый чай",
@@ -124,6 +125,7 @@ export const babushkeNaDenRozhdeniya: GiftGuide = {
         priceFrom: 400,
         priceTo: 1200,
         searchQuery: "крем для рук питательный",
+        productQuery: "крем для рук",
       },
     ],
   },

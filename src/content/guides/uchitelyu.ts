@@ -43,6 +43,7 @@ export const uchitelyu: GiftGuide = {
       priceFrom: 900,
       priceTo: 2500,
       searchQuery: "термокружка нержавеющая сталь 450 мл",
+      productQuery: "термокружка",
     },
     {
       name: "Настольная лампа с тёплым светом",
@@ -51,6 +52,7 @@ export const uchitelyu: GiftGuide = {
       priceFrom: 1500,
       priceTo: 3000,
       searchQuery: "настольная лампа для чтения регулировка яркости",
+      productQuery: "настольная лампа",
     },
     {
       name: "Набор маркеров для белой доски",
@@ -59,6 +61,7 @@ export const uchitelyu: GiftGuide = {
       priceFrom: 800,
       priceTo: 1800,
       searchQuery: "набор маркеров для белой доски 8 цветов",
+      productQuery: "набор маркеров",
     },
     {
       name: "Электронный подарочный сертификат",
@@ -75,6 +78,7 @@ export const uchitelyu: GiftGuide = {
       priceFrom: 1500,
       priceTo: 3000,
       searchQuery: "плед флисовый 150х200 плотный",
+      productQuery: "плед флисовый",
     },
     {
       name: "Ежедневник с плотной бумагой",
@@ -83,6 +87,7 @@ export const uchitelyu: GiftGuide = {
       priceFrom: 800,
       priceTo: 2200,
       searchQuery: "ежедневник недатированный плотная бумага",
+      productQuery: "ежедневник недатированный",
     },
     {
       name: "Подставка для книг и тетрадей",
@@ -113,6 +118,7 @@ export const uchitelyu: GiftGuide = {
         priceFrom: 400,
         priceTo: 900,
         searchQuery: "крем для рук питательный 75 мл",
+        productQuery: "крем для рук",
       },
       {
         name: "Небольшой суккулент в горшке",
@@ -129,6 +135,7 @@ export const uchitelyu: GiftGuide = {
         priceFrom: 400,
         priceTo: 1000,
         searchQuery: "набор гелевых ручек красные зелёные",
+        productQuery: "гелевых ручек",
       },
     ],
   },

@@ -50,6 +50,7 @@ export const babushkeNaYubiley: GiftGuide = {
       priceFrom: 6000,
       priceTo: 40000,
       searchQuery: "золотые серьги классические",
+      productQuery: "золотые серьги",
     },
     {
       name: "Тёплый плед из хорошей шерсти",
@@ -74,6 +75,7 @@ export const babushkeNaYubiley: GiftGuide = {
       priceFrom: 3000,
       priceTo: 15000,
       searchQuery: "чайный сервиз фарфоровый на 6 персон",
+      productQuery: "чайный сервиз",
     },
     {
       name: "Встреча, на которую приехали все",
@@ -96,6 +98,7 @@ export const babushkeNaYubiley: GiftGuide = {
         priceFrom: 400,
         priceTo: 1800,
         searchQuery: "фоторамка деревянная настольная",
+        productQuery: "фоторамка деревянная",
       },
       {
         name: "Письмо, написанное от руки",

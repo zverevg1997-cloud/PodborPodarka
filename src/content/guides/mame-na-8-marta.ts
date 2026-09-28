@@ -84,6 +84,7 @@ export const mameNa8Marta: GiftGuide = {
       priceFrom: 2000,
       priceTo: 10000,
       searchQuery: "серебряная цепочка тонкая",
+      productQuery: "серебряная цепочка",
     },
   ],
   budget: {
@@ -122,6 +123,7 @@ export const mameNa8Marta: GiftGuide = {
         priceFrom: 400,
         priceTo: 1200,
         searchQuery: "крем для рук питательный",
+        productQuery: "крем для рук",
       },
     ],
   },

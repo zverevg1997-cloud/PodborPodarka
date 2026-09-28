@@ -60,6 +60,7 @@ export const kollegeZhenshchine: GiftGuide = {
       priceFrom: 400,
       priceTo: 1200,
       searchQuery: "крем для рук питательный без отдушки",
+      productQuery: "крем для рук",
     },
     {
       name: "Сертификат в кофейню или книжный",
@@ -76,6 +77,7 @@ export const kollegeZhenshchine: GiftGuide = {
       priceFrom: 700,
       priceTo: 2500,
       searchQuery: "органайзер настольный деревянный",
+      productQuery: "органайзер настольный",
     },
     {
       name: "Плед на кресло",
@@ -84,6 +86,7 @@ export const kollegeZhenshchine: GiftGuide = {
       priceFrom: 1000,
       priceTo: 3000,
       searchQuery: "плед флисовый 130х170",
+      productQuery: "плед флисовый",
     },
   ],
   budget: {

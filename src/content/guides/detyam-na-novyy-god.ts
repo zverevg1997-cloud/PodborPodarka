@@ -28,6 +28,7 @@ export const detyamNaNovyyGod: GiftGuide = {
       priceFrom: 600,
       priceTo: 2000,
       searchQuery: "сортер развивающий для малышей",
+      productQuery: "сортер",
     },
     {
       name: "Каталка или толокар (1–2 года)",
@@ -36,6 +37,7 @@ export const detyamNaNovyyGod: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "толокар детский",
+      productQuery: "толокар",
     },
     {
       name: "Кукольный домик или гараж (3–5 лет)",
@@ -44,6 +46,7 @@ export const detyamNaNovyyGod: GiftGuide = {
       priceFrom: 2000,
       priceTo: 7000,
       searchQuery: "кукольный домик игровой набор",
+      productQuery: "кукольный домик",
     },
     {
       name: "Набор для творчества с пластилином или гипсом (3–6 лет)",
@@ -69,6 +72,7 @@ export const detyamNaNovyyGod: GiftGuide = {
       priceFrom: 1500,
       priceTo: 6000,
       searchQuery: "конструктор детский тематический",
+      productQuery: "конструктор детский",
     },
     {
       name: "Настольная игра для всей семьи (6–12 лет)",
@@ -77,6 +81,7 @@ export const detyamNaNovyyGod: GiftGuide = {
       priceFrom: 1000,
       priceTo: 3500,
       searchQuery: "настольная игра для всей семьи",
+      productQuery: "настольная игра",
     },
     {
       name: "Ледянка или тюбинг (5–12 лет)",
@@ -158,6 +163,7 @@ export const detyamNaNovyyGod: GiftGuide = {
         priceFrom: 400,
         priceTo: 1000,
         searchQuery: "конструктор детский небольшой набор",
+        productQuery: "конструктор детский",
       },
       {
         name: "Набор фломастеров или гелевых ручек",
@@ -166,6 +172,7 @@ export const detyamNaNovyyGod: GiftGuide = {
         priceFrom: 250,
         priceTo: 800,
         searchQuery: "набор гелевых ручек детский",
+        productQuery: "гелевых ручек",
       },
       {
         name: "Головоломка",
@@ -182,6 +189,7 @@ export const detyamNaNovyyGod: GiftGuide = {
         priceFrom: 300,
         priceTo: 1000,
         searchQuery: "детские книги с иллюстрациями",
+        productQuery: "детские книги",
       },
       {
         name: "Ночник",
@@ -190,6 +198,7 @@ export const detyamNaNovyyGod: GiftGuide = {
         priceFrom: 400,
         priceTo: 1000,
         searchQuery: "детский ночник",
+        productQuery: "детский ночник",
       },
     ],
   },

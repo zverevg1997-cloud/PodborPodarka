@@ -26,6 +26,7 @@ export const malchiku6Let: GiftGuide = {
       priceFrom: 900,
       priceTo: 3000,
       searchQuery: "настольная игра для детей 6 лет на ловкость",
+      productQuery: "настольная игра",
     },
     {
       name: "Конструктор со схемой сборки",
@@ -34,6 +35,7 @@ export const malchiku6Let: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "конструктор детский для 6 лет со схемой",
+      productQuery: "конструктор детский",
     },
     {
       name: "Самокат или беговел побольше",
@@ -42,6 +44,7 @@ export const malchiku6Let: GiftGuide = {
       priceFrom: 2500,
       priceTo: 9000,
       searchQuery: "самокат детский двухколёсный от 6 лет",
+      productQuery: "самокат детский",
     },
     {
       name: "Набор для опытов",
@@ -50,6 +53,7 @@ export const malchiku6Let: GiftGuide = {
       priceFrom: 1000,
       priceTo: 3500,
       searchQuery: "набор для опытов детский от 6 лет",
+      productQuery: "набор опытов",
     },
     {
       name: "Радиоуправляемая машина",
@@ -58,6 +62,7 @@ export const malchiku6Let: GiftGuide = {
       priceFrom: 1500,
       priceTo: 6000,
       searchQuery: "радиоуправляемая машина детская",
+      productQuery: "радиоуправляемая машина",
     },
     {
       name: "Настольный футбол или хоккей",
@@ -66,6 +71,7 @@ export const malchiku6Let: GiftGuide = {
       priceFrom: 2000,
       priceTo: 8000,
       searchQuery: "настольный футбол детский",
+      productQuery: "настольный футбол",
     },
     {
       name: "Детский микроскоп",
@@ -82,6 +88,7 @@ export const malchiku6Let: GiftGuide = {
       priceFrom: 600,
       priceTo: 2500,
       searchQuery: "набор фигурок динозавров детский",
+      productQuery: "набор фигурок",
     },
   ],
   budget: {
@@ -120,6 +127,7 @@ export const malchiku6Let: GiftGuide = {
         priceFrom: 500,
         priceTo: 1400,
         searchQuery: "налобный фонарь детский",
+        productQuery: "налобный фонарь",
       },
     ],
   },

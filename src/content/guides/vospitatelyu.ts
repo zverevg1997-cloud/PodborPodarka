@@ -27,6 +27,7 @@ export const vospitatelyu: GiftGuide = {
       priceFrom: 1000,
       priceTo: 2500,
       searchQuery: "настольная игра для детей 4-6 лет",
+      productQuery: "настольная игра",
     },
     {
       name: "Большой набор для творчества",
@@ -43,6 +44,7 @@ export const vospitatelyu: GiftGuide = {
       priceFrom: 700,
       priceTo: 2000,
       searchQuery: "книги для детей 4-6 лет сборник сказок",
+      productQuery: "книги детей",
     },
     {
       name: "Магнитная доска с буквами и цифрами",
@@ -51,6 +53,7 @@ export const vospitatelyu: GiftGuide = {
       priceFrom: 1200,
       priceTo: 3000,
       searchQuery: "магнитная доска детская с буквами и цифрами",
+      productQuery: "магнитная доска",
     },
     {
       name: "Увлажнитель воздуха в группу",
@@ -76,6 +79,7 @@ export const vospitatelyu: GiftGuide = {
       priceFrom: 400,
       priceTo: 900,
       searchQuery: "крем для рук питательный 75 мл",
+      productQuery: "крем для рук",
     },
     {
       name: "Сертификат в книжный магазин",
@@ -106,6 +110,7 @@ export const vospitatelyu: GiftGuide = {
         priceFrom: 350,
         priceTo: 800,
         searchQuery: "крем для рук без отдушки",
+        productQuery: "крем для рук",
       },
       {
         name: "Небольшой суккулент в горшке",
@@ -122,6 +127,7 @@ export const vospitatelyu: GiftGuide = {
         priceFrom: 300,
         priceTo: 700,
         searchQuery: "влажные салфетки детские большая упаковка",
+        productQuery: "влажные салфетки",
       },
     ],
   },

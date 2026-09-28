@@ -69,6 +69,7 @@ export const kollege: GiftGuide = {
       priceFrom: 700,
       priceTo: 2500,
       searchQuery: "органайзер настольный деревянный",
+      productQuery: "органайзер настольный",
     },
   ],
   budget: {

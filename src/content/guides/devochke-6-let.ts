@@ -27,6 +27,7 @@ export const devochke6Let: GiftGuide = {
       priceFrom: 900,
       priceTo: 3000,
       searchQuery: "настольная игра для детей 6 лет на ловкость",
+      productQuery: "настольная игра",
     },
     {
       name: "Набор для творчества с готовым результатом",
@@ -68,6 +69,7 @@ export const devochke6Let: GiftGuide = {
       priceFrom: 900,
       priceTo: 3000,
       searchQuery: "набор для опытов детский от 6 лет",
+      productQuery: "набор опытов",
     },
     {
       name: "Магнитный конструктор",
@@ -76,6 +78,7 @@ export const devochke6Let: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "магнитный конструктор детский набор",
+      productQuery: "магнитный конструктор",
     },
     {
       name: "Роликовые коньки с защитой",
@@ -99,6 +102,7 @@ export const devochke6Let: GiftGuide = {
         priceFrom: 400,
         priceTo: 1200,
         searchQuery: "набор для плетения браслетов детский",
+        productQuery: "набор плетения",
       },
       {
         name: "Пазл на 100–200 деталей",
@@ -107,6 +111,7 @@ export const devochke6Let: GiftGuide = {
         priceFrom: 300,
         priceTo: 1000,
         searchQuery: "пазл детский 100 деталей",
+        productQuery: "пазл детский",
       },
       {
         name: "Книга-находилка",
@@ -115,6 +120,7 @@ export const devochke6Let: GiftGuide = {
         priceFrom: 500,
         priceTo: 1500,
         searchQuery: "детская книга виммельбух находилка",
+        productQuery: "детская книга",
       },
       {
         name: "Кинетический песок",
@@ -123,6 +129,7 @@ export const devochke6Let: GiftGuide = {
         priceFrom: 500,
         priceTo: 1400,
         searchQuery: "кинетический песок набор с формочками",
+        productQuery: "кинетический песок",
       },
     ],
   },

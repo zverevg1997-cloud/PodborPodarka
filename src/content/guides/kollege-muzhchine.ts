@@ -78,6 +78,7 @@ export const kollegeMuzhchine: GiftGuide = {
       priceFrom: 700,
       priceTo: 2500,
       searchQuery: "органайзер настольный деревянный",
+      productQuery: "органайзер настольный",
     },
     {
       name: "Набор соусов, специй или снеков",

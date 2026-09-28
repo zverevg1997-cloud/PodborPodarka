@@ -45,6 +45,7 @@ export const zheneNaDenRozhdeniya: GiftGuide = {
       priceFrom: 5000,
       priceTo: 40000,
       searchQuery: "золотая цепочка тонкая женская",
+      productQuery: "золотая цепочка",
     },
     {
       name: "То, о чём она говорила мимоходом",
@@ -78,6 +79,7 @@ export const zheneNaDenRozhdeniya: GiftGuide = {
       priceFrom: 1500,
       priceTo: 6000,
       searchQuery: "чайная пара фарфор подарочная",
+      productQuery: "чайная пара",
     },
     {
       name: "День без забот",

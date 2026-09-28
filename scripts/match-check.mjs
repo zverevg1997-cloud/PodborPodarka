@@ -46,11 +46,16 @@ const GENERIC = new Set([
   "нов", "красив", "удобн", "прост", "качествен", "лучш", "подарок",
 ]);
 
-const stem = (word) =>
-  word.replace(
+const stem = (word) => {
+  const cut = word.replace(
     /(ами|ями|ов|ей|ам|ям|ах|ях|ой|ую|ые|ый|ий|ая|ое|ым|им|ом|ем|ы|и|а|я|у|ю|е)$/u,
     "",
   );
+
+  // Короче трёх букв не режем: «крем» превращался в «кр», а «кр» есть в
+  // «круглый». Совпадает с lib/products/match.
+  return cut.length >= 3 ? cut : word;
+};
 
 const words = (text) =>
   text

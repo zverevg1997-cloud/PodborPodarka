@@ -10,11 +10,15 @@
 //
 // Пишет: scripts/phrases.json
 //
+// Запуск с --all берёт и уже заполненные идеи — для сплошной проверки.
+//
 // Запуск: node scripts/phrases-make.mjs
 
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 
-const DIR = "C:/Users/Master/PodborPodarka/src/content/guides";
+const here = (name) => new URL(`../${name}`, import.meta.url).pathname.slice(1);
+
+const DIR = here("src/content/guides");
 
 const STOP = new Set([
   "для", "или", "под", "над", "без", "при", "про", "изо", "обо",
@@ -42,8 +46,21 @@ for (const file of readdirSync(DIR).filter((f) => f.endsWith(".ts"))) {
   for (const m of src.matchAll(IDEA)) {
     total++;
     const [, name, from, to, searchQuery, productQuery] = m;
+
     if (productQuery) {
       withQuery++;
+      // С ключом --all берём и уже заполненные, с их собственной фразой: так
+      // одним прогоном проверяются все, а не только новые. Нужно после
+      // правок в отборе — они меняют выдачу и у старых фраз тоже.
+      if (!process.argv.includes("--all")) continue;
+
+      out.push({
+        slug,
+        idea: name,
+        query: productQuery,
+        priceFrom: Number(from),
+        priceTo: Number(to),
+      });
       continue;
     }
 
@@ -60,7 +77,7 @@ for (const file of readdirSync(DIR).filter((f) => f.endsWith(".ts"))) {
 }
 
 writeFileSync(
-  "C:/Users/Master/PodborPodarka/scripts/phrases.json",
+  here("scripts/phrases.json"),
   JSON.stringify(out, null, 1),
   "utf8",
 );

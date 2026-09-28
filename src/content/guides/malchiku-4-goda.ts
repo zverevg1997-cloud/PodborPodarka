@@ -35,6 +35,7 @@ export const malchiku4Goda: GiftGuide = {
       priceFrom: 1500,
       priceTo: 6000,
       searchQuery: "детская железная дорога набор",
+      productQuery: "железная дорога",
     },
     {
       name: "Набор инструментов или мастерская",
@@ -60,6 +61,7 @@ export const malchiku4Goda: GiftGuide = {
       priceFrom: 700,
       priceTo: 2200,
       searchQuery: "настольная игра для детей 4 лет ходилка",
+      productQuery: "настольная игра",
     },
     {
       name: "Набор фигурок: животные, динозавры, машины",
@@ -68,6 +70,7 @@ export const malchiku4Goda: GiftGuide = {
       priceFrom: 500,
       priceTo: 2000,
       searchQuery: "набор фигурок динозавров детский",
+      productQuery: "набор фигурок",
     },
     {
       name: "Магнитный конструктор",
@@ -76,6 +79,7 @@ export const malchiku4Goda: GiftGuide = {
       priceFrom: 1200,
       priceTo: 4500,
       searchQuery: "магнитный конструктор детский набор",
+      productQuery: "магнитный конструктор",
     },
     {
       name: "Большой напольный пазл",
@@ -84,6 +88,7 @@ export const malchiku4Goda: GiftGuide = {
       priceFrom: 600,
       priceTo: 2000,
       searchQuery: "пазл детский напольный крупный",
+      productQuery: "пазл детский",
     },
   ],
   budget: {
@@ -98,6 +103,7 @@ export const malchiku4Goda: GiftGuide = {
         priceFrom: 300,
         priceTo: 1000,
         searchQuery: "машинка детская металлическая",
+        productQuery: "машинка детская",
       },
       {
         name: "Кинетический песок",
@@ -106,6 +112,7 @@ export const malchiku4Goda: GiftGuide = {
         priceFrom: 400,
         priceTo: 1000,
         searchQuery: "кинетический песок набор с формочками",
+        productQuery: "кинетический песок",
       },
       {
         name: "Книга с окошками или находилка",
@@ -114,6 +121,7 @@ export const malchiku4Goda: GiftGuide = {
         priceFrom: 400,
         priceTo: 1000,
         searchQuery: "детская книга виммельбух с окошками",
+        productQuery: "детская книга",
       },
       {
         name: "Пластилин или масса для лепки",
@@ -122,6 +130,7 @@ export const malchiku4Goda: GiftGuide = {
         priceFrom: 300,
         priceTo: 900,
         searchQuery: "масса для лепки детская набор",
+        productQuery: "масса лепки",
       },
     ],
   },

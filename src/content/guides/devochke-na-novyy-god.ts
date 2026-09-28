@@ -108,6 +108,7 @@ export const devochkeNaNovyyGod: GiftGuide = {
       priceFrom: 1000,
       priceTo: 3500,
       searchQuery: "настольная игра для компании подростков",
+      productQuery: "настольная игра",
     },
     {
       name: "Портативная колонка (11–16 лет)",
@@ -173,6 +174,7 @@ export const devochkeNaNovyyGod: GiftGuide = {
         priceFrom: 300,
         priceTo: 900,
         searchQuery: "носки женские тёплые",
+        productQuery: "носки женские",
       },
       {
         name: "Головоломка",
@@ -189,6 +191,7 @@ export const devochkeNaNovyyGod: GiftGuide = {
         priceFrom: 250,
         priceTo: 800,
         searchQuery: "гирлянда на батарейках для комнаты",
+        productQuery: "гирлянда батарейках",
       },
     ],
   },

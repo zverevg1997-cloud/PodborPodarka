@@ -61,6 +61,7 @@ export const zhene: GiftGuide = {
       priceFrom: 4000,
       priceTo: 40000,
       searchQuery: "золотая цепочка тонкая женская",
+      productQuery: "золотая цепочка",
     },
     {
       name: "День, полностью взятый на себя",

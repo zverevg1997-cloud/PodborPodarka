@@ -45,6 +45,7 @@ export const podrugeNaNovyyGod: GiftGuide = {
       priceFrom: 1500,
       priceTo: 6000,
       searchQuery: "шарф женский кашемировый",
+      productQuery: "шарф женский",
     },
     {
       name: "Электрическая грелка или плед с подогревом",
@@ -61,6 +62,7 @@ export const podrugeNaNovyyGod: GiftGuide = {
       priceFrom: 700,
       priceTo: 3000,
       searchQuery: "керамическая кружка ручной работы",
+      productQuery: "керамическая кружка",
     },
     {
       name: "Комнатное растение в красивом горшке",
@@ -77,6 +79,7 @@ export const podrugeNaNovyyGod: GiftGuide = {
       priceFrom: 600,
       priceTo: 2500,
       searchQuery: "ароматическая свеча в стекле",
+      productQuery: "ароматическая свеча",
     },
     {
       name: "Набор для нового увлечения",
@@ -158,6 +161,7 @@ export const podrugeNaNovyyGod: GiftGuide = {
         priceFrom: 400,
         priceTo: 1200,
         searchQuery: "ароматическая свеча",
+        productQuery: "ароматическая свеча",
       },
       {
         name: "Пушистые носки",
@@ -166,6 +170,7 @@ export const podrugeNaNovyyGod: GiftGuide = {
         priceFrom: 300,
         priceTo: 900,
         searchQuery: "носки женские тёплые",
+        productQuery: "носки женские",
       },
       {
         name: "Чай или кофе, который она любит",
@@ -182,6 +187,7 @@ export const podrugeNaNovyyGod: GiftGuide = {
         priceFrom: 250,
         priceTo: 900,
         searchQuery: "гирлянда на батарейках для дома",
+        productQuery: "гирлянда батарейках",
       },
       {
         name: "Крем для рук с хорошим составом",
@@ -190,6 +196,7 @@ export const podrugeNaNovyyGod: GiftGuide = {
         priceFrom: 400,
         priceTo: 1500,
         searchQuery: "крем для рук питательный",
+        productQuery: "крем для рук",
       },
     ],
   },

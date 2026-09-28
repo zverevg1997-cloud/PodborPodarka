@@ -27,6 +27,7 @@ export const devochke3Goda: GiftGuide = {
       priceFrom: 1000,
       priceTo: 4000,
       searchQuery: "детская посуда игрушечная набор",
+      productQuery: "детская посуда",
     },
     {
       name: "Кукла с одеждой, которую можно снимать",
@@ -52,6 +53,7 @@ export const devochke3Goda: GiftGuide = {
       priceFrom: 400,
       priceTo: 1500,
       searchQuery: "масса для лепки детская набор",
+      productQuery: "масса лепки",
     },
     {
       name: "Крупный конструктор",
@@ -60,6 +62,7 @@ export const devochke3Goda: GiftGuide = {
       priceFrom: 1000,
       priceTo: 4000,
       searchQuery: "конструктор крупный детский от 3 лет",
+      productQuery: "конструктор детский",
     },
     {
       name: "Домик для кукол или гараж",
@@ -68,6 +71,7 @@ export const devochke3Goda: GiftGuide = {
       priceFrom: 2000,
       priceTo: 7000,
       searchQuery: "кукольный домик детский",
+      productQuery: "кукольный домик",
     },
     {
       name: "Набор доктора или парикмахера",
@@ -76,6 +80,7 @@ export const devochke3Goda: GiftGuide = {
       priceFrom: 700,
       priceTo: 2500,
       searchQuery: "набор доктора детский игровой",
+      productQuery: "набор доктора",
     },
     {
       name: "Книга с крупными картинками и простым сюжетом",
@@ -84,6 +89,7 @@ export const devochke3Goda: GiftGuide = {
       priceFrom: 400,
       priceTo: 1500,
       searchQuery: "детская книга для 3 лет с картинками",
+      productQuery: "детская книга",
     },
   ],
   budget: {
@@ -98,6 +104,7 @@ export const devochke3Goda: GiftGuide = {
         priceFrom: 400,
         priceTo: 1000,
         searchQuery: "набор фигурок животных детский",
+        productQuery: "набор фигурок",
       },
       {
         name: "Пазл из крупных деталей",
@@ -106,6 +113,7 @@ export const devochke3Goda: GiftGuide = {
         priceFrom: 300,
         priceTo: 900,
         searchQuery: "пазл детский крупный от 3 лет",
+        productQuery: "пазл детский",
       },
       {
         name: "Восковые мелки или карандаши",
@@ -122,6 +130,7 @@ export const devochke3Goda: GiftGuide = {
         priceFrom: 300,
         priceTo: 900,
         searchQuery: "игрушки для ванной детские набор",
+        productQuery: "игрушки ванной",
       },
     ],
   },

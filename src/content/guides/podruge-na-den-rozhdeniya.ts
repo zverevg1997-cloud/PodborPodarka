@@ -53,6 +53,7 @@ export const podrugeNaDenRozhdeniya: GiftGuide = {
       priceFrom: 1500,
       priceTo: 6000,
       searchQuery: "набор маркеров для скетчинга со скетчбуком",
+      productQuery: "набор маркеров",
     },
     {
       name: "Сертификат в её магазин",
@@ -86,6 +87,7 @@ export const podrugeNaDenRozhdeniya: GiftGuide = {
       priceFrom: 2000,
       priceTo: 10000,
       searchQuery: "серебряная цепочка тонкая",
+      productQuery: "серебряная цепочка",
     },
   ],
   budget: {

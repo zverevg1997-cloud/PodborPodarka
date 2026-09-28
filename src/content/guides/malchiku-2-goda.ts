@@ -27,6 +27,7 @@ export const malchiku2Goda: GiftGuide = {
       priceFrom: 1500,
       priceTo: 5000,
       searchQuery: "толокар детский машина каталка от 1 года",
+      productQuery: "толокар",
     },
     {
       name: "Крупные кубики или мягкий конструктор",
@@ -35,6 +36,7 @@ export const malchiku2Goda: GiftGuide = {
       priceFrom: 700,
       priceTo: 2500,
       searchQuery: "кубики детские крупные деревянные набор",
+      productQuery: "кубики детские",
     },
     {
       name: "Сортер или доска с вкладышами",
@@ -43,6 +45,7 @@ export const malchiku2Goda: GiftGuide = {
       priceFrom: 600,
       priceTo: 2000,
       searchQuery: "сортер деревянный детский от 1 года",
+      productQuery: "сортер",
     },
     {
       name: "Книжки-картонки с плотными страницами",
@@ -59,6 +62,7 @@ export const malchiku2Goda: GiftGuide = {
       priceFrom: 300,
       priceTo: 1000,
       searchQuery: "мяч детский резиновый 20 см",
+      productQuery: "мяч детский",
     },
     {
       name: "Набор для песка и воды",
@@ -67,6 +71,7 @@ export const malchiku2Goda: GiftGuide = {
       priceFrom: 500,
       priceTo: 2000,
       searchQuery: "набор для песочницы детский с мельницей",
+      productQuery: "набор песочницы",
     },
     {
       name: "Пирамидка или стаканчики-вкладыши",
@@ -75,6 +80,7 @@ export const malchiku2Goda: GiftGuide = {
       priceFrom: 400,
       priceTo: 1500,
       searchQuery: "пирамидка детская деревянная кольца",
+      productQuery: "пирамидка детская",
     },
     {
       name: "Музыкальный инструмент: барабан, ксилофон, маракасы",
@@ -97,6 +103,7 @@ export const malchiku2Goda: GiftGuide = {
         priceFrom: 300,
         priceTo: 800,
         searchQuery: "мяч детский резиновый",
+        productQuery: "мяч детский",
       },
       {
         name: "Книжка с окошками",
@@ -105,6 +112,7 @@ export const malchiku2Goda: GiftGuide = {
         priceFrom: 400,
         priceTo: 1000,
         searchQuery: "детская книга с окошками картонная",
+        productQuery: "детская книга",
       },
       {
         name: "Набор формочек для песка",
@@ -113,6 +121,7 @@ export const malchiku2Goda: GiftGuide = {
         priceFrom: 250,
         priceTo: 700,
         searchQuery: "формочки для песочницы набор",
+        productQuery: "формочки песочницы",
       },
       {
         name: "Пальчиковые краски",
@@ -121,6 +130,7 @@ export const malchiku2Goda: GiftGuide = {
         priceFrom: 300,
         priceTo: 900,
         searchQuery: "пальчиковые краски детские смываемые",
+        productQuery: "пальчиковые краски",
       },
     ],
   },

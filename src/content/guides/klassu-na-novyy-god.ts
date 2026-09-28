@@ -44,6 +44,7 @@ export const klassuNaNovyyGod: GiftGuide = {
       priceFrom: 300,
       priceTo: 1000,
       searchQuery: "конструктор детский небольшой набор",
+      productQuery: "конструктор детский",
     },
     {
       name: "Головоломка",
@@ -60,6 +61,7 @@ export const klassuNaNovyyGod: GiftGuide = {
       priceFrom: 350,
       priceTo: 1000,
       searchQuery: "детский ночник",
+      productQuery: "детский ночник",
     },
     {
       name: "Термокружка или бутылка для воды",
@@ -77,6 +79,7 @@ export const klassuNaNovyyGod: GiftGuide = {
       priceFrom: 300,
       priceTo: 1000,
       searchQuery: "детские книги по возрасту",
+      productQuery: "детские книги",
     },
     {
       name: "Настольная игра на двоих в дорогу",
@@ -93,6 +96,7 @@ export const klassuNaNovyyGod: GiftGuide = {
       priceFrom: 300,
       priceTo: 900,
       searchQuery: "мягкая игрушка символ года маленькая",
+      productQuery: "мягкая игрушка",
     },
     {
       name: "Набор для творчества",

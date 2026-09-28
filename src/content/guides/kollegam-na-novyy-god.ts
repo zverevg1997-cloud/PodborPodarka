@@ -37,6 +37,7 @@ export const kollegamNaNovyyGod: GiftGuide = {
       priceFrom: 800,
       priceTo: 2500,
       searchQuery: "плед флисовый",
+      productQuery: "плед флисовый",
     },
     {
       name: "Беспроводная зарядка",
@@ -104,6 +105,7 @@ export const kollegamNaNovyyGod: GiftGuide = {
       priceFrom: 600,
       priceTo: 2000,
       searchQuery: "ежедневник датированный",
+      productQuery: "ежедневник",
     },
     {
       name: "Настольная игра на двоих или небольшую компанию",
@@ -112,6 +114,7 @@ export const kollegamNaNovyyGod: GiftGuide = {
       priceFrom: 900,
       priceTo: 2500,
       searchQuery: "настольная игра на двоих компактная",
+      productQuery: "настольная игра",
     },
     {
       name: "Тёплые носки из шерсти",
@@ -136,6 +139,7 @@ export const kollegamNaNovyyGod: GiftGuide = {
       priceFrom: 300,
       priceTo: 1000,
       searchQuery: "держатель для телефона настольный",
+      productQuery: "держатель телефона",
     },
     {
       name: "Подарочный сертификат в маркетплейс",
@@ -168,6 +172,7 @@ export const kollegamNaNovyyGod: GiftGuide = {
         priceFrom: 300,
         priceTo: 700,
         searchQuery: "кружка керамическая однотонная",
+        productQuery: "кружка керамическая",
       },
       {
         name: "Мини-гирлянда на батарейках",
@@ -176,6 +181,7 @@ export const kollegamNaNovyyGod: GiftGuide = {
         priceFrom: 200,
         priceTo: 600,
         searchQuery: "гирлянда на батарейках маленькая",
+        productQuery: "гирлянда батарейках",
       },
       {
         name: "Набор хорошего чая в пакетиках",
@@ -192,6 +198,7 @@ export const kollegamNaNovyyGod: GiftGuide = {
         priceFrom: 300,
         priceTo: 700,
         searchQuery: "мягкая игрушка символ года маленькая",
+        productQuery: "мягкая игрушка",
       },
     ],
   },
