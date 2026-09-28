@@ -201,6 +201,39 @@ export async function handleAdminCommand(
     return true;
   }
 
+  if (command === "/coverage" || command === "/покрытие") {
+    // Где в подборках есть настоящие товары, а где по-прежнему поиск Маркета.
+    // Проверка идёт по всем идеям всех подборок, это сотни запросов к базе,
+    // поэтому предупреждаем и не торопим.
+    await sendMessage(chatId, "Проверяю все подборки, это займёт с полминуты.");
+
+    const { coverage } = await import("@/lib/products/coverage");
+    const found = await coverage();
+
+    const empty = found.empty
+      .slice(0, 15)
+      .map((e) => `• ${e.slug} — «${e.query}»`)
+      .join("\n");
+
+    // Кандидаты: сперва те, где нашлось больше, — там совпадение вернее.
+    const candidates = [...found.candidates]
+      .sort((a, b) => b.found - a.found)
+      .slice(0, 20)
+      .map((c) => `• ${c.slug} — ${c.idea} → «${c.query}» (${c.found})`)
+      .join("\n");
+
+    await sendMessage(
+      chatId,
+      `<b>Покрытие подборок</b>\n\n` +
+        `Фраз задано: ${found.filled + found.empty.length} — ` +
+        `находят ${found.filled}, пусто у ${found.empty.length}\n` +
+        `Идей без фразы: ${found.without} — из них нашлось бы у ${found.candidates.length}\n` +
+        (empty ? `\n<b>Фраза есть, товара нет</b>\n${empty}\n` : "") +
+        (candidates ? `\n<b>Можно добавить фразу</b>\n${candidates}` : ""),
+    );
+    return true;
+  }
+
   if (command === "/takprodam" || command.startsWith("/takprodam ")) {
     // Такпродам — не файл, а каталог маркетплейсов. Адрес у него свой, под
     // /feed он не подходит, поэтому команда отдельная.
