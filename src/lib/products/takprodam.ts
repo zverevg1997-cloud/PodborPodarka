@@ -39,10 +39,18 @@ const PAGE = 1000;
  */
 const MAX_PAGES = 500;
 
-/** Товар в их ответе. Имена полей — из описания API, не угаданные. */
+/** Товар в их ответе. Имена полей — из живого ответа, не из описания. */
 interface TakprodamProduct {
+  /** Их номер товара. Берём его за свой: один на весь каталог и не меняется. */
   product_id?: string | number;
-  product_sku?: string | number;
+  /** Идентификатор записи в их базе, на случай если номера не окажется. */
+  id?: string;
+  /**
+   * Номер товара на самом маркетплейсе — он же в конце external_link.
+   * За свой не берём: у Озона и Wildberries номера могут совпасть, а каталог
+   * мы храним общий, и два разных товара слились бы в один.
+   */
+  sku?: string | number;
   title?: string;
   price?: string | number;
   image_url?: string;
@@ -162,7 +170,7 @@ export async function findSource(): Promise<{ id: string; title: string }> {
 }
 
 function toProduct(raw: TakprodamProduct): FeedProduct | null {
-  const externalId = String(raw.product_id ?? raw.product_sku ?? "").trim();
+  const externalId = String(raw.product_id ?? raw.id ?? "").trim();
   const name = String(raw.title ?? "").trim();
   const picture = String(raw.image_url ?? "").trim();
 
