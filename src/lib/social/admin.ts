@@ -246,9 +246,9 @@ export async function handleAdminCommand(
           `<b>Товаров</b>\n${counts.join("\n")}\n\n` +
           `<b>Разделов: ${categories.length}</b>\n` +
           (list.length ? `${list.join("\n")}\n\n` : "\n") +
-          "Подключить весь каталог: /takprodam всё\n" +
-          "Только один маркетплейс: /takprodam Wildberries\n" +
-          "С отбором разделов: /takprodam Wildberries игрушк|настольн",
+          "Каталог без ненужных разделов: /takprodam кроме 1,2,14,15,21\n" +
+          "Весь каталог целиком: /takprodam всё\n" +
+          "Только один маркетплейс: /takprodam Wildberries",
       );
       return true;
     }
@@ -257,8 +257,22 @@ export async function handleAdminCommand(
     const first = parts[0].toLowerCase();
     const whole = first === "всё" || first === "все";
 
-    const marketplace = whole ? null : parts[0];
-    const include = parts.slice(1).join(" ") || null;
+    // «кроме 1,2,14» — взять каталог без названных разделов. Отсеять их по
+    // названию нельзя: у товара стоит подраздел, а не раздел, — поэтому
+    // пользуемся их отбором и ненужное просто не запрашиваем.
+    const except = first === "кроме" ? parts.slice(1).join("").replace(/\s/g, "") : null;
+
+    if (except !== null && !/^\d+(,\d+)*$/.test(except)) {
+      await sendMessage(
+        chatId,
+        "Номера разделов через запятую — например: /takprodam кроме 1,2,14,15,21\n" +
+          "Какие есть — покажет /takprodam",
+      );
+      return true;
+    }
+
+    const marketplace = whole || except !== null ? null : parts[0];
+    const include = except !== null ? null : parts.slice(1).join(" ") || null;
 
     if (include) {
       try {
@@ -272,7 +286,9 @@ export async function handleAdminCommand(
     const name = marketplace ? `Такпродам ${marketplace}` : "Такпродам";
     const url = marketplace
       ? `takprodam:?marketplace=${encodeURIComponent(marketplace)}`
-      : "takprodam:";
+      : except !== null
+        ? `takprodam:?not_category_id=${except}`
+        : "takprodam:";
 
     const before = await prisma.productFeed.findFirst({ where: { name } });
     const feed = before
@@ -284,12 +300,10 @@ export async function handleAdminCommand(
             url,
             enabled: true,
             error: null,
-            ...(include ? { include } : whole ? { include: null } : {}),
+            ...(include ? { include } : whole || except !== null ? { include: null } : {}),
           },
         })
-      : await prisma.productFeed.create({
-          data: { name, url, include: whole ? null : include },
-        });
+      : await prisma.productFeed.create({ data: { name, url, include } });
 
     await sendMessage(
       chatId,

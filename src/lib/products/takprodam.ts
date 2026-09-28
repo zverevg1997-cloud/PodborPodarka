@@ -206,10 +206,41 @@ export interface TakprodamResult {
 }
 
 /**
+ * Какие разделы обходить.
+ *
+ * Отсеивать ненужное по названию нельзя: у товара в `product_category` стоит
+ * подраздел — «Отделочные и строительные материалы», — а в справочнике
+ * двадцать один раздел верхнего уровня, и пересечения между ними нет.
+ * Поэтому пользуемся их отбором: обходим каталог по разделам, а ненужные
+ * просто не запрашиваем.
+ *
+ * Список исключённых храним как есть и раскрываем при каждой загрузке, а не
+ * один раз при подключении. Иначе раздел, заведённый ими позже, к нам бы
+ * никогда не попал — и заметили бы мы это нескоро.
+ */
+async function passes(params: Record<string, string>): Promise<(string | null)[]> {
+  if (params.category_id) return params.category_id.split(",").map((s) => s.trim());
+
+  if (params.not_category_id) {
+    const drop = new Set(params.not_category_id.split(",").map((s) => s.trim()));
+    const all = await takprodamCategories();
+    const keep = all.map((c) => c.id).filter((id) => !drop.has(id));
+
+    // Пустой список означал бы «обойти всё», то есть ровно наоборот. Лучше
+    // сказать вслух, чем молча принести весь каталог.
+    if (keep.length === 0) throw new Error("исключены все разделы — грузить нечего");
+    return keep;
+  }
+
+  // Ни включений, ни исключений — один проход по всему каталогу.
+  return [null];
+}
+
+/**
  * Обходит каталог постранично и пишет товары в базу.
  *
  * `params` — то, что стояло в адресе после `takprodam:`: маркетплейс,
- * раздел, тип оплаты. Идентификатор площадки подставляем сами, чтобы его не
+ * разделы, тип оплаты. Идентификатор площадки подставляем сами, чтобы его не
  * приходилось искать руками и вписывать в адрес.
  */
 export async function importTakprodam(
@@ -222,57 +253,65 @@ export async function importTakprodam(
     new URLSearchParams(feed.url.replace(/^takprodam:\??/, "")),
   );
 
+  // Наши собственные параметры в запрос не уходят: разделы к этому моменту
+  // уже раскрыты и подставляются поштучно, а чужой параметр их API либо не
+  // поймёт, либо поймёт не так.
+  const query = { ...params };
+  delete query.category_id;
+  delete query.not_category_id;
+
   const only = feed.include ? new RegExp(feed.include, "i") : null;
 
   let saved = 0;
   let skipped = 0;
-  let capped = true;
+  let capped = false;
+  let first = true;
 
-  for (let page = 1; page <= MAX_PAGES; page++) {
-    // Пауза перед каждой страницей, кроме первой: восемьдесят страниц подряд
-    // без неё — гарантированный 429.
-    if (page > 1) await wait(PAUSE_MS);
+  for (const categoryId of await passes(params)) {
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      // Пауза перед каждым запросом, кроме самого первого: восемьдесят
+      // страниц подряд без неё — гарантированный 429.
+      if (!first) await wait(PAUSE_MS);
+      first = false;
 
-    const data = await api("/product/", {
-      ...params,
-      source_id: source.id,
-      // subid уходит в их статистику: по нему видно, что покупка пришла с
-      // сайта, а не из постов.
-      subid: params.subid ?? "daribot",
-      page: String(page),
-      limit: String(PAGE),
-    });
+      const data = await api("/product/", {
+        ...query,
+        source_id: source.id,
+        ...(categoryId ? { category_id: categoryId } : {}),
+        // subid уходит в их статистику: по нему видно, что покупка пришла с
+        // сайта, а не из постов.
+        subid: params.subid ?? "daribot",
+        page: String(page),
+        limit: String(PAGE),
+      });
 
-    const list = rows<TakprodamProduct>(data);
-    if (list.length === 0) {
-      capped = false;
-      break;
-    }
+      const list = rows<TakprodamProduct>(data);
+      if (list.length === 0) break;
 
-    const batch: (FeedProduct & { legal: string | null })[] = [];
+      const batch: (FeedProduct & { legal: string | null })[] = [];
 
-    for (const raw of list) {
-      const product = toProduct(raw);
-      if (!product) {
-        skipped++;
-        continue;
+      for (const raw of list) {
+        const product = toProduct(raw);
+        if (!product) {
+          skipped++;
+          continue;
+        }
+        if (only && !only.test(product.category ?? "")) {
+          skipped++;
+          continue;
+        }
+        batch.push({ ...product, legal: raw.legal_text?.trim() || null });
       }
-      if (only && !only.test(product.category ?? "")) {
-        skipped++;
-        continue;
+
+      if (batch.length > 0) {
+        await save(batch);
+        saved += batch.length;
       }
-      batch.push({ ...product, legal: raw.legal_text?.trim() || null });
-    }
 
-    if (batch.length > 0) {
-      await save(batch);
-      saved += batch.length;
-    }
-
-    // Неполная страница — каталог кончился.
-    if (list.length < PAGE) {
-      capped = false;
-      break;
+      // Неполная страница — раздел кончился. Дошли до предела — значит
+      // кончился не он, а наше терпение, и об этом надо сказать.
+      if (list.length < PAGE) break;
+      if (page === MAX_PAGES) capped = true;
     }
   }
 
