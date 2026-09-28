@@ -31,7 +31,7 @@ const BASE = "https://api.takprodam.ru/v2/publisher";
 async function get(path, params = {}) {
   const url = `${BASE}${path}?${new URLSearchParams(params)}`;
   const res = await fetch(url, {
-    headers: { "X-Api-Key": KEY, Accept: "application/json" },
+    headers: { Authorization: `Bearer ${KEY}`, Accept: "application/json" },
     signal: AbortSignal.timeout(30_000),
   });
 

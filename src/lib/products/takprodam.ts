@@ -89,7 +89,9 @@ async function api(
 
   const query = new URLSearchParams(params).toString();
   const res = await fetch(`${BASE}${path}${query ? `?${query}` : ""}`, {
-    headers: { "X-Api-Key": key, Accept: "application/json" },
+    // Именно Bearer. На старом /api/v1 было наоборот — там ключ узнавали по
+    // заголовку X-Api-Key, а Bearer отвергали, — и это сбивает с толку.
+    headers: { Authorization: `Bearer ${key}`, Accept: "application/json" },
     signal: AbortSignal.timeout(60_000),
   });
 
