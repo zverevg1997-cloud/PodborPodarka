@@ -52,6 +52,16 @@ import { mameNa8Marta } from "@/content/guides/mame-na-8-marta";
 import { mameNaDenRozhdeniya } from "@/content/guides/mame-na-den-rozhdeniya";
 import { mameNaYubiley } from "@/content/guides/mame-na-yubiley";
 import { uchitelyuNaDenRozhdeniya } from "@/content/guides/uchitelyu-na-den-rozhdeniya";
+import { babushkeNaDenRozhdeniya } from "@/content/guides/babushke-na-den-rozhdeniya";
+import { babushkeNaYubiley } from "@/content/guides/babushke-na-yubiley";
+import { dedushkeNaDenRozhdeniya } from "@/content/guides/dedushke-na-den-rozhdeniya";
+import { muzhuNa23Fevralya } from "@/content/guides/muzhu-na-23-fevralya";
+import { muzhuNaDenRozhdeniya } from "@/content/guides/muzhu-na-den-rozhdeniya";
+import { podrugeNaDenRozhdeniya } from "@/content/guides/podruge-na-den-rozhdeniya";
+import { zhene } from "@/content/guides/zhene";
+import { zheneNa8Marta } from "@/content/guides/zhene-na-8-marta";
+import { zheneNaDenRozhdeniya } from "@/content/guides/zhene-na-den-rozhdeniya";
+import { zheneNaGodovshchinu } from "@/content/guides/zhene-na-godovshchinu";
 import { podrugeNaNovyyGod } from "@/content/guides/podruge-na-novyy-god";
 import { rebenkuNaDenRozhdeniya } from "@/content/guides/rebenku-na-den-rozhdeniya";
 import { uchitelyu } from "@/content/guides/uchitelyu";
@@ -132,6 +142,16 @@ export const GIFT_GUIDES: GiftGuide[] = [
   malchiku5Let,
   malchiku8Let,
   rebenkuNaDenRozhdeniya,
+  babushkeNaDenRozhdeniya,
+  babushkeNaYubiley,
+  dedushkeNaDenRozhdeniya,
+  muzhuNa23Fevralya,
+  muzhuNaDenRozhdeniya,
+  podrugeNaDenRozhdeniya,
+  zhene,
+  zheneNa8Marta,
+  zheneNaDenRozhdeniya,
+  zheneNaGodovshchinu,
   devochke12Let,
   devochke6Let,
   devochke7Let,
@@ -181,7 +201,7 @@ export const GUIDE_GROUPS: Array<{
   {
     title: "С чего начать",
     note: "Общий вопрос, на который одной подборкой не ответить: всё зависит от возраста. Эта страница разводит по остальным.",
-    slugs: ["rebenku-na-den-rozhdeniya", "mame", "pape", "kollege"],
+    slugs: ["rebenku-na-den-rozhdeniya", "mame", "pape", "zhene", "kollege"],
   },
   {
     title: "Учителям и воспитателям",
@@ -237,6 +257,26 @@ export const GUIDE_GROUPS: Array<{
     ],
   },
   {
+    title: "Жене и мужу",
+    note: "Сложность тут не в незнании, а наоборот: всё нужное человек покупает сам и сразу. Искать надо в отложенном.",
+    slugs: [
+      "zhene-na-den-rozhdeniya",
+      "zhene-na-godovshchinu",
+      "zhene-na-8-marta",
+      "muzhu-na-den-rozhdeniya",
+      "muzhu-na-23-fevralya",
+    ],
+  },
+  {
+    title: "Бабушке и дедушке",
+    note: "Здесь труднее всего угодить вещью — и проще всего вниманием. Лучший подарок обычно не покупается.",
+    slugs: [
+      "babushke-na-den-rozhdeniya",
+      "babushke-na-yubiley",
+      "dedushke-na-den-rozhdeniya",
+    ],
+  },
+  {
     title: "Папе",
     note: "Самый трудный получатель в семье: на «что тебе подарить» отвечает «ничего не надо» — и не лукавит.",
     slugs: ["pape-na-den-rozhdeniya", "pape-na-23-fevralya", "pape-na-novyy-god"],
@@ -245,6 +285,11 @@ export const GUIDE_GROUPS: Array<{
     title: "Коллегам",
     note: "Здесь важнее не попасть в душу, а не поставить человека в неловкое положение.",
     slugs: ["kollege-zhenshchine", "kollege-muzhchine", "kollegam-na-novyy-god"],
+  },
+  {
+    title: "Подруге",
+    note: "У дружеского подарка есть границы: слишком личное неуместно, слишком формальное обидно.",
+    slugs: ["podruge-na-den-rozhdeniya", "podruge-na-novyy-god"],
   },
   {
     title: "На Новый год",
