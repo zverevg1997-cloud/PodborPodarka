@@ -32,10 +32,11 @@ const env = Object.fromEntries(
     .map((m) => [m[1], m[2]]),
 );
 
+// DATABASE_URL, а не DATABASE_URL_POOLER: второй остался с переезда и
+// смотрит в базу, где таблицы products нет вовсе (P2021). Соединение рвалось
+// не из-за него, а из-за пятисот запросов подряд — теперь их полтора десятка.
 const prisma = new PrismaClient({
-  // Через пул: одиночное соединение Timeweb закрывает сам, и на середине
-  // работы это выглядит как P1017 «Server has closed the connection».
-  datasources: { db: { url: env.DATABASE_URL_POOLER || env.DATABASE_URL } },
+  datasources: { db: { url: env.DATABASE_URL } },
 });
 
 // --- отбор, как в lib/products/match ---
