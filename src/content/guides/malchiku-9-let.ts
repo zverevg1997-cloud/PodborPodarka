@@ -27,6 +27,7 @@ export const malchiku9Let: GiftGuide = {
       priceFrom: 8000,
       priceTo: 25000,
       searchQuery: "велосипед детский 24 дюйма",
+      productQuery: "велосипед",
     },
     {
       name: "Наушники",

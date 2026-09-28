@@ -84,6 +84,7 @@ export const devochke14Let: GiftGuide = {
       priceFrom: 2500,
       priceTo: 8000,
       searchQuery: "рюкзак подростковый городской",
+      productQuery: "рюкзак",
     },
   ],
   budget: {

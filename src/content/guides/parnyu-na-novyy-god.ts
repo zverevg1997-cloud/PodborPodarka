@@ -69,6 +69,7 @@ export const parnyuNaNovyyGod: GiftGuide = {
       priceFrom: 800,
       priceTo: 2500,
       searchQuery: "термокружка мужская",
+      productQuery: "термокружка",
     },
     {
       name: "Билеты на концерт или матч",

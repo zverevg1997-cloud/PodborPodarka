@@ -50,6 +50,7 @@ export const devochke8Let: GiftGuide = {
       priceFrom: 2500,
       priceTo: 9000,
       searchQuery: "роликовые коньки детские раздвижные",
+      productQuery: "роликовые коньки",
     },
     {
       name: "Шкатулка или дневник с замком",

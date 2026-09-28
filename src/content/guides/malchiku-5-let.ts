@@ -34,6 +34,7 @@ export const malchiku5Let: GiftGuide = {
       priceFrom: 3000,
       priceTo: 9000,
       searchQuery: "самокат детский двухколёсный от 5 лет",
+      productQuery: "самокат",
     },
     {
       name: "Настольная игра на правила и очередь",

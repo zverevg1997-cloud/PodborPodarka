@@ -28,6 +28,7 @@ export const podrugeNaNovyyGod: GiftGuide = {
       priceFrom: 2000,
       priceTo: 8000,
       searchQuery: "подарочный сертификат спа",
+      productQuery: "сертификат спа",
     },
     {
       name: "Билеты на концерт, спектакль или выставку",

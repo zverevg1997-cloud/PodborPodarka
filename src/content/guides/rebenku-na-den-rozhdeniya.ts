@@ -61,6 +61,7 @@ export const rebenkuNaDenRozhdeniya: GiftGuide = {
       priceFrom: 1500,
       priceTo: 8000,
       searchQuery: "подарочный сертификат детский квест",
+      productQuery: "сертификат квест",
     },
     {
       name: "Книга по его теме",

@@ -42,6 +42,7 @@ export const devochke10Let: GiftGuide = {
       priceFrom: 2500,
       priceTo: 9000,
       searchQuery: "роликовые коньки детские раздвижные",
+      productQuery: "роликовые коньки",
     },
     {
       name: "Настольная игра на компанию",

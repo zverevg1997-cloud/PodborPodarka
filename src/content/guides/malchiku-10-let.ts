@@ -33,6 +33,7 @@ export const malchiku10Let: GiftGuide = {
       priceFrom: 6000,
       priceTo: 20000,
       searchQuery: "самокат трюковой детский",
+      productQuery: "самокат",
     },
     {
       name: "Игровые наушники с микрофоном",
@@ -174,6 +175,7 @@ export const malchiku10Let: GiftGuide = {
         priceFrom: 800,
         priceTo: 1500,
         searchQuery: "мяч футбольный игровой",
+      productQuery: "мяч футбольный",
       },
     ],
   },

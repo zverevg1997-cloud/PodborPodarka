@@ -42,6 +42,7 @@ export const devochke5Let: GiftGuide = {
       priceFrom: 2500,
       priceTo: 8000,
       searchQuery: "самокат детский двухколёсный от 5 лет",
+      productQuery: "самокат",
     },
     {
       name: "Магнитный конструктор",

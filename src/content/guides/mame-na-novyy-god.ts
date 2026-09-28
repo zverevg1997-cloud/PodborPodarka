@@ -99,6 +99,7 @@ export const mameNaNovyyGod: GiftGuide = {
       priceFrom: 2000,
       priceTo: 8000,
       searchQuery: "подарочный сертификат спа",
+      productQuery: "сертификат спа",
     },
     {
       name: "Домашние тапочки с закрытой пяткой",

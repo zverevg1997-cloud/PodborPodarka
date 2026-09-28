@@ -52,6 +52,7 @@ export const malchiku7Let: GiftGuide = {
       priceFrom: 6000,
       priceTo: 18000,
       searchQuery: "велосипед детский 20 дюймов",
+      productQuery: "велосипед",
     },
     {
       name: "Настольная игра для компании",
@@ -76,6 +77,7 @@ export const malchiku7Let: GiftGuide = {
       priceFrom: 1200,
       priceTo: 4000,
       searchQuery: "футбольный мяч размер 4",
+      productQuery: "мяч",
     },
     {
       name: "Комиксы или первая книга длинной серии",

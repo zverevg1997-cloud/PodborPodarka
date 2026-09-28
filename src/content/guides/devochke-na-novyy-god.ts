@@ -99,6 +99,7 @@ export const devochkeNaNovyyGod: GiftGuide = {
       priceFrom: 2500,
       priceTo: 9000,
       searchQuery: "коньки фигурные детские",
+      productQuery: "коньки фигурные",
     },
     {
       name: "Настольная игра для компании (8–15 лет)",
@@ -124,6 +125,7 @@ export const devochkeNaNovyyGod: GiftGuide = {
       priceFrom: 1500,
       priceTo: 6000,
       searchQuery: "подростковый рюкзак городской",
+      productQuery: "рюкзак",
     },
     {
       name: "Книга по её увлечению (любой возраст)",

@@ -43,6 +43,7 @@ export const devochke3Goda: GiftGuide = {
       priceFrom: 2000,
       priceTo: 6000,
       searchQuery: "самокат детский трёхколёсный от 3 лет",
+      productQuery: "самокат",
     },
     {
       name: "Пластилин или масса для лепки",

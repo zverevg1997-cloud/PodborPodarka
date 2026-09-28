@@ -53,6 +53,7 @@ export const malchiku11Let: GiftGuide = {
       priceFrom: 6000,
       priceTo: 20000,
       searchQuery: "самокат трюковой подростковый",
+      productQuery: "самокат",
     },
     {
       name: "Внешний аккумулятор",
@@ -86,6 +87,7 @@ export const malchiku11Let: GiftGuide = {
       priceFrom: 2000,
       priceTo: 7000,
       searchQuery: "рюкзак подростковый городской",
+      productQuery: "рюкзак",
     },
   ],
   budget: {

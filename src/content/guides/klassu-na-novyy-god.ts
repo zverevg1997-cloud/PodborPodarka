@@ -68,6 +68,7 @@ export const klassuNaNovyyGod: GiftGuide = {
       priceFrom: 400,
       priceTo: 1200,
       searchQuery: "детская бутылка для воды",
+      productQuery: "термокружка",
     },
     {
       name: "Книга по возрасту",
@@ -167,6 +168,7 @@ export const klassuNaNovyyGod: GiftGuide = {
         priceFrom: 3000,
         priceTo: 9000,
         searchQuery: "подарочный сертификат спа",
+      productQuery: "сертификат спа",
       },
     ],
   },

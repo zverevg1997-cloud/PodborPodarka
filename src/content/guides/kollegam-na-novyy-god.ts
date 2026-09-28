@@ -28,6 +28,7 @@ export const kollegamNaNovyyGod: GiftGuide = {
       priceFrom: 700,
       priceTo: 2500,
       searchQuery: "термокружка для офиса",
+      productQuery: "термокружка",
     },
     {
       name: "Плед с рукавами или обычный флисовый",

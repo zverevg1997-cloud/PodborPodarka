@@ -44,6 +44,7 @@ export const malchiku12Let: GiftGuide = {
       priceFrom: 10000,
       priceTo: 35000,
       searchQuery: "электросамокат подростковый",
+      productQuery: "самокат",
     },
     {
       name: "Умная колонка",
