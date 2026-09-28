@@ -290,6 +290,8 @@ model Product {
   url        String
   picture    String
   category   String?
+  // Текст маркировки рекламы, если партнёрка отдаёт его отдельно от ссылки.
+  legal      String?
   available  Boolean  @default(true)
   updatedAt  DateTime @updatedAt
 

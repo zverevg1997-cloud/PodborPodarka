@@ -17,6 +17,7 @@ import {
   takeOffers,
   type FeedProduct,
 } from "@/lib/products/feed";
+import { importTakprodam } from "@/lib/products/takprodam";
 
 /** Раз в сутки: чаще магазины выгрузку и не обновляют. */
 const STALE_AFTER_MS = 20 * 60 * 60 * 1000;
@@ -41,7 +42,9 @@ export interface ImportResult {
   error?: string;
 }
 
-async function save(feedId: string, products: FeedProduct[]): Promise<void> {
+type Savable = FeedProduct & { legal?: string | null };
+
+async function save(feedId: string, products: Savable[]): Promise<void> {
   await prisma.$transaction(
     products.map((product) =>
       prisma.product.upsert({
@@ -73,6 +76,34 @@ export async function importFeed(feed: {
   const startedAt = new Date();
 
   try {
+    // Такпродам — не файл, а постраничный API. Разбор у него свой, а всё
+    // остальное общее: та же таблица, та же отметка пропавших, тот же отчёт.
+    if (feed.url.startsWith("takprodam:")) {
+      const { saved, skipped } = await importTakprodam(feed, (batch) =>
+        save(feed.id, batch),
+      );
+
+      if (saved === 0) {
+        throw new Error(
+          skipped > 0
+            ? `отбор не нашёл ни одного товара из ${skipped}`
+            : "в каталоге нет подходящих товаров",
+        );
+      }
+
+      const { count: gone } = await prisma.product.updateMany({
+        where: { feedId: feed.id, updatedAt: { lt: startedAt }, available: true },
+        data: { available: false },
+      });
+
+      await prisma.productFeed.update({
+        where: { id: feed.id },
+        data: { importedAt: new Date(), count: saved, error: null },
+      });
+
+      return { feed: feed.name, saved, skipped, gone };
+    }
+
     const res = await fetch(feed.url, { signal: AbortSignal.timeout(900_000) });
     if (!res.ok) throw new Error(`магазин ответил ${res.status}`);
     if (!res.body) throw new Error("магазин прислал пустой ответ");

@@ -9,8 +9,10 @@ import TrackedLink from "@/components/TrackedLink";
  * Там, где товара у нас нет, идея по-прежнему ведёт на поиск Маркета: лучше
  * отправить человека искать самому, чем показать не то.
  *
- * Ссылки в выгрузках Адмитада уже содержат erid, то есть промаркированы как
- * реклама самой сетью. Отдельно этим заниматься не нужно.
+ * Про маркировку. В выгрузках Адмитада erid зашит в саму ссылку, и рядом
+ * писать нечего — хватает слова «Реклама». Такпродам отдаёт текст маркировки
+ * отдельным полем, и тогда показываем именно его: закон требует, чтобы он был
+ * виден рядом с товаром, а не спрятан в ссылке.
  */
 export default function ProductCards({
   products,
@@ -20,6 +22,12 @@ export default function ProductCards({
   query: string;
 }) {
   if (products.length === 0) return null;
+
+  // Одинаковый текст маркировки у нескольких товаров показываем один раз.
+  // Если рядом есть товары без своего текста — им нужно общее слово «Реклама»:
+  // в одной подборке могут оказаться и выгрузка Адмитада, и каталог Такпродам.
+  const legal = [...new Set(products.map((p) => p.legal).filter((t): t is string => !!t))];
+  const marks = products.some((p) => !p.legal) ? ["Реклама", ...legal] : legal;
 
   return (
     <div className="mt-2 flex flex-col gap-2">
@@ -55,7 +63,9 @@ export default function ProductCards({
         </TrackedLink>
       ))}
 
-      <span className="text-[11px] text-muted-foreground">Реклама</span>
+      <span className="text-[11px] leading-snug text-muted-foreground">
+        {marks.join(" · ")}
+      </span>
     </div>
   );
 }

@@ -201,6 +201,81 @@ export async function handleAdminCommand(
     return true;
   }
 
+if (command === "/takprodam" || command.startsWith("/takprodam ")) {
+    // Такпродам — не файл, а каталог маркетплейсов. Адрес у него свой, под
+    // /feed он не подходит, поэтому команда отдельная.
+    const { findSource, takprodamCategories } = await import("@/lib/products/takprodam");
+
+    const rest = text.trim().slice("/takprodam".length).trim();
+
+    let source: { id: string; title: string };
+    try {
+      source = await findSource();
+    } catch (error) {
+      await sendMessage(
+        chatId,
+        `Такпродам не отвечает как надо: ${error instanceof Error ? error.message : error}`,
+      );
+      return true;
+    }
+
+    if (!rest) {
+      // Без аргументов — разведка: что за площадка и какие разделы есть.
+      const categories = await takprodamCategories().catch(() => []);
+      const list = categories.slice(0, 40).map((c) => `${c.id} — ${c.title}`);
+
+      await sendMessage(
+        chatId,
+        `<b>Такпродам</b>\n\nПлощадка: ${source.title} (${source.id})\n` +
+          `Разделов: ${categories.length}\n\n` +
+          (list.length ? `${list.join("\n")}\n\n` : "") +
+          "Подключить маркетплейс: /takprodam Wildberries\n" +
+          "С отбором разделов: /takprodam Wildberries игрушк|настольн|книг",
+      );
+      return true;
+    }
+
+    const parts = rest.split(/\s+/);
+    const marketplace = parts[0];
+    const include = parts.slice(1).join(" ") || null;
+
+    if (include) {
+      try {
+        new RegExp(include);
+      } catch {
+        await sendMessage(chatId, "Отбор непонятен. Разделы через | — например: игрушк|настольн");
+        return true;
+      }
+    }
+
+    const name = `Такпродам ${marketplace}`;
+    const url = `takprodam:?marketplace=${encodeURIComponent(marketplace)}`;
+
+    const before = await prisma.productFeed.findFirst({ where: { name } });
+    const feed = before
+      ? await prisma.productFeed.update({
+          where: { id: before.id },
+          data: { url, enabled: true, error: null, ...(include ? { include } : {}) },
+        })
+      : await prisma.productFeed.create({ data: { name, url, include } });
+
+    await sendMessage(
+      chatId,
+      `${before ? "Обновляю" : "Добавил"} «${name}». Каталог постраничный, это небыстро.`,
+    );
+
+    const { importFeed } = await import("@/lib/products/import");
+    const result = await importFeed(feed);
+
+    await sendMessage(
+      chatId,
+      result.error
+        ? `Не вышло: ${result.error}`
+        : `Готово: товаров ${result.saved}${result.skipped ? `, отсеяно ${result.skipped}` : ""}.`,
+    );
+    return true;
+  }
+
   if (command.startsWith("/filter ")) {
     // Какие разделы магазина брать. Без этого большие каталоги приносят
     // сотни тысяч товаров, из которых в подарок годятся единицы.
