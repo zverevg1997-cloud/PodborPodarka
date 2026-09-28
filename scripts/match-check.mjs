@@ -5,8 +5,14 @@
 // только то, что видно, поэтому здесь фраза прогоняется по базе и рядом
 // печатаются названия найденных товаров.
 //
-// Отбор повторяет lib/products/match слово в слово. Если тот изменится, надо
-// менять и здесь: разойдутся — и проверка начнёт врать.
+// Товары забираем один раз и сравниваем у себя. Пятьсот сорок шесть запросов
+// подряд, каждый на тысячу строк, база не выдержала и закрыла соединение
+// (P1017) — а нужны нам всего три поля, и весь каталог в них весит единицы
+// мегабайт.
+//
+// Отбор повторяет lib/products/match слово в слово, включая предел в тысячу
+// кандидатов: без него проверка показывала бы товары, которых сайт всё равно
+// не покажет.
 //
 // Читает: scripts/phrases.json — список {slug, idea, query, priceFrom, priceTo}
 // Пишет:  scripts/phrases-result.txt
@@ -27,7 +33,9 @@ const env = Object.fromEntries(
 );
 
 const prisma = new PrismaClient({
-  datasources: { db: { url: env.DATABASE_URL } },
+  // Через пул: одиночное соединение Timeweb закрывает сам, и на середине
+  // работы это выглядит как P1017 «Server has closed the connection».
+  datasources: { db: { url: env.DATABASE_URL_POOLER || env.DATABASE_URL } },
 });
 
 // --- отбор, как в lib/products/match ---
@@ -51,7 +59,39 @@ const words = (text) =>
     .filter((word) => word.length >= 3)
     .map(stem);
 
-async function find(query, priceFrom, priceTo) {
+// --- забираем каталог ---
+
+const CHUNK = 5000;
+const all = [];
+
+for (let skip = 0; ; skip += CHUNK) {
+  const page = await prisma.product.findMany({
+    where: { available: true },
+    select: { name: true, price: true },
+    orderBy: { price: "asc" },
+    skip,
+    take: CHUNK,
+  });
+
+  all.push(...page);
+  process.stdout.write(`\rзагружено товаров: ${all.length}`);
+  if (page.length < CHUNK) break;
+}
+
+await prisma.$disconnect();
+console.log("");
+
+// Один раз разбираем названия на основы: иначе каждая из пятисот фраз
+// перемалывала бы весь каталог заново.
+const catalogue = all.map((p) => ({
+  name: p.name,
+  price: p.price,
+  stems: words(p.name).join(" "),
+}));
+
+// --- прогон ---
+
+function find(query, priceFrom, priceTo) {
   const needed = words(query);
   if (needed.length === 0) return { reason: "пустой запрос", products: [] };
 
@@ -59,22 +99,20 @@ async function find(query, priceFrom, priceTo) {
     return { reason: "одни служебные слова", products: [] };
   }
 
-  const candidates = await prisma.product.findMany({
-    where: {
-      available: true,
-      price: { gte: priceFrom, lte: priceTo },
-      name: { contains: needed[0], mode: "insensitive" },
-    },
-    orderBy: { price: "asc" },
-    take: 1000,
-  });
+  const candidates = catalogue
+    .filter(
+      (p) =>
+        p.price >= priceFrom &&
+        p.price <= priceTo &&
+        p.name.toLowerCase().includes(needed[0]),
+    )
+    .slice(0, 1000);
 
   const seen = new Set();
   const products = [];
 
   for (const product of candidates) {
-    const name = words(product.name).join(" ");
-    if (!needed.every((word) => name.includes(word))) continue;
+    if (!needed.every((word) => product.stems.includes(word))) continue;
 
     const key = product.name.toLowerCase();
     if (seen.has(key)) continue;
@@ -87,15 +125,13 @@ async function find(query, priceFrom, priceTo) {
   return { reason: candidates.length === 0 ? "в вилке нет ничего" : "", products };
 }
 
-// --- прогон ---
-
 const phrases = JSON.parse(readFileSync(here("scripts/phrases.json"), "utf8"));
 const lines = [];
 
 let hit = 0;
 
 for (const item of phrases) {
-  const { products, reason } = await find(item.query, item.priceFrom, item.priceTo);
+  const { products, reason } = find(item.query, item.priceFrom, item.priceTo);
 
   lines.push(`${item.slug} · ${item.idea}`);
   lines.push(`  «${item.query}»  ${item.priceFrom}–${item.priceTo} ₽`);
@@ -111,10 +147,11 @@ for (const item of phrases) {
   lines.push("");
 }
 
-const head = `Проверено фраз: ${phrases.length}, нашли товар: ${hit}\n\n`;
+const head =
+  `Товаров в базе: ${catalogue.length}\n` +
+  `Проверено фраз: ${phrases.length}, нашли товар: ${hit}\n\n`;
+
 writeFileSync(here("scripts/phrases-result.txt"), head + lines.join("\n"), "utf8");
 
 console.log(head.trim());
 console.log("Подробности: scripts/phrases-result.txt");
-
-await prisma.$disconnect();
