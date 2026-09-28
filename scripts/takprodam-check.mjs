@@ -1,11 +1,14 @@
-// Разведка API Такпродам.
+// Разведка API Такпродам, второй заход.
 //
-// Документации у нас нет, а сайт с моей стороны не открывается — российские
-// адреса через этот выход в сеть недоступны. Поэтому скрипт перебирает
-// правдоподобные адреса и способы передать ключ и показывает, что отвечает.
+// Первый показал главное: база — https://api.takprodam.ru/api/v1, ключ
+// передаётся заголовком X-Api-Key. С ним корень отвечает 406 «An error
+// occurred», то есть ключ принят, а вот сам запрос сервер не устраивает —
+// либо путь, либо заголовок Accept.
 //
-// Ключ берётся из .env, чтобы не мелькать в командной строке: её содержимое
-// оседает в истории оболочки и видно в списке процессов.
+// Bearer в Authorization даёт 401, так что этот способ отпадает.
+//
+// Документацию прочитать не вышло: takprodam.ru с моей стороны отклоняет
+// соединение. Поэтому перебираем пути и варианты Accept.
 //
 // Запуск: node scripts/takprodam-check.mjs   (с ВЫКЛЮЧЕННЫМ VPN)
 
@@ -21,55 +24,57 @@ const env = Object.fromEntries(
 
 const KEY = env.TAKPRODAM_API_KEY;
 if (!KEY) {
-  console.log('В .env нет TAKPRODAM_API_KEY. Добавьте строкой: TAKPRODAM_API_KEY="..."');
+  console.log('В .env нет TAKPRODAM_API_KEY.');
   process.exit(1);
 }
 
-const BASES = [
-  "https://api.takprodam.ru",
-  "https://takprodam.ru/api",
-  "https://takprodam.ru/api/v1",
-  "https://api.takprodam.ru/v1",
-  "https://api.takprodam.ru/api/v1",
+const BASE = "https://api.takprodam.ru/api/v1";
+
+const PATHS = [
+  "", "/products", "/product", "/goods", "/offers", "/offer",
+  "/feeds", "/feed", "/export", "/catalog", "/items",
+  "/advertisers", "/campaigns", "/programs", "/shops",
+  "/links", "/link", "/deeplink",
+  "/websites", "/sites", "/me", "/profile", "/user", "/account",
+  "/statistics", "/stat", "/balance", "/reports",
 ];
 
-const PATHS = ["", "/", "/products", "/offers", "/feeds", "/campaigns", "/me", "/user"];
-
-// Ключ могут ждать по-разному: в заголовке, в другом заголовке или в адресе.
-const WAYS = [
-  ["Bearer в Authorization", (u) => [u, { Authorization: `Bearer ${KEY}` }]],
-  ["X-Api-Key", (u) => [u, { "X-Api-Key": KEY }]],
-  ["в адресе", (u) => [`${u}${u.includes("?") ? "&" : "?"}api_key=${KEY}`, {}]],
+// 406 часто означает, что серверу не нравится Accept, а не путь.
+const ACCEPTS = [
+  "application/json",
+  "application/vnd.api+json",
+  "*/*",
 ];
 
-const seen = new Set();
+const interesting = [];
 
-for (const base of BASES) {
-  for (const path of PATHS) {
-    const url = base + path;
-    if (seen.has(url)) continue;
-    seen.add(url);
+for (const path of PATHS) {
+  for (const accept of ACCEPTS) {
+    try {
+      const res = await fetch(BASE + path, {
+        headers: { "X-Api-Key": KEY, Accept: accept },
+        signal: AbortSignal.timeout(12_000),
+      });
 
-    for (const [label, build] of WAYS) {
-      const [target, headers] = build(url);
-      try {
-        const res = await fetch(target, {
-          headers: { Accept: "application/json", ...headers },
-          signal: AbortSignal.timeout(12_000),
-        });
+      const body = (await res.text()).slice(0, 220).replace(/\s+/g, " ");
 
-        // Интересны только осмысленные ответы: 404 и отказы соединения
-        // ничего не говорят, а вот 200, 401 и 403 говорят многое.
-        if (res.status === 404) continue;
+      // 404 и 406 в корне нам уже известны и ничего не добавляют.
+      if (res.status === 404) continue;
+      if (res.status === 406 && path !== "") continue;
 
-        const body = (await res.text()).slice(0, 200).replace(/\s+/g, " ");
-        console.log(`${res.status}  ${label.padEnd(22)} ${url}`);
-        if (body) console.log(`      ${body}`);
-      } catch {
-        // молчим: недоступный адрес — это не новость
-      }
+      interesting.push(`${res.status}  ${accept.padEnd(24)} ${BASE}${path}\n      ${body}`);
+
+      // Как только путь ответил осмысленно, остальные Accept не нужны.
+      if (res.status < 400) break;
+    } catch {
+      // недоступный адрес — не новость
     }
   }
 }
 
-console.log("\nЕсли всё молчит — пришлите ссылку на документацию из кабинета.");
+if (interesting.length === 0) {
+  console.log("Ничего не ответило. Откройте https://takprodam.ru/api в браузере");
+  console.log("и пришлите, что там написано про методы.");
+} else {
+  for (const line of interesting) console.log(line);
+}
