@@ -215,11 +215,19 @@ export async function handleAdminCommand(
       .map((e) => `• ${e.slug} — «${e.query}»`)
       .join("\n");
 
-    // Кандидаты: сперва те, где нашлось больше, — там совпадение вернее.
-    const candidates = [...found.candidates]
-      .sort((a, b) => b.found - a.found)
-      .slice(0, 20)
-      .map((c) => `• ${c.slug} — ${c.idea} → «${c.query}» (${c.found})`)
+    // По две на подборку, а не двадцать подряд. Сортировать по числу
+    // найденного бессмысленно: карточек показываем три, и у всех стоит три.
+    // Без этого список целиком состоял бы из первых двух подборок.
+    const perGuide = new Map<string, number>();
+    const candidates = found.candidates
+      .filter((c) => {
+        const seen = perGuide.get(c.slug) ?? 0;
+        if (seen >= 2) return false;
+        perGuide.set(c.slug, seen + 1);
+        return true;
+      })
+      .slice(0, 24)
+      .map((c) => `• ${c.slug} — ${c.idea} → «${c.query}»`)
       .join("\n");
 
     await sendMessage(
