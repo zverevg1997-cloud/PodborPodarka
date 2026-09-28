@@ -41,6 +41,17 @@ import { kollegeZhenshchine } from "@/content/guides/kollege-zhenshchine";
 import { pape } from "@/content/guides/pape";
 import { papeNa23Fevralya } from "@/content/guides/pape-na-23-fevralya";
 import { papeNaDenRozhdeniya } from "@/content/guides/pape-na-den-rozhdeniya";
+import { devochke12Let } from "@/content/guides/devochke-12-let";
+import { devochke6Let } from "@/content/guides/devochke-6-let";
+import { devochke7Let } from "@/content/guides/devochke-7-let";
+import { devochke9Let } from "@/content/guides/devochke-9-let";
+import { malchiku13Let } from "@/content/guides/malchiku-13-let";
+import { malchiku4Goda } from "@/content/guides/malchiku-4-goda";
+import { mame } from "@/content/guides/mame";
+import { mameNa8Marta } from "@/content/guides/mame-na-8-marta";
+import { mameNaDenRozhdeniya } from "@/content/guides/mame-na-den-rozhdeniya";
+import { mameNaYubiley } from "@/content/guides/mame-na-yubiley";
+import { uchitelyuNaDenRozhdeniya } from "@/content/guides/uchitelyu-na-den-rozhdeniya";
 import { podrugeNaNovyyGod } from "@/content/guides/podruge-na-novyy-god";
 import { rebenkuNaDenRozhdeniya } from "@/content/guides/rebenku-na-den-rozhdeniya";
 import { uchitelyu } from "@/content/guides/uchitelyu";
@@ -121,6 +132,17 @@ export const GIFT_GUIDES: GiftGuide[] = [
   malchiku5Let,
   malchiku8Let,
   rebenkuNaDenRozhdeniya,
+  devochke12Let,
+  devochke6Let,
+  devochke7Let,
+  devochke9Let,
+  malchiku13Let,
+  malchiku4Goda,
+  mame,
+  mameNa8Marta,
+  mameNaDenRozhdeniya,
+  mameNaYubiley,
+  uchitelyuNaDenRozhdeniya,
   kollege,
   kollegeMuzhchine,
   kollegeZhenshchine,
@@ -159,18 +181,25 @@ export const GUIDE_GROUPS: Array<{
   {
     title: "С чего начать",
     note: "Общий вопрос, на который одной подборкой не ответить: всё зависит от возраста. Эта страница разводит по остальным.",
-    slugs: ["rebenku-na-den-rozhdeniya", "pape", "kollege"],
+    slugs: ["rebenku-na-den-rozhdeniya", "mame", "pape", "kollege"],
   },
   {
     title: "Учителям и воспитателям",
     note: "Здесь у подарка есть потолок по закону — три тысячи рублей на человека. Разбираем, как в него уложиться.",
-    slugs: ["uchitelyu", "uchitelyu-ot-klassa", "vospitatelyu", "klassu-na-novyy-god"],
+    slugs: [
+      "uchitelyu",
+      "uchitelyu-na-den-rozhdeniya",
+      "uchitelyu-ot-klassa",
+      "vospitatelyu",
+      "klassu-na-novyy-god",
+    ],
   },
   {
     title: "Мальчикам по возрасту",
     note: "Год разницы в детстве меняет всё. Поэтому страницы отдельные, а не «детям от 5 до 10».",
     slugs: [
       "malchiku-2-goda",
+      "malchiku-4-goda",
       "malchiku-5-let",
       "malchiku-6-let",
       "malchiku-7-let",
@@ -179,6 +208,7 @@ export const GUIDE_GROUPS: Array<{
       "malchiku-10-let",
       "malchiku-11-let",
       "malchiku-12-let",
+      "malchiku-13-let",
     ],
   },
   {
@@ -187,9 +217,23 @@ export const GUIDE_GROUPS: Array<{
     slugs: [
       "devochke-3-goda",
       "devochke-5-let",
+      "devochke-6-let",
+      "devochke-7-let",
       "devochke-8-let",
+      "devochke-9-let",
       "devochke-10-let",
+      "devochke-12-let",
       "devochke-14-let",
+    ],
+  },
+  {
+    title: "Маме",
+    note: "Правило одно и почти безотказное: дарить то, что она себе не купит.",
+    slugs: [
+      "mame-na-den-rozhdeniya",
+      "mame-na-8-marta",
+      "mame-na-yubiley",
+      "mame-na-novyy-god",
     ],
   },
   {
