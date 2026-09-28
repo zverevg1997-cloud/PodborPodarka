@@ -40,6 +40,8 @@ export interface ImportResult {
   skipped: number;
   gone: number;
   error?: string;
+  /** Загрузка прошла, но есть о чём сказать вслух — например, недобранный хвост. */
+  note?: string;
 }
 
 type Savable = FeedProduct & { legal?: string | null };
@@ -79,7 +81,7 @@ export async function importFeed(feed: {
     // Такпродам — не файл, а постраничный API. Разбор у него свой, а всё
     // остальное общее: та же таблица, та же отметка пропавших, тот же отчёт.
     if (feed.url.startsWith("takprodam:")) {
-      const { saved, skipped } = await importTakprodam(feed, (batch) =>
+      const { saved, skipped, capped } = await importTakprodam(feed, (batch) =>
         save(feed.id, batch),
       );
 
@@ -101,7 +103,17 @@ export async function importFeed(feed: {
         data: { importedAt: new Date(), count: saved, error: null },
       });
 
-      return { feed: feed.name, saved, skipped, gone };
+      return {
+        feed: feed.name,
+        saved,
+        skipped,
+        gone,
+        // Про упёршийся обход надо говорить: иначе недобранный хвост каждый
+        // раз будет молча помечаться отсутствующим, и мы этого не заметим.
+        note: capped
+          ? "дошёл до предела обхода — часть каталога осталась незабранной"
+          : undefined,
+      };
     }
 
     const res = await fetch(feed.url, { signal: AbortSignal.timeout(900_000) });

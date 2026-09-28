@@ -201,10 +201,17 @@ export async function handleAdminCommand(
     return true;
   }
 
-if (command === "/takprodam" || command.startsWith("/takprodam ")) {
+  if (command === "/takprodam" || command.startsWith("/takprodam ")) {
     // Такпродам — не файл, а каталог маркетплейсов. Адрес у него свой, под
     // /feed он не подходит, поэтому команда отдельная.
-    const { findSource, takprodamCategories } = await import("@/lib/products/takprodam");
+    //
+    // Берём каталог целиком: отбирать по разделам заранее — значит решать за
+    // подборки, каким товарам в них место. Отбор при показе и так строгий,
+    // все слова запроса должны найтись в названии, так что лишнее до
+    // страницы не доходит, а нужное находится там, где мы его не ждали.
+    const { findSource, takprodamCategories, takprodamTotals } = await import(
+      "@/lib/products/takprodam"
+    );
 
     const rest = text.trim().slice("/takprodam".length).trim();
 
@@ -220,23 +227,37 @@ if (command === "/takprodam" || command.startsWith("/takprodam ")) {
     }
 
     if (!rest) {
-      // Без аргументов — разведка: что за площадка и какие разделы есть.
-      const categories = await takprodamCategories().catch(() => []);
+      // Без аргументов — разведка: что за площадка, сколько товаров и какие
+      // разделы. Разделы нужны не для отбора, а чтобы видеть, что в каталоге
+      // вообще есть.
+      const [categories, totals] = await Promise.all([
+        takprodamCategories().catch(() => []),
+        takprodamTotals(source.id).catch(() => []),
+      ]);
+
+      const counts = totals.map(
+        (t) => `${t.marketplace}: ${t.total === null ? "не сообщил" : t.total}`,
+      );
       const list = categories.slice(0, 40).map((c) => `${c.id} — ${c.title}`);
 
       await sendMessage(
         chatId,
-        `<b>Такпродам</b>\n\nПлощадка: ${source.title} (${source.id})\n` +
-          `Разделов: ${categories.length}\n\n` +
-          (list.length ? `${list.join("\n")}\n\n` : "") +
-          "Подключить маркетплейс: /takprodam Wildberries\n" +
-          "С отбором разделов: /takprodam Wildberries игрушк|настольн|книг",
+        `<b>Такпродам</b>\n\nПлощадка: ${source.title} (${source.id})\n\n` +
+          `<b>Товаров</b>\n${counts.join("\n")}\n\n` +
+          `<b>Разделов: ${categories.length}</b>\n` +
+          (list.length ? `${list.join("\n")}\n\n` : "\n") +
+          "Подключить весь каталог: /takprodam всё\n" +
+          "Только один маркетплейс: /takprodam Wildberries\n" +
+          "С отбором разделов: /takprodam Wildberries игрушк|настольн",
       );
       return true;
     }
 
     const parts = rest.split(/\s+/);
-    const marketplace = parts[0];
+    const first = parts[0].toLowerCase();
+    const whole = first === "всё" || first === "все";
+
+    const marketplace = whole ? null : parts[0];
     const include = parts.slice(1).join(" ") || null;
 
     if (include) {
@@ -248,20 +269,32 @@ if (command === "/takprodam" || command.startsWith("/takprodam ")) {
       }
     }
 
-    const name = `Такпродам ${marketplace}`;
-    const url = `takprodam:?marketplace=${encodeURIComponent(marketplace)}`;
+    const name = marketplace ? `Такпродам ${marketplace}` : "Такпродам";
+    const url = marketplace
+      ? `takprodam:?marketplace=${encodeURIComponent(marketplace)}`
+      : "takprodam:";
 
     const before = await prisma.productFeed.findFirst({ where: { name } });
     const feed = before
       ? await prisma.productFeed.update({
           where: { id: before.id },
-          data: { url, enabled: true, error: null, ...(include ? { include } : {}) },
+          // Отбор снимаем, только если о нём сказали заново. Исключение —
+          // «всё»: там его отсутствие и есть смысл команды.
+          data: {
+            url,
+            enabled: true,
+            error: null,
+            ...(include ? { include } : whole ? { include: null } : {}),
+          },
         })
-      : await prisma.productFeed.create({ data: { name, url, include } });
+      : await prisma.productFeed.create({
+          data: { name, url, include: whole ? null : include },
+        });
 
     await sendMessage(
       chatId,
-      `${before ? "Обновляю" : "Добавил"} «${name}». Каталог постраничный, это небыстро.`,
+      `${before ? "Обновляю" : "Добавил"} «${name}». ` +
+        "Каталог постраничный, по тысяче товаров за раз — это надолго.",
     );
 
     const { importFeed } = await import("@/lib/products/import");
@@ -271,7 +304,8 @@ if (command === "/takprodam" || command.startsWith("/takprodam ")) {
       chatId,
       result.error
         ? `Не вышло: ${result.error}`
-        : `Готово: товаров ${result.saved}${result.skipped ? `, отсеяно ${result.skipped}` : ""}.`,
+        : `Готово: товаров ${result.saved}${result.skipped ? `, отсеяно ${result.skipped}` : ""}.` +
+          (result.note ? `\n\nНо: ${result.note}.` : ""),
     );
     return true;
   }

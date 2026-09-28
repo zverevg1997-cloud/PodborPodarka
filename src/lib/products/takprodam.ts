@@ -19,7 +19,6 @@
  * добавляется он теми же командами бота.
  */
 
-import { prisma } from "@/lib/prisma";
 import type { FeedProduct } from "@/lib/products/feed";
 
 const BASE = "https://api.takprodam.ru/v2/publisher";
@@ -31,10 +30,14 @@ const PAGE = 1000;
  * Предохранитель от бесконечного обхода.
  *
  * Если API вдруг начнёт отдавать одну и ту же страницу при любом `page`,
- * цикл «пока страница полная» не кончится никогда. Триста тысяч товаров нам
- * и не нужны — столько мы всё равно не покажем.
+ * цикл «пока страница полная» не кончится никогда.
+ *
+ * Берём каталог целиком, поэтому предел высокий — полмиллиона товаров. Он
+ * тут не для экономии, а чтобы обход не стал вечным: когда упираемся в него,
+ * говорим об этом вслух, иначе недобранный хвост будет молча пропадать при
+ * каждом обновлении.
  */
-const MAX_PAGES = 300;
+const MAX_PAGES = 500;
 
 /** Товар в их ответе. Имена полей — из описания API, не угаданные. */
 interface TakprodamProduct {
@@ -160,6 +163,8 @@ function toProduct(raw: TakprodamProduct): FeedProduct | null {
 export interface TakprodamResult {
   saved: number;
   skipped: number;
+  /** Обход упёрся в предел, и часть каталога осталась незабранной. */
+  capped: boolean;
 }
 
 /**
@@ -183,6 +188,7 @@ export async function importTakprodam(
 
   let saved = 0;
   let skipped = 0;
+  let capped = true;
 
   for (let page = 1; page <= MAX_PAGES; page++) {
     const data = await api("/product/", {
@@ -196,7 +202,10 @@ export async function importTakprodam(
     });
 
     const list = rows<TakprodamProduct>(data);
-    if (list.length === 0) break;
+    if (list.length === 0) {
+      capped = false;
+      break;
+    }
 
     const batch: (FeedProduct & { legal: string | null })[] = [];
 
@@ -219,10 +228,13 @@ export async function importTakprodam(
     }
 
     // Неполная страница — каталог кончился.
-    if (list.length < PAGE) break;
+    if (list.length < PAGE) {
+      capped = false;
+      break;
+    }
   }
 
-  return { saved, skipped };
+  return { saved, skipped, capped };
 }
 
 /** Разделы каталога: нужны, чтобы было из чего составлять отбор. */
@@ -239,7 +251,59 @@ export async function takprodamCategories(): Promise<{ id: string; title: string
     .filter((c) => c.id && c.title);
 }
 
-/** Сколько товаров у нас от Такпродам — для ответа бота. */
-export async function takprodamCount(feedId: string): Promise<number> {
-  return prisma.product.count({ where: { feedId, available: true } });
+/**
+ * Сколько товаров в каталоге — всего и по маркетплейсам.
+ *
+ * Нужно до подключения: каталог берём целиком, и полезно знать заранее,
+ * десять это тысяч или триста. Общее число API сообщает в служебном поле
+ * ответа, а как оно называется — у разных методов по-разному, поэтому
+ * перебираем привычные имена. Не нашли — честно говорим «не сообщил», а не
+ * выдаём ноль за правду.
+ */
+export async function takprodamTotals(
+  sourceId: string,
+): Promise<{ marketplace: string; total: number | null }[]> {
+  const MARKETS = ["Wildberries", "Ozon", "Avito", "Aliexpress"];
+  const out: { marketplace: string; total: number | null }[] = [];
+
+  for (const marketplace of [null, ...MARKETS]) {
+    try {
+      const data = await api("/product/", {
+        source_id: sourceId,
+        ...(marketplace ? { marketplace } : {}),
+        limit: "1",
+      });
+
+      out.push({
+        marketplace: marketplace ?? "всего",
+        total: totalOf(data) ?? (rows(data).length > 0 ? null : 0),
+      });
+    } catch {
+      out.push({ marketplace: marketplace ?? "всего", total: null });
+    }
+  }
+
+  return out;
+}
+
+function totalOf(data: unknown): number | null {
+  if (!data || typeof data !== "object") return null;
+  const box = data as Record<string, unknown>;
+
+  for (const key of ["total", "count", "total_count", "totalItems", "hydra:totalItems"]) {
+    const value = box[key];
+    if (typeof value === "number") return value;
+    if (typeof value === "string" && /^\d+$/.test(value)) return Number(value);
+  }
+
+  // Бывает, что счётчик лежит внутри обёртки meta или pagination.
+  for (const key of ["meta", "pagination"]) {
+    const nested = box[key];
+    if (nested && typeof nested === "object") {
+      const found = totalOf(nested);
+      if (found !== null) return found;
+    }
+  }
+
+  return null;
 }
