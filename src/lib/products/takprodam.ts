@@ -80,6 +80,20 @@ function rows<T>(data: unknown): T[] {
   return [];
 }
 
+const wait = (ms: number) => new Promise((done) => setTimeout(done, ms));
+
+/**
+ * Пауза между запросами.
+ *
+ * Не перестраховка: на четырёх быстрых запросах подряд нас отрезали по 429.
+ * Каталог — восемьдесят страниц, так что секунда на страницу стоит нам
+ * полторы минуты и снимает вопрос целиком.
+ */
+const PAUSE_MS = 1000;
+
+/** Сколько раз пробуем снова, когда просят подождать. */
+const RETRIES = 5;
+
 async function api(
   path: string,
   params: Record<string, string> = {},
@@ -88,28 +102,42 @@ async function api(
   if (!key) throw new Error("не задан TAKPRODAM_API_KEY");
 
   const query = new URLSearchParams(params).toString();
-  const res = await fetch(`${BASE}${path}${query ? `?${query}` : ""}`, {
-    // Именно Bearer. На старом /api/v1 было наоборот — там ключ узнавали по
-    // заголовку X-Api-Key, а Bearer отвергали, — и это сбивает с толку.
-    headers: { Authorization: `Bearer ${key}`, Accept: "application/json" },
-    signal: AbortSignal.timeout(60_000),
-  });
+  const url = `${BASE}${path}${query ? `?${query}` : ""}`;
 
-  const text = await res.text();
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url, {
+      // Именно Bearer. На старом /api/v1 было наоборот — там ключ узнавали по
+      // заголовку X-Api-Key, а Bearer отвергали, — и это сбивает с толку.
+      headers: { Authorization: `Bearer ${key}`, Accept: "application/json" },
+      signal: AbortSignal.timeout(60_000),
+    });
 
-  if (!res.ok) {
-    // 401 и 403 у них означают разное: первое — ключ не тот, второе — ключ
-    // верный, но площадка ещё не подтверждена. Разница важная, поэтому
-    // подсказываем прямо в сообщении.
-    if (res.status === 401) throw new Error("ключ не принят (401)");
-    if (res.status === 403) throw new Error("доступ закрыт (403): площадка ещё не подтверждена?");
-    throw new Error(`Такпродам ответил ${res.status}: ${text.slice(0, 200)}`);
-  }
+    // Просят подождать — ждём. Сколько именно, они иногда говорят сами;
+    // если молчат, отступаем всё дальше: 5, 10, 20, 40, 60 секунд.
+    if (res.status === 429 && attempt < RETRIES) {
+      const told = Number(res.headers.get("retry-after"));
+      const backoff = Math.min(5000 * 2 ** attempt, 60_000);
+      await wait(Number.isFinite(told) && told > 0 ? told * 1000 : backoff);
+      continue;
+    }
 
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw new Error(`ответ не разобрался: ${text.slice(0, 200)}`);
+    const text = await res.text();
+
+    if (!res.ok) {
+      // Коды у них означают разное, и разница стоит отдельных слов:
+      // 401 — ключ не тот (или не Bearer), 403 — ключ верный, но площадка
+      // не подтверждена, 429 — мы слишком частим.
+      if (res.status === 401) throw new Error("ключ не принят (401)");
+      if (res.status === 403) throw new Error("доступ закрыт (403): площадка ещё не подтверждена?");
+      if (res.status === 429) throw new Error("Такпродам держит нас на паузе (429) — попробуйте позже");
+      throw new Error(`Такпродам ответил ${res.status}: ${text.slice(0, 200)}`);
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(`ответ не разобрался: ${text.slice(0, 200)}`);
+    }
   }
 }
 
@@ -193,6 +221,10 @@ export async function importTakprodam(
   let capped = true;
 
   for (let page = 1; page <= MAX_PAGES; page++) {
+    // Пауза перед каждой страницей, кроме первой: восемьдесят страниц подряд
+    // без неё — гарантированный 429.
+    if (page > 1) await wait(PAUSE_MS);
+
     const data = await api("/product/", {
       ...params,
       source_id: source.id,
@@ -269,6 +301,9 @@ export async function takprodamTotals(
   const out: { marketplace: string; total: number | null }[] = [];
 
   for (const marketplace of [null, ...MARKETS]) {
+    // Пять запросов подряд — ровно тот случай, на котором нас отрезали.
+    if (out.length > 0) await wait(PAUSE_MS);
+
     try {
       const data = await api("/product/", {
         source_id: sourceId,
