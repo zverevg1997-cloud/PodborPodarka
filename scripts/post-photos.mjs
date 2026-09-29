@@ -70,16 +70,34 @@ for (const [post, ids] of Object.entries(POSTS)) {
     const ext = product.picture.match(/\.(jpe?g|png|webp)(\?|$)/i)?.[1] ?? "jpg";
     const file = `${dir}/${n}.${ext.toLowerCase()}`;
 
-    try {
-      const res = await fetch(product.picture, { signal: AbortSignal.timeout(30_000) });
-      if (!res.ok) throw new Error(`магазин ответил ${res.status}`);
+    // У части адресов Озона в пути стоит размер — «/c200/». Такой снимок
+    // приходит на 150×200 пикселей, и в посте это заметно: рядом с обычными
+    // он выглядит мыльным пятном. Сначала пробуем без этого сегмента, то
+    // есть оригинал, и только если его там нет — берём что дают.
+    const sources = [product.picture.replace(/\/c\d+\//, "/"), product.picture].filter(
+      (url, i, all) => all.indexOf(url) === i,
+    );
 
-      const bytes = Buffer.from(await res.arrayBuffer());
-      writeFileSync(file, bytes);
-      console.log(`  ${n}. ${Math.round(bytes.length / 1024)} КБ  ${product.name.slice(0, 55)}`);
-    } catch (error) {
-      console.log(`  ${n}. не скачалось (${String(error.message).slice(0, 40)}) — ${product.picture}`);
+    let saved = false;
+
+    for (const source of sources) {
+      try {
+        const res = await fetch(source, { signal: AbortSignal.timeout(30_000) });
+        if (!res.ok) throw new Error(`магазин ответил ${res.status}`);
+
+        const bytes = Buffer.from(await res.arrayBuffer());
+        writeFileSync(file, bytes);
+        console.log(`  ${n}. ${Math.round(bytes.length / 1024)} КБ  ${product.name.slice(0, 55)}`);
+        saved = true;
+        break;
+      } catch (error) {
+        if (source === sources.at(-1)) {
+          console.log(`  ${n}. не скачалось (${String(error.message).slice(0, 40)}) — ${source}`);
+        }
+      }
     }
+
+    if (!saved) lines.push(`   СНИМОК НЕ СКАЧАЛСЯ: ${product.picture}`);
   }
 
   // Товар, пропавший из выгрузки, лучше заметить сейчас, а не в день выхода.
