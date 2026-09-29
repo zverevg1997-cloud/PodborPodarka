@@ -52,9 +52,12 @@ const stem = (word) => {
     "",
   );
 
-  // Короче трёх букв не режем: «крем» превращался в «кр», а «кр» есть в
-  // «круглый». Совпадает с lib/products/match.
-  return cut.length >= 3 ? cut : word;
+  // Совпадает с lib/products/match: короче трёх букв не режем («крем» → «кр»),
+  // и у короткого слова не отрезаем сразу две буквы («специй» → «спец»,
+  // а «спец» лежит в «спецназе»).
+  if (cut.length < 3) return word;
+  if (word.length <= 6 && word.length - cut.length >= 2) return word;
+  return cut;
 };
 
 const words = (text) =>
