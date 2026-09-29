@@ -74,10 +74,21 @@ function words(text: string): string[] {
     .map(stem);
 }
 
+/**
+ * Настройки поиска.
+ *
+ * `trim` — разрешение отбрасывать хвост запроса, если целиком он ничего не
+ * находит. Нужно там, где фразу пишет не человек, а модель.
+ */
+export interface FindOptions {
+  trim?: boolean;
+}
+
 export async function findProducts(
   query: string,
   priceFrom: number,
   priceTo: number,
+  options: FindOptions = {},
 ): Promise<Product[]> {
   const needed = words(query);
   if (needed.length === 0) return [];
@@ -112,11 +123,45 @@ export async function findProducts(
     take: 1000,
   });
 
+  // Заранее раскладываем названия на основы: ниже мы проходим по списку
+  // несколько раз, и перемалывать его каждый раз заново незачем.
+  const prepared = candidates.map((product) => ({
+    product,
+    stems: words(product.name).join(" "),
+  }));
+
+  /**
+   * Сколько слов запроса требовать.
+   *
+   * Обычно все. Но фразу из подбора пишет модель, и пишет её для поиска
+   * Маркета: «беспроводные наушники подарок», «настольная игра для
+   * компании». Там лишнее слово только уточняет, а у нас каждое обязано
+   * найтись в названии товара — и не находится никогда, потому что товара
+   * со словом «подарок» в названии просто нет.
+   *
+   * Поэтому с `trim` отрезаем хвост, пока что-нибудь не найдётся. Режем с
+   * конца: в таких запросах предмет стоит в начале, а уточнения идут за ним.
+   * Ниже двух слов не опускаемся — одно слово это уже не поиск, а раздел
+   * каталога, и «беспроводные» нашли бы что угодно беспроводное.
+   */
+  const shortest = options.trim ? Math.min(2, needed.length) : needed.length;
+
+  for (let length = needed.length; length >= shortest; length--) {
+    const found = collect(prepared, needed.slice(0, length));
+    if (found.length > 0) return found;
+  }
+
+  return [];
+}
+
+function collect(
+  prepared: { product: Product; stems: string }[],
+  needed: string[],
+): Product[] {
   const seen = new Set<string>();
   const matched: Product[] = [];
 
-  for (const product of candidates) {
-    const name = words(product.name).join(" ");
+  for (const { product, stems: name } of prepared) {
     if (!needed.every((word) => name.includes(word))) continue;
 
     // Один товар в пяти цветах — это одна идея, а не пять. Схлопываем по
