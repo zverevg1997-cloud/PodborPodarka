@@ -8,7 +8,7 @@ import GiftLink from "@/components/GiftLink";
 import ProductCards from "@/components/ProductCards";
 import { findProducts } from "@/lib/products/match";
 import { readGuestId } from "@/lib/guest";
-import { marketPriceRange } from "@/lib/budget";
+import { marketPriceRange, parseBudget } from "@/lib/budget";
 import {
   marketDeliveryInterval,
   needsLocalPurchase,
@@ -95,15 +95,39 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
   //
   // Впечатления и услуги ищем не здесь: их берут в своём городе, а наши
   // выгрузки к городу не привязаны.
-  const found = await Promise.all(
-    ideas.map((idea) =>
-      idea.kind === "local" || buyLocally
-        ? Promise.resolve([])
-        : findProducts(idea.searchQuery, price.from ?? 0, price.to ?? 1_000_000, {
-            trim: true,
-          }),
-    ),
-  );
+  // По цене ищем в два захода.
+  //
+  // Сначала в верхней половине бюджета: человек, готовый потратить тридцать
+  // тысяч, ждёт подарок тысяч от пятнадцати, и показывать ему первое, что
+  // дёшево, — значит не прочитать анкету.
+  //
+  // Если там пусто — берём весь бюджет целиком. Половинный пол придуман для
+  // ссылки на Маркет, где сортировка идёт от дешёвого; наш каталог этим не
+  // страдает, а вот отсечь им фитнес-браслет за четыре тысячи при бюджете в
+  // тридцать — страдает: вещь в бюджет укладывается, просто стоит меньше,
+  // чем мы за человека решили.
+  const whole = parseBudget(search.budget);
+
+  const lookUp = async (idea: GiftIdea) => {
+    if (idea.kind === "local" || buyLocally) return [];
+
+    const upper = await findProducts(
+      idea.searchQuery,
+      price.from ?? 0,
+      price.to ?? 1_000_000,
+      { trim: true },
+    );
+    if (upper.length > 0) return upper;
+
+    return findProducts(
+      idea.searchQuery,
+      whole.from ?? 0,
+      whole.to ?? 1_000_000,
+      { trim: true },
+    );
+  };
+
+  const found = await Promise.all(ideas.map(lookUp));
 
   const linkFor = (idea: GiftIdea) => {
     if (idea.kind === "local") {
