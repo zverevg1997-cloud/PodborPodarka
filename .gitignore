@@ -80,3 +80,6 @@ takprodam-api.json
 # Рабочие файлы проверки фраз: перегенерируются, в истории не нужны.
 scripts/phrases.json
 scripts/phrases-result.txt
+
+# Снимки товаров к постам: качаются скриптом, в истории им не место.
+/posts/
