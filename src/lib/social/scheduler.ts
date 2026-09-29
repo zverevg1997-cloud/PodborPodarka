@@ -2,9 +2,18 @@
  * Публикация запланированных постов.
  *
  * Работает так: раз в минуту смотрим, не подошло ли время у одобренных
- * постов, и публикуем их в обе сети. Ничего не публикуется без одобрения —
+ * постов, и публикуем их в телеграм. Ничего не публикуется без одобрения —
  * это намеренно. Один нелепый пост в ленте стоит дороже, чем сэкономленные
  * пять минут на просмотр.
+ *
+ * Во ВКонтакте бот не публикует. Приложить фотографию он туда не может:
+ * photos.getWallUploadServer отвечает ошибкой 27 на всех токенах, которые у
+ * нас есть, а запись без картинки в ленте почти не показывается. Городить
+ * ради этого текстовую публикацию бессмысленно — она уйдёт в пустоту.
+ *
+ * Поэтому за сутки бот отдаёт человеку готовый текст и картинку, а отложку
+ * в сообществе человек ставит сам. Когда поставил — отмечает командой
+ * /mark <ключ> vk, и пост уходит из очереди.
  *
  * Замок тот же по смыслу, что у слушателя телеграма: при выкатке контейнеры
  * какое-то время живут парой, и без него оба опубликуют один и тот же пост.
@@ -12,15 +21,14 @@
 
 import { prisma } from "@/lib/prisma";
 import { holdLock, releaseLock } from "@/lib/systemLock";
-import { getFileBytes, sendMessage, sendPhoto } from "@/lib/telegram/api";
-import { isVkConfigured, postToWall } from "@/lib/social/vk";
+import { sendMessage, sendPhoto } from "@/lib/telegram/api";
 
 const LOCK = "social-scheduler";
 
 /** Как часто смотрим на очередь. Минуты достаточно: посты не срочные. */
 const TICK_MS = 60_000;
 
-/** За сколько предупреждаем, что к посту нет картинки. */
+/** За сколько предупреждаем о посте: и о ВКонтакте, и о недостающей картинке. */
 const WARN_AHEAD_MS = 24 * 60 * 60 * 1000;
 
 /** Ограничение телеграма на подпись к картинке. */
@@ -104,7 +112,12 @@ async function publishToTelegram(
   return String(sent.result.message_id);
 }
 
-/** Один пост: публикуем туда, куда он назначен, и записываем результат. */
+/**
+ * Один пост: публикуем в телеграм и записываем результат.
+ *
+ * ВКонтакте здесь нет намеренно — он уходит человеку за сутки, см. шапку
+ * файла и handOffVkPosts.
+ */
 async function publish(post: {
   id: string;
   key: string;
@@ -116,80 +129,44 @@ async function publish(post: {
   vkPostId: string | null;
   tgMessageId: string | null;
 }): Promise<void> {
-  // Сеть, куда пост уже ушёл, пропускаем. Публикация идёт в две сети по
-  // очереди, и падение второй не отменяет первую: без этой проверки повтор
-  // выложил бы запись в канал ещё раз.
-  const toVk =
-    (post.networks === "both" || post.networks === "vk") && !post.vkPostId;
+  // Сеть, куда пост уже ушёл, пропускаем: без этой проверки повтор выложил
+  // бы запись в канал ещё раз.
   const toTg =
     (post.networks === "both" || post.networks === "tg") && !post.tgMessageId;
 
-  // Картинку скачиваем один раз: она нужна ВКонтакте в виде байтов, а
-  // телеграму хватает его собственного идентификатора файла.
-  const image =
-    toVk && post.photoFileId ? await getFileBytes(post.photoFileId) : null;
+  const tgMessageId = toTg
+    ? await publishToTelegram(post.textTg, post.photoFileId)
+    : post.tgMessageId;
 
-  if (toVk && post.photoFileId && !image) {
-    throw new Error("картинка не скачалась из телеграма");
-  }
-
-  let vkPostId: string | null = post.vkPostId;
-  let tgMessageId: string | null = post.tgMessageId;
-  let vkWithoutPhoto: string | null = null;
-
-  try {
-    // Телеграм первым: он надёжнее, и если упадёт ВКонтакте, пост хотя бы
-    // выйдет в канале, а не потеряется целиком.
-    if (toTg) {
-      tgMessageId = await publishToTelegram(post.textTg, post.photoFileId);
-    }
-
-    if (toVk) {
-      if (!isVkConfigured()) throw new Error("VK_TOKEN или VK_GROUP_ID не заданы");
-
-      try {
-        vkPostId = await postToWall(post.textVk, image);
-      } catch (error) {
-        // Пост, к которому фотография и есть содержание, без неё выпускать
-        // нельзя: список товаров без картинок хуже, чем ничего. А вот запись
-        // с карточкой лучше выпустить текстом, чем потерять целиком —
-        // расписание сдвигать некуда, время у неё одно.
-        if (post.needsPhoto || !image) throw error;
-
-        vkWithoutPhoto = String(error instanceof Error ? error.message : error).slice(0, 300);
-        vkPostId = await postToWall(post.textVk, null);
-      }
-    }
-  } catch (error) {
-    // Запоминаем то, что уже получилось, и только потом отдаём ошибку выше.
-    // Иначе удачная половина работы потеряется, и повтор сделает её заново.
-    if (vkPostId !== post.vkPostId || tgMessageId !== post.tgMessageId) {
-      await prisma.scheduledPost
-        .update({ where: { id: post.id }, data: { vkPostId, tgMessageId } })
-        .catch(() => {});
-    }
-    throw error;
-  }
+  // Пост, назначенный только во ВКонтакте, бот не публиковал вовсе, и
+  // «опубликован» тут было бы неправдой: его ставил человек, ещё сутки
+  // назад. Такому ставим «вручную» — он уходит из очереди, но не
+  // притворяется нашей работой.
+  const published = tgMessageId !== null;
 
   await prisma.scheduledPost.update({
     where: { id: post.id },
     data: {
-      status: "published",
+      status: published ? "published" : "manual",
       publishedAt: new Date(),
-      vkPostId,
       tgMessageId,
       error: null,
     },
   });
 
-  const where = [
-    vkPostId ? `вк: vk.com/wall-${process.env.VK_GROUP_ID}_${vkPostId}` : null,
-    tgMessageId ? "телеграм: опубликован" : null,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  // Про ВКонтакте пишем, только если пост туда назначен и ещё не отмечен.
+  // Напоминание с текстом ушло сутки назад, так что это короткая строка, а
+  // не второй такой же разбор.
+  const forVk =
+    (post.networks === "both" || post.networks === "vk") && !post.vkPostId;
 
-  await tellAdmin(`Опубликован пост ${post.key}\n${where}`);
+  const lines = [
+    published ? `Опубликован пост ${post.key}` : `Время поста ${post.key}`,
+    published ? "телеграм: вышел" : null,
+    forVk ? `вк: за вами — когда поставите, отметьте /mark ${post.key} vk` : null,
+  ].filter(Boolean);
+
+  await tellAdmin(lines.join("\n"));
 }
 
 /**
@@ -210,6 +187,11 @@ async function warnAboutMissingPhotos(): Promise<void> {
       status: { in: ["draft", "approved"] },
       // Опросы и видео публикуются руками, картинка им не нужна.
       kind: "post",
+      // Только те, что идут в один телеграм: посты для ВКонтакте целиком
+      // уходят человеку отдельным сообщением, и там про недостающую
+      // картинку сказано в том же тексте. Два письма про один пост —
+      // верный способ научить не читать оба.
+      networks: "tg",
       photoFileId: null,
       warnedAt: null,
       publishAt: { lte: soon, gte: new Date() },
@@ -247,8 +229,78 @@ async function warnAboutMissingPhotos(): Promise<void> {
   });
 }
 
+/**
+ * Передача постов для ВКонтакте человеку — за сутки до выхода.
+ *
+ * Бот туда не публикует, поэтому «напоминание» здесь не вежливость, а сама
+ * публикация, только руками: он присылает картинку и готовый текст, а
+ * человек ставит отложку в сообществе.
+ *
+ * Картинку отправляем отдельным сообщением, а не подписью к ней: тексты у
+ * нас длиннее тысячи символов, а подпись телеграм обрезает. И отдаём мы её
+ * тем же файлом, что придёт в канал, — чтобы в двух сетях был один кадр.
+ *
+ * Отдаём по одному посту за сообщение, а не списком: списком его не
+ * скопируешь, а копировать придётся.
+ */
+async function handOffVkPosts(): Promise<void> {
+  const soon = new Date(Date.now() + WARN_AHEAD_MS);
+
+  const posts = await prisma.scheduledPost.findMany({
+    where: {
+      status: { in: ["draft", "approved"] },
+      kind: "post",
+      networks: { in: ["vk", "both"] },
+      vkPostId: null,
+      vkHandedAt: null,
+      // Без нижней границы намеренно: пост, заведённый меньше чем за сутки
+      // до выхода, иначе не отдался бы вовсе.
+      publishAt: { lte: soon },
+    },
+    orderBy: { publishAt: "asc" },
+    take: 5,
+  });
+
+  if (posts.length === 0) return;
+
+  const when = new Intl.DateTimeFormat("ru-RU", {
+    timeZone: "Europe/Moscow",
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const to = admin();
+  if (!to) return;
+
+  for (const post of posts) {
+    if (post.photoFileId) {
+      await sendPhoto(to, post.photoFileId, `${post.key} — картинка к посту`).catch(
+        () => {},
+      );
+    }
+
+    const head =
+      `<b>Для ВКонтакте: ${when.format(post.publishAt)}</b>\n` +
+      `Ключ ${post.key}\n` +
+      (post.photoFileId ? "" : "⚠️ Картинки у меня нет — пришлите её мне с подписью-ключом\n") +
+      `\nТекст ниже отдельным сообщением, чтобы удобно было скопировать.`;
+
+    await sendMessage(to, head).catch(() => {});
+    // Текст без разметки и без всего лишнего: его копируют целиком.
+    await sendMessage(to, post.textVk).catch(() => {});
+
+    await prisma.scheduledPost.update({
+      where: { id: post.id },
+      data: { vkHandedAt: new Date() },
+    });
+  }
+}
+
 /** Один проход по очереди. */
 async function tick(): Promise<void> {
+  await handOffVkPosts();
   await warnAboutMissingPhotos();
 
   const due = await prisma.scheduledPost.findMany({
@@ -271,7 +323,13 @@ async function tick(): Promise<void> {
       continue;
     }
 
-    if (post.needsPhoto && !post.photoFileId) {
+    // Отсутствие картинки роняет пост только там, где боту действительно
+    // есть что публиковать. У записи для одного ВКонтакте он ничего не
+    // публикует, и «не вышел» про неё — неправда: её ставил человек, и
+    // картинку он получил сутки назад вместе с текстом.
+    const needsTelegram = post.networks === "both" || post.networks === "tg";
+
+    if (post.needsPhoto && !post.photoFileId && needsTelegram) {
       await prisma.scheduledPost.update({
         where: { id: post.id },
         data: { status: "failed", error: "нет фотографии товара" },

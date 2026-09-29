@@ -40,13 +40,23 @@ function line(post: {
   publishAt: Date;
   status: string;
   kind: string;
+  networks: string;
   needsPhoto: boolean;
   photoFileId: string | null;
+  vkPostId: string | null;
+  vkHandedAt: Date | null;
   error: string | null;
 }): string {
   const marks: string[] = [STATUS_LABEL[post.status] ?? post.status];
   if (post.kind !== "post") marks.push(post.kind === "poll" ? "опрос" : "видео");
   if (post.needsPhoto && !post.photoFileId) marks.push("нужно фото");
+
+  // Во ВКонтакте публикует человек, поэтому состояние там своё и в статус
+  // поста не укладывается: отдали текст или ещё нет, поставили или ещё нет.
+  if ((post.networks === "vk" || post.networks === "both") && !post.vkPostId) {
+    marks.push(post.vkHandedAt ? "вк: за вами" : "вк: отдам за сутки");
+  }
+
   if (post.error) marks.push(post.error);
 
   return `${MOSCOW.format(post.publishAt)} · ${post.key}\n   ${marks.join(" · ")}`;
@@ -560,7 +570,10 @@ export async function handleAdminCommand(
     // «В этой сети пост уже вышел». Нужна, когда запись ушла, а отметиться
     // не успела: до этой правки публикация в двух сетях могла отработать
     // наполовину и не сохранить удачную половину.
-    const [, key, network] = text.trim().split(/s+/);
+    // Именно \s+. Без обратной косой это регулярка из буквы «s», и команда
+    // разваливалась: ключ «2026-10-03-thermos» она резала по «s» внутри
+    // слова, а ключ без «s» не резала вовсе.
+    const [, key, network] = text.trim().split(/\s+/);
     const field =
       network === "tg" ? "tgMessageId" : network === "vk" ? "vkPostId" : null;
 

@@ -223,6 +223,9 @@ model ScheduledPost {
   // Когда предупредили, что картинки нет. Нужна, чтобы напомнить один раз,
   // а не каждую минуту до самой публикации.
   warnedAt    DateTime?
+  // Когда отдали пост для ВКонтакте человеку. Бот туда не публикует:
+  // приложить фотографию он не может, а запись без неё в ленте не живёт.
+  vkHandedAt  DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
