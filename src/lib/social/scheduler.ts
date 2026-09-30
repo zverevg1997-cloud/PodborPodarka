@@ -77,6 +77,17 @@ function admin(): string | null {
 }
 
 /** Сообщение администратору. Молчать о сбое хуже, чем разбудить. */
+/**
+ * Символы, которые телеграм примет за разметку.
+ *
+ * Сообщения мы всегда отправляем как HTML, поэтому текст, который пишет не
+ * программа, а человек, надо экранировать: одна угловая скобка — и вместо
+ * сообщения приходит ошибка 400.
+ */
+function esc(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 async function tellAdmin(text: string): Promise<void> {
   const to = admin();
   if (!to) return;
@@ -288,8 +299,21 @@ async function handOffVkPosts(): Promise<void> {
       `\nТекст ниже отдельным сообщением, чтобы удобно было скопировать.`;
 
     await sendMessage(to, head).catch(() => {});
-    // Текст без разметки и без всего лишнего: его копируют целиком.
-    await sendMessage(to, post.textVk).catch(() => {});
+
+    // Экранируем. Телеграм у нас всегда разбирает сообщение как HTML, а это
+    // текст поста: одна амперсанда или угловая скобка — и он ответит 400, а
+    // человек останется без текста. В самом сообщении экранирование не
+    // видно, копируется тоже исходный символ.
+    const sent = (await sendMessage(to, esc(post.textVk)).catch(() => null)) as {
+      result?: { message_id?: number };
+    } | null;
+
+    // Отмечаем отданным, только если текст действительно ушёл. Иначе пост
+    // тихо выпал бы из очереди — он помечен, а у человека ничего нет.
+    if (!sent?.result?.message_id) {
+      await tellAdmin(`Не смог отдать текст поста ${post.key} для ВКонтакте. Попробую снова.`);
+      continue;
+    }
 
     await prisma.scheduledPost.update({
       where: { id: post.id },
