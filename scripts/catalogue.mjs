@@ -40,31 +40,50 @@ if (queries.length === 0) {
 /** Сколько показываем на запрос. Больше глазами всё равно не просмотреть. */
 const LIMIT = 12;
 
-for (const query of queries) {
-  const words = query.toLowerCase().split(/\s+/).filter((w) => w.length >= 3);
-
-  const products = await prisma.product.findMany({
+function find(words) {
+  return prisma.product.findMany({
     where: {
       available: true,
-      // Все слова разом: по одному находится слишком много не того.
       AND: words.map((word) => ({
         name: { contains: word, mode: "insensitive" },
       })),
     },
-    select: { externalId: true, name: true, price: true, category: true },
+    select: { externalId: true, name: true, price: true },
     orderBy: { price: "asc" },
     take: LIMIT,
   });
+}
 
-  console.log(`\n=== «${query}» — найдено ${products.length}${products.length === LIMIT ? "+" : ""} ===\n`);
+function show(products) {
+  for (const p of products) {
+    console.log(`${String(p.price).padStart(6)} ₽  ${p.externalId.padEnd(13)} ${p.name.slice(0, 78)}`);
+  }
+}
 
-  if (products.length === 0) {
-    console.log("  в каталоге такого нет");
+for (const query of queries) {
+  const words = query.toLowerCase().split(/\s+/).filter((w) => w.length >= 3);
+
+  // Сперва все слова разом: так находится именно то, что искали.
+  const exact = await find(words);
+
+  console.log(`\n=== «${query}» — найдено ${exact.length}${exact.length === LIMIT ? "+" : ""} ===\n`);
+
+  if (exact.length > 0) {
+    show(exact);
     continue;
   }
 
-  for (const p of products) {
-    console.log(`${String(p.price).padStart(6)} ₽  ${p.externalId.padEnd(13)} ${p.name.slice(0, 78)}`);
+  // Пусто — значит магазин назвал вещь другими словами, а не значит, что её
+  // нет. «Магнитная планка для ножей» лежит там как «магнитный держатель», и
+  // строгий поиск отвечает на неё пустотой, из-за чего мы уже один раз
+  // решили, что товара в каталоге нет. Поэтому пробуем слова по одному.
+  console.log("  всех слов разом нет — смотрю по каждому слову отдельно\n");
+
+  for (const word of words) {
+    const loose = await find([word]);
+    console.log(`  — «${word}»: ${loose.length === 0 ? "ничего" : ""}`);
+    show(loose.slice(0, 6));
+    console.log("");
   }
 }
 
