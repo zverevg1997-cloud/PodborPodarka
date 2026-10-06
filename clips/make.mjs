@@ -1,17 +1,28 @@
 // Вертикальный клип «находки» из товаров нашего каталога.
 //
-// Для ВК Клипов и Телеграма. Без озвучки пока — и это осознанное временное
-// решение, не финал: закадровый голос и субтитры нужны, но Yandex SpeechKit
-// требует отдельной роли на сервисном аккаунте (см. scripts/tts-test.mjs),
-// и пока роль не проверена и не выдана, подключать его рано. Трендовый клип
-// и без голоса держится на звуке — музыку накладывают в редакторе ВК при
-// загрузке, из встроенной библиотеки, в момент публикации, когда видно,
-// что сейчас в тренде.
+// Для ВК Клипов и Телеграма. С закадровым голосом и субтитрами: каждая
+// карточка озвучена через Yandex SpeechKit (голос alena), а то же самое
+// предложение горит на экране, пока его читают. Голос объясняет не что это
+// за вещь — это и так видно на фото и в названии, — а почему это хороший
+// подарок именно в этой роли.
+//
+// Длительность слайда теперь не фиксированная цифра, а выводится из записи:
+// слайд держится столько, сколько длится озвучка этого товара, плюс
+// небольшая пауза на передышку. Короткая фраза — короткий слайд, длинная —
+// длинный; раньше было наоборот, одна цифра на все слайды разом, и текст
+// либо скучал на экране, либо не успевал прочитаться.
+//
+// Про музыку в ВК. Раньше, без голоса, ролик держался на треке из
+// библиотеки ВК, который накладывают при публикации. Теперь в кадре уже
+// есть речь, и трек поверх нее — это разговор одновременно с музыкой,
+// слышно будет хуже, а не лучше. Либо без трека вовсе, либо что-то тихое и
+// фоновое, явно позади голоса, а не поверх.
 //
 // ПРИБЛИЖЕНИЕ НЕ ИСПОЛЬЗУЕТСЯ. Раньше каждая карточка плавно наезжала
 // (zoompan) — попросили убрать насовсем, это решение постоянное, не на один
-// клип. Движение теперь только в переходах между карточками (xfade,
-// перекрёстное растворение), сама фотография внутри кадра неподвижна.
+// клип. Движение — в переходах между карточками (xfade, перекрёстное
+// растворение, и в озвученной версии — такой же acrossfade у звука), сама
+// фотография внутри кадра неподвижна.
 //
 // Шрифты и цвет — те же, что на сайте: Unbounded для заголовков и цены,
 // Nunito для остального, фирменный градиент розовый→фиолетовый на ключевых
@@ -30,24 +41,35 @@
 // значило бы либо выдумывать кадры, либо лезть на саму страницу товара
 // и тянуть оттуда лишнее — отдельный разговор, если понадобится.
 //
-// Запуск: node clips/make.mjs <ключ>   (с ВЫКЛЮЧЕННЫМ VPN — фото свои)
+// Озвучку кэшируем по тексту (clips/tmp/voice-cache/): каждый запуск
+// SpeechKit стоит денег, а при подборе раскладки текста перезапускать
+// сборку приходится не один раз. Поменялся текст — переозвучится; не
+// поменялся — возьмётся готовый файл.
+//
+// Запуск: node clips/make.mjs <ключ>   (с ВЫКЛЮЧЕННЫМ VPN — фото и голос свои)
 //    или: node clips/make.mjs          — соберёт все темы по очереди
 
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { mkdirSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import sharp from "sharp";
 
 const FFMPEG =
   "C:/Users/Master/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-9.0.2-full_build/bin/ffmpeg.exe";
+const FFPROBE =
+  "C:/Users/Master/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-9.0.2-full_build/bin/ffprobe.exe";
 
 // Вертикаль 9:16 — единственный формат, который ВК показывает в Клипах.
 const W = 1080;
 const H = 1920;
 
-/** Сколько держится один товар. Меньше пяти секунд прочитать не успевают. */
-const PER_SLIDE = 5;
+/** Пауза после того, как голос замолчал, перед тем как резать на следующий кадр. */
+const PAD_AFTER_VOICE = 0.5;
 
-/** Длина перехода между карточками. Короче — резко, длиннее — вяло. */
+/** Короче слайд не делаем, даже если фраза прочиталась мгновенно. */
+const MIN_SLIDE = 3.0;
+
+/** Длина перехода между карточками — и в видео, и в звуке, одна и та же. */
 const CROSS = 0.4;
 
 /**
@@ -65,37 +87,79 @@ const GOLD = "#ffb020";
 /**
  * Темы клипов.
  *
- * `out` — имя файла в clips/out/, без расширения. Пять позиций в ITEMS —
- * не жёсткое число, но меньше выглядит бедно, а больше не держат внимание:
- * по PER_SLIDE секунд на штуку ролик и так растягивается почти на полминуты.
+ * `voice` у позиции — то, что произносит голос и что написано субтитром:
+ * не описание товара (это и так видно), а причина, по которой это хороший
+ * подарок. `voiceIntro` — то же самое для заглавного кадра.
  */
 const CLIPS = {
   "2026-10-11-nahodki-500": {
     out: "nahodki-do-500",
     title: "5 находок до 500 ₽",
     subtitle: "ничего случайного, всё по ссылке в профиле",
+    voiceIntro: "Пять находок до пятисот рублей. Ничего случайного — каждая вещь по делу.",
     items: [
-      { name: "Гирлянда на батарейках", price: 71, note: "На полку, на окно, в детскую", url: "https://ir.ozone.ru/s3/multimedia-1-x/15066063069.jpg" },
+      {
+        name: "Гирлянда на батарейках", price: 71,
+        voice: "Работает без розетки — повесить можно куда угодно: на полку, на окно, в детскую.",
+        url: "https://ir.ozone.ru/s3/multimedia-1-x/15066063069.jpg",
+      },
       // Было «Садовый секатор» (id 3320820) — фото оказалось напальчником
       // для сбора урожая, другим инструментом того же продавца: карточка
       // магазина сама перепутала снимок и название. Заменил на товар,
       // который проверил глазами лично.
-      { name: "Недатированный ежедневник", price: 108, note: "Начать можно в любой день, не ждёт января", url: "https://ir.ozone.ru/s3/multimedia-1-a/15355065322.jpg" },
-      { name: "Ароматическая свеча в банке", price: 244, note: "Соевый воск держит запах дольше парафина", url: "https://ir.ozone.ru/s3/multimedia-1-i/6957079218.jpg" },
-      { name: "Термокружка с крышкой", price: 221, note: "Горячее дольше, чем в открытой чашке", url: "https://ir.ozone.ru/s3/multimedia-1-k/9681718268.jpg" },
-      { name: "Когтеточка самоклеящаяся", price: 245, note: "Если в доме уже страдает угол", url: "https://ir.ozone.ru/s3/multimedia-1-2/15460182938.jpg" },
+      {
+        name: "Недатированный ежедневник", price: 108,
+        voice: "Начать вести его можно в любой день, а не ждать января.",
+        url: "https://ir.ozone.ru/s3/multimedia-1-a/15355065322.jpg",
+      },
+      {
+        name: "Ароматическая свеча в банке", price: 244,
+        voice: "Соевый воск держит аромат дольше обычного парафина.",
+        url: "https://ir.ozone.ru/s3/multimedia-1-i/6957079218.jpg",
+      },
+      {
+        name: "Термокружка с крышкой", price: 221,
+        voice: "Чай остаётся горячим дольше, чем в открытой чашке.",
+        url: "https://ir.ozone.ru/s3/multimedia-1-k/9681718268.jpg",
+      },
+      {
+        name: "Когтеточка самоклеящаяся", price: 245,
+        voice: "Клеится прямо на угол, который и так уже страдает от кошачьих когтей.",
+        url: "https://ir.ozone.ru/s3/multimedia-1-2/15460182938.jpg",
+      },
     ],
   },
   "2026-10-14-nahodki-wide": {
     out: "nahodki-250-2500",
     title: "5 находок от 250 до 2500 ₽",
     subtitle: "для любого бюджета, всё по ссылке в профиле",
+    voiceIntro: "Пять находок на любой бюджет — от двухсот пятидесяти до двух с половиной тысяч рублей.",
     items: [
-      { name: "Ароматическая свеча в банке", price: 257, note: "«Сладкая хурма» — осенний вариант", url: "https://ir.ozone.ru/s3/multimedia-1-x/6906698097.jpg" },
-      { name: "Термокружка подарочная", price: 342, note: "350 мл, держит и горячее, и холодное", url: "https://cdn1.ozone.ru/s3/multimedia-1-r/20012948307.jpg" },
-      { name: "Деревянный органайзер для ручек", price: 1586, note: "Одна работа — и справляется с ней десятилетиями", url: "https://cdn1.ozone.ru/s3/multimedia-1-t/7297925321.jpg" },
-      { name: "Портативная колонка Xiaomi", price: 1107, note: "В сумку, на дачу, в ванную", url: "https://mi-shop.com/upload/iblock/b1f/ib28rnvj4s43j1nzyfygj4ghf0zkox50.png" },
-      { name: "Серебряная цепочка 925 пробы", price: 2560, note: "Простая форма — носят каждый день", url: "https://ir.ozone.ru/s3/multimedia-1-p/14806827493.jpg" },
+      {
+        name: "Ароматическая свеча в банке", price: 257,
+        voice: "«Сладкая хурма» — осенний аромат, который подходит почти к любому поводу.",
+        url: "https://ir.ozone.ru/s3/multimedia-1-x/6906698097.jpg",
+      },
+      {
+        name: "Термокружка подарочная", price: 342,
+        voice: "Держит и горячее, и холодное — пригодится в любое время года.",
+        url: "https://cdn1.ozone.ru/s3/multimedia-1-r/20012948307.jpg",
+      },
+      {
+        name: "Деревянный органайзер для ручек", price: 1586,
+        voice: "У него одна работа на столе — и он справляется с ней годами.",
+        url: "https://cdn1.ozone.ru/s3/multimedia-1-t/7297925321.jpg",
+      },
+      {
+        name: "Портативная колонка Xiaomi", price: 1107,
+        voice: "Помещается в сумку — на дачу, в ванную, куда угодно.",
+        url: "https://mi-shop.com/upload/iblock/b1f/ib28rnvj4s43j1nzyfygj4ghf0zkox50.png",
+      },
+      {
+        name: "Серебряная цепочка 925 пробы", price: 2560,
+        voice: "Простое плетение без подвески — такую носят каждый день, не задумываясь.",
+        url: "https://ir.ozone.ru/s3/multimedia-1-p/14806827493.jpg",
+      },
     ],
   },
 };
@@ -107,8 +171,19 @@ const dir = (name) =>
 
 mkdirSync(dir("out/"), { recursive: true });
 mkdirSync(dir("tmp/"), { recursive: true });
+mkdirSync(dir("tmp/voice-cache/"), { recursive: true });
 
 const esc = (t) => t.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+
+// .env читаем сами: скрипт лежит не в корне, а переменные (ключ SpeechKit)
+// нужны именно отсюда, без похода через серверный код.
+const ENV = Object.fromEntries(
+  readFileSync(dir("../.env"), "utf8")
+    .split("\n")
+    .map((line) => line.match(/^([A-Z_0-9]+)="?([^"\r\n]*)"?/))
+    .filter(Boolean)
+    .map((m) => [m[1], m[2]]),
+);
 
 /**
  * Шрифты сайта, встроенные в SVG как есть.
@@ -243,6 +318,51 @@ async function fetchPhoto(url) {
   }
 }
 
+/**
+ * Озвучка одной фразы через Yandex SpeechKit, с кэшем по тексту.
+ *
+ * Кэш — не оптимизация про запас: без него каждая правка раскладки на
+ * экране заново платила бы за озвучку, которая при этом не менялась ни на
+ * букву.
+ */
+async function synthesizeVoice(text) {
+  const hash = createHash("sha1").update(text).digest("hex").slice(0, 16);
+  const file = dir(`tmp/voice-cache/${hash}.mp3`);
+  if (existsSync(file)) return file;
+
+  const key = ENV.YANDEX_API_KEY;
+  const folder = ENV.YANDEX_FOLDER_ID;
+  if (!key || !folder) throw new Error("В .env нет YANDEX_API_KEY или YANDEX_FOLDER_ID");
+
+  const res = await fetch("https://tts.api.cloud.yandex.net/speech/v1/tts:synthesize", {
+    method: "POST",
+    headers: {
+      Authorization: `Api-Key ${key}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      text, lang: "ru-RU", voice: "alena", folderId: folder, format: "mp3",
+    }),
+    signal: AbortSignal.timeout(30_000),
+  });
+
+  if (!res.ok) {
+    throw new Error(`SpeechKit ответил ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  }
+
+  writeFileSync(file, Buffer.from(await res.arrayBuffer()));
+  return file;
+}
+
+/** Длительность аудиофайла в секундах — ffprobe знает точно, на глаз не угадать. */
+function probeDuration(file) {
+  const out = execFileSync(FFPROBE, [
+    "-v", "error", "-show_entries", "format=duration",
+    "-of", "default=noprint_wrappers=1:nokey=1", file,
+  ]).toString().trim();
+  return parseFloat(out);
+}
+
 async function titleFrame(title, subtitle, file) {
   const size = pickTitleSize(title);
   const lineHeight = Math.round(size * 1.19);
@@ -272,58 +392,76 @@ async function titleFrame(title, subtitle, file) {
 async function itemFrame(item, index, file) {
   const photo = await fetchPhoto(item.url);
 
-  // Фотографию кладём на белую карточку: у товаров фон то белый, то серый,
-  // и без карточки кадры выглядят разнородно. Карточка неподвижна весь кадр
-  // — никакого наезда, так решили насовсем.
+  // Карточка чуть меньше, чем в первой версии: субтитр теперь — полное
+  // предложение, а не короткая бирка, и под него нужно больше места по
+  // высоте, не заезжая на фирменную подпись внизу.
   const card = await sharp(Buffer.from(photo))
-    .resize(660, 660, { fit: "contain", background: "#ffffff" })
+    .resize(600, 600, { fit: "contain", background: "#ffffff" })
     .toBuffer();
 
-  const nameLines = wrap(item.name, 58, W - 160);
+  const nameLines = wrap(item.name, 54, W - 160);
   const name = nameLines
-    .map((l, i) => `<text x="70" y="${1216 + i * 70}" font-family="Unbounded" font-size="58" font-weight="700" fill="${INK}">${esc(l)}</text>`)
+    .map((l, i) => `<text x="70" y="${1086 + i * 66}" font-family="Unbounded" font-size="54" font-weight="700" fill="${INK}">${esc(l)}</text>`)
     .join("");
 
-  const below = 1216 + nameLines.length * 70;
+  const afterName = 1086 + nameLines.length * 66;
+
+  // Субтитр — то же предложение, что звучит голосом, не короткая бирка.
+  // Высота блока не фиксирована: короткая фраза в одну строку, длинная —
+  // в две, и цена ниже сама подстраивается под то, сколько строк вышло.
+  const subLines = wrap(item.voice, 36, W - 160);
+  const sub = subLines
+    .map((l, i) => `<text x="70" y="${afterName + 20 + i * 48}" font-family="Nunito" font-size="36" font-weight="500" fill="${INK}" opacity="0.62">${esc(l)}</text>`)
+    .join("");
+
+  const afterSub = afterName + 20 + subLines.length * 48;
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
     ${backdrop()}
-    <rect x="128" y="288" width="824" height="824" rx="56" fill="url(#brand)"/>
-    <rect x="150" y="310" width="780" height="780" rx="44" fill="#ffffff"/>
-    <circle cx="190" cy="228" r="54" fill="url(#brand)"/>
-    <text x="190" y="248" text-anchor="middle" font-family="Unbounded" font-size="46" font-weight="700" fill="#ffffff">${index}</text>
+    <rect x="148" y="236" width="784" height="784" rx="52" fill="url(#brand)"/>
+    <rect x="170" y="258" width="740" height="740" rx="40" fill="#ffffff"/>
+    <circle cx="190" cy="196" r="52" fill="url(#brand)"/>
+    <text x="190" y="215" text-anchor="middle" font-family="Unbounded" font-size="44" font-weight="700" fill="#ffffff">${index}</text>
     ${name}
-    <text x="70" y="${below + 22}" font-family="Nunito" font-size="38" font-weight="500" fill="${INK}" opacity="0.6">${esc(item.note)}</text>
-    <text x="70" y="${below + 126}" font-family="Unbounded" font-size="80" font-weight="800" fill="url(#brand)">${item.price.toLocaleString("ru")} ₽</text>
+    ${sub}
+    <text x="70" y="${afterSub + 86}" font-family="Unbounded" font-size="72" font-weight="800" fill="url(#brand)">${item.price.toLocaleString("ru")} ₽</text>
     ${mark()}
   </svg>`;
 
   await sharp(Buffer.from(svg))
-    .composite([{ input: card, top: 370, left: 210 }])
+    .composite([{ input: card, top: 328, left: 240 }])
     .png()
     .toFile(file);
 }
 
 async function buildClip(key, clip) {
   // Кадры конкретной темы держим в своей подпапке tmp/: сборка двух клипов
-  // подряд иначе затирала бы кадры друг друга на середине работы.
+  // подряд иначе затирала бы кадры друг друга на середине работы. voice-cache
+  // — исключение, он общий на все темы и не чистится между сборками.
   const tmp = (name) => dir(`tmp/${key}/${name}`);
   mkdirSync(tmp(""), { recursive: true });
 
   const frames = [];
 
+  // Заглавный кадр: озвучка задаёт длительность, не фиксированная цифра.
+  const introVoice = await synthesizeVoice(clip.voiceIntro);
+  const introSeconds = Math.max(MIN_SLIDE, probeDuration(introVoice) + PAD_AFTER_VOICE);
   await titleFrame(clip.title, clip.subtitle, tmp("00.png"));
-  frames.push({ file: tmp("00.png"), seconds: 2.2 });
+  frames.push({ file: tmp("00.png"), voice: introVoice, seconds: introSeconds });
+  console.log(`  заставка: ${introSeconds.toFixed(1)} с озвучки`);
 
   for (const [i, item] of clip.items.entries()) {
     const file = tmp(`${String(i + 1).padStart(2, "0")}.png`);
+    const voice = await synthesizeVoice(item.voice);
+    const seconds = Math.max(MIN_SLIDE, probeDuration(voice) + PAD_AFTER_VOICE);
     await itemFrame(item, i + 1, file);
-    frames.push({ file, seconds: PER_SLIDE });
-    console.log(`  кадр ${i + 1}: ${item.name}`);
+    frames.push({ file, voice, seconds });
+    console.log(`  кадр ${i + 1}: ${item.name} — ${seconds.toFixed(1)} с`);
   }
 
   const inputs = [];
-  const parts = [];
+  const videoParts = [];
+  const audioParts = [];
 
   frames.forEach((frame, i) => {
     // Каждый кадр — свой видеопоток постоянной длины, без зацикленного
@@ -331,27 +469,41 @@ async function buildClip(key, clip) {
     // -framerate напрямую на зацикленную картинку даёт ровно нужное число
     // кадров без лишней арифметики.
     inputs.push("-framerate", "30", "-loop", "1", "-t", String(frame.seconds), "-i", frame.file);
-    parts.push(`[${i}:v]format=yuv420p,setsar=1[s${i}]`);
+    videoParts.push(`[${i * 2}:v]format=yuv420p,setsar=1[v${i}]`);
+
+    // Голос короче слайда — хвост досюда домолчит паузой: apad растягивает
+    // тишиной ровно до длины кадра, иначе звук и видео разъедутся уже на
+    // второй карточке.
+    inputs.push("-i", frame.voice);
+    audioParts.push(`[${i * 2 + 1}:a]apad=whole_dur=${frame.seconds}[a${i}]`);
   });
 
   // Перекрёстное растворение между соседними карточками, цепочкой: каждый
   // следующий xfade берёт на вход уже смонтированный кусок, а не исходный
   // кадр. Смещение — это точка в объединённой до сих пор длине, где должен
   // начаться переход к следующей карточке: конец текущего отрезка минус
-  // длина самого перехода.
-  let label = "s0";
+  // длина самого перехода. Звук идёт той же цепочкой через acrossfade —
+  // звуковой аналог xfade, — с той же длительностью перехода, чтобы голос
+  // не разошёлся с картинкой ни на кадр.
+  let videoLabel = "v0";
+  let audioLabel = "a0";
   let cursor = frames[0].seconds;
 
   for (let i = 1; i < frames.length; i++) {
-    const next = `x${i}`;
+    const nextVideo = `vx${i}`;
+    const nextAudio = `ax${i}`;
     const offset = (cursor - CROSS).toFixed(3);
-    parts.push(`[${label}][s${i}]xfade=transition=fade:duration=${CROSS}:offset=${offset}[${next}]`);
+
+    videoParts.push(`[${videoLabel}][v${i}]xfade=transition=fade:duration=${CROSS}:offset=${offset}[${nextVideo}]`);
+    audioParts.push(`[${audioLabel}][a${i}]acrossfade=d=${CROSS}:c1=tri:c2=tri[${nextAudio}]`);
+
     cursor = cursor + frames[i].seconds - CROSS;
-    label = next;
+    videoLabel = nextVideo;
+    audioLabel = nextAudio;
   }
 
   const filterFile = tmp("filter.txt");
-  writeFileSync(filterFile, parts.join(";"));
+  writeFileSync(filterFile, [...videoParts, ...audioParts].join(";"));
 
   const out = dir(`out/${clip.out}.mp4`);
 
@@ -360,9 +512,11 @@ async function buildClip(key, clip) {
     [
       "-y", ...inputs,
       "-/filter_complex", filterFile,
-      "-map", `[${label}]`,
+      "-map", `[${videoLabel}]`,
+      "-map", `[${audioLabel}]`,
       "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
       "-pix_fmt", "yuv420p", "-r", "30",
+      "-c:a", "aac", "-b:a", "160k", "-ar", "48000",
       // Оглавление в начало файла: иначе ВК и телеграм начинают показывать
       // ролик только после того, как скачают его целиком.
       "-movflags", "+faststart",
@@ -388,4 +542,8 @@ for (const key of keys) {
   await buildClip(key, clip);
 }
 
-console.log("Музыку накладывайте в редакторе ВК при загрузке — берите то, что в тренде сейчас.");
+console.log(
+  "Готово со звуком. Трек поверх в редакторе ВК накладывать не нужно — голос\n" +
+    "уже есть; если хочется фоновой подложки, берите что-то тихое и явно\n" +
+    "позади речи, а не трек на передний план.",
+);
