@@ -8,7 +8,14 @@
 // что надо сказать, написано на экране, а звук выбирается в момент
 // публикации, когда видно, что сейчас в тренде.
 //
-// Запуск: node clips/make.mjs
+// Темы собраны в CLIPS ниже, по ключу поста из src/lib/social/plan.ts —
+// так же, как карточки в cards/make.mjs выбираются по id. Источник цен,
+// названий и фото — scripts/post-photos.mjs: он же качает снимки по
+// идентификатору товара в posts/<ключ>/ и печатает прямой адрес каждого
+// в links.txt, этот адрес отсюда и берётся.
+//
+// Запуск: node clips/make.mjs <ключ>   (с ВЫКЛЮЧЕННЫМ VPN — фото свои)
+//    или: node clips/make.mjs          — соберёт все темы по очереди
 
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -35,16 +42,39 @@ const INK = "#2b1b3d";
 const PINK = "#ff5c7a";
 const VIOLET = "#7c5cfc";
 
-const TITLE = "5 подарков до 2000 ₽";
-const SUBTITLE = "которые не выглядят дёшево";
-
-const ITEMS = [
-  { name: "Датчик температуры", price: 941, note: "Покажет, почему дома душно", url: "https://mi-shop.com/upload/iblock/8ae/mcu0rmy5s3e07nub1ei3rw8oxnd31w1d.png" },
-  { name: "Портативная колонка", price: 1131, note: "В сумку, на дачу, в ванную", url: "https://mi-shop.com/upload/iblock/957/rhq6mnyu0tsgu04kjvlzvkmh4xlwxqb9.png" },
-  { name: "Термокружка", price: 1399, note: "Горячее шесть часов, а не сорок минут", url: "https://shop-polaris.ru/upload/iblock/ad8/Kontur-500TM-A.jpg" },
-  { name: "Настольная лампа", price: 1416, note: "Для тех, кто работает по вечерам", url: "https://mi-shop.com/upload/iblock/50b/50b9438a568f4e033875d8e7a2489d49.jpg" },
-  { name: "Увлажнитель воздуха", price: 2110, note: "С октября по апрель — незаменим", url: "https://shop-polaris.ru/upload/iblock/cd4/PUH%205004_K01-min.jpg" },
-];
+/**
+ * Темы клипов.
+ *
+ * `out` — имя файла в clips/out/, без расширения. Пять позиций в ITEMS —
+ * не жёсткое число, но меньше выглядит бедно, а больше не держат внимание:
+ * по PER_SLIDE секунд на штуку ролик и так растягивается почти на полминуты.
+ */
+const CLIPS = {
+  "2026-10-11-nahodki-500": {
+    out: "nahodki-do-500",
+    title: "5 находок до 500 ₽",
+    subtitle: "ничего случайного, всё по ссылке в профиле",
+    items: [
+      { name: "Гирлянда на батарейках", price: 71, note: "На полку, на окно, в детскую", url: "https://ir.ozone.ru/s3/multimedia-1-x/15066063069.jpg" },
+      { name: "Садовый секатор", price: 51, note: "Для того, кто уже просил именно это", url: "https://ir.ozone.ru/s3/multimedia-1-e/13683851438.jpg" },
+      { name: "Ароматическая свеча в банке", price: 244, note: "Соевый воск держит запах дольше парафина", url: "https://ir.ozone.ru/s3/multimedia-1-i/6957079218.jpg" },
+      { name: "Термокружка с крышкой", price: 221, note: "Горячее дольше, чем в открытой чашке", url: "https://ir.ozone.ru/s3/multimedia-1-k/9681718268.jpg" },
+      { name: "Когтеточка самоклеящаяся", price: 245, note: "Если в доме уже страдает угол", url: "https://ir.ozone.ru/s3/multimedia-1-2/15460182938.jpg" },
+    ],
+  },
+  "2026-10-14-nahodki-wide": {
+    out: "nahodki-250-2500",
+    title: "5 находок от 250 до 2500 ₽",
+    subtitle: "для любого бюджета, всё по ссылке в профиле",
+    items: [
+      { name: "Ароматическая свеча в банке", price: 257, note: "«Сладкая хурма» — осенний вариант", url: "https://ir.ozone.ru/s3/multimedia-1-x/6906698097.jpg" },
+      { name: "Термокружка подарочная", price: 342, note: "350 мл, держит и горячее, и холодное", url: "https://cdn1.ozone.ru/s3/multimedia-1-r/20012948307.jpg" },
+      { name: "Деревянный органайзер для ручек", price: 1586, note: "Одна работа — и справляется с ней десятилетиями", url: "https://cdn1.ozone.ru/s3/multimedia-1-t/7297925321.jpg" },
+      { name: "Портативная колонка Xiaomi", price: 1107, note: "В сумку, на дачу, в ванную", url: "https://mi-shop.com/upload/iblock/b1f/ib28rnvj4s43j1nzyfygj4ghf0zkox50.png" },
+      { name: "Серебряная цепочка 925 пробы", price: 2560, note: "Простая форма — носят каждый день", url: "https://ir.ozone.ru/s3/multimedia-1-p/14806827493.jpg" },
+    ],
+  },
+};
 
 // Кириллица в имени файла иначе приезжает в виде %D0%BF%D1%80: URL её
 // кодирует, а файловой системе это не нужно.
@@ -129,8 +159,8 @@ async function fetchPhoto(url) {
   }
 }
 
-async function titleFrame(file) {
-  const lines = wrap(TITLE, 110, W - 180);
+async function titleFrame(title, subtitle, file) {
+  const lines = wrap(title, 110, W - 180);
   const head = lines
     .map((l, i) => `<text x="70" y="${700 + i * 130}" font-family="Segoe UI" font-size="110" font-weight="700" fill="${INK}">${esc(l)}</text>`)
     .join("");
@@ -138,7 +168,7 @@ async function titleFrame(file) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
     ${backdrop()}
     ${head}
-    <text x="70" y="${700 + lines.length * 130 + 20}" font-family="Segoe UI" font-size="46" font-weight="400" fill="${INK}" opacity="0.6">${esc(SUBTITLE)}</text>
+    <text x="70" y="${700 + lines.length * 130 + 20}" font-family="Segoe UI" font-size="46" font-weight="400" fill="${INK}" opacity="0.6">${esc(subtitle)}</text>
     ${mark()}
   </svg>`;
 
@@ -178,65 +208,87 @@ async function itemFrame(item, index, file) {
     .toFile(file);
 }
 
-const frames = [];
+async function buildClip(key, clip) {
+  // Кадры конкретной темы держим в своей подпапке tmp/: сборка двух клипов
+  // подряд иначе затирала бы кадры друг друга на середине работы.
+  const tmp = (name) => dir(`tmp/${key}/${name}`);
+  mkdirSync(tmp(""), { recursive: true });
 
-await titleFrame(dir("tmp/00.png"));
-frames.push({ file: dir("tmp/00.png"), seconds: 2.5 });
+  const frames = [];
 
-for (const [i, item] of ITEMS.entries()) {
-  const file = dir(`tmp/${String(i + 1).padStart(2, "0")}.png`);
-  await itemFrame(item, i + 1, file);
-  frames.push({ file, seconds: PER_SLIDE });
-  console.log(`кадр ${i + 1}: ${item.name}`);
+  await titleFrame(clip.title, clip.subtitle, tmp("00.png"));
+  frames.push({ file: tmp("00.png"), seconds: 2.5 });
+
+  for (const [i, item] of clip.items.entries()) {
+    const file = tmp(`${String(i + 1).padStart(2, "0")}.png`);
+    await itemFrame(item, i + 1, file);
+    frames.push({ file, seconds: PER_SLIDE });
+    console.log(`  кадр ${i + 1}: ${item.name}`);
+  }
+
+  const inputs = [];
+  const parts = [];
+
+  frames.forEach((frame, i) => {
+    // Ровно один кадр на слайд.
+    //
+    // zoompan выдаёт d кадров на КАЖДЫЙ входной. Если подать зацикленную
+    // картинку как поток на пять секунд, войдёт сто пятьдесят одинаковых
+    // кадров и выйдет сто пятьдесят на сто пятьдесят — двадцать две тысячи
+    // вместо ста пятидесяти. Так ролик в полминуты считался двадцать пять
+    // минут, пока я не разобрался.
+    //
+    // Сужающейся обрезкой то же самое не сделать: crop вычисляет размер один
+    // раз при настройке, и времени в этот момент ещё нет.
+    inputs.push("-framerate", "1", "-loop", "1", "-t", "1", "-i", frame.file);
+
+    const d = Math.round(frame.seconds * 30);
+    parts.push(
+      `[${i}:v]zoompan=z='min(1+0.0009*on,1.12)':d=${d}:` +
+        `x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${W}x${H}:fps=30,setsar=1[v${i}]`,
+    );
+  });
+
+  const chain = frames.map((_, i) => `[v${i}]`).join("");
+  const filterFile = tmp("filter.txt");
+  writeFileSync(
+    filterFile,
+    `${parts.join(";")};${chain}concat=n=${frames.length}:v=1:a=0[out]`,
+  );
+
+  const out = dir(`out/${clip.out}.mp4`);
+
+  execFileSync(
+    FFMPEG,
+    [
+      "-y", ...inputs,
+      "-/filter_complex", filterFile,
+      "-map", "[out]",
+      "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+      "-pix_fmt", "yuv420p", "-r", "30",
+      // Оглавление в начало файла: иначе ВК и телеграм начинают показывать
+      // ролик только после того, как скачают его целиком.
+      "-movflags", "+faststart",
+      out,
+    ],
+    { stdio: ["ignore", "ignore", "pipe"] },
+  );
+
+  console.log(`готово: ${out}`);
+  console.log(`длина: ${frames.reduce((s, f) => s + f.seconds, 0)} с\n`);
 }
 
-const inputs = [];
-const parts = [];
+const requested = process.argv[2];
+const keys = requested ? [requested] : Object.keys(CLIPS);
 
-frames.forEach((frame, i) => {
-  // Ровно один кадр на слайд.
-  //
-  // zoompan выдаёт d кадров на КАЖДЫЙ входной. Если подать зацикленную
-  // картинку как поток на пять секунд, войдёт сто пятьдесят одинаковых
-  // кадров и выйдет сто пятьдесят на сто пятьдесят — двадцать две тысячи
-  // вместо ста пятидесяти. Так ролик в полминуты считался двадцать пять
-  // минут, пока я не разобрался.
-  //
-  // Сужающейся обрезкой то же самое не сделать: crop вычисляет размер один
-  // раз при настройке, и времени в этот момент ещё нет.
-  inputs.push("-framerate", "1", "-loop", "1", "-t", "1", "-i", frame.file);
+for (const key of keys) {
+  const clip = CLIPS[key];
+  if (!clip) {
+    console.log(`нет такой темы: ${key}\nесть: ${Object.keys(CLIPS).join(", ")}`);
+    continue;
+  }
+  console.log(`=== ${key} ===`);
+  await buildClip(key, clip);
+}
 
-  const d = Math.round(frame.seconds * 30);
-  parts.push(
-    `[${i}:v]zoompan=z='min(1+0.0009*on,1.12)':d=${d}:` +
-      `x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${W}x${H}:fps=30,setsar=1[v${i}]`,
-  );
-});
-
-const chain = frames.map((_, i) => `[v${i}]`).join("");
-writeFileSync(
-  dir("tmp/filter.txt"),
-  `${parts.join(";")};${chain}concat=n=${frames.length}:v=1:a=0[out]`,
-);
-
-const out = dir("out/nahodki-do-2000.mp4");
-
-execFileSync(
-  FFMPEG,
-  [
-    "-y", ...inputs,
-    "-/filter_complex", dir("tmp/filter.txt"),
-    "-map", "[out]",
-    "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
-    "-pix_fmt", "yuv420p", "-r", "30",
-    // Оглавление в начало файла: иначе ВК и телеграм начинают показывать
-    // ролик только после того, как скачают его целиком.
-    "-movflags", "+faststart",
-    out,
-  ],
-  { stdio: ["ignore", "ignore", "pipe"] },
-);
-
-console.log(`\nготово: ${out}`);
-console.log(`длина: ${frames.reduce((s, f) => s + f.seconds, 0)} с`);
 console.log("Музыку накладывайте в редакторе ВК при загрузке — берите то, что в тренде сейчас.");
