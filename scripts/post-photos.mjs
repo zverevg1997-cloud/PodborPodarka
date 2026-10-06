@@ -16,7 +16,7 @@
 //
 // Запуск: node scripts/post-photos.mjs   (с ВЫКЛЮЧЕННЫМ VPN)
 
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
 
 const here = (name) => new URL(`../${name}`, import.meta.url).pathname.slice(1);
@@ -59,6 +59,14 @@ const POSTS = {
 
 for (const [post, ids] of Object.entries(POSTS)) {
   const dir = here(`posts/${post}`);
+
+  // Список товаров у поста иногда сокращается — у термоса так и вышло,
+  // второй пропал из выгрузки. Папку просто дописывали, и старый «2.jpg»
+  // от уже несуществующего товара остался бы висеть рядом с новым набором
+  // как ни в чём не бывало — отправь его боту по ошибке, и в посте
+  // окажется чужая фотография. Поэтому каждый раз чистим подчистую и
+  // пишем заново.
+  rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
 
   const products = await prisma.product.findMany({
